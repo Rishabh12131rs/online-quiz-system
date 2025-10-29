@@ -70,7 +70,8 @@ function showResults() {
   questionEl.innerHTML = "Quiz Completed!";
   answersEl.innerHTML = '';
   nextBtn.style.display = 'none';
-  resultEl.innerHTML = `<div>Your score is ${score} out of ${totalQuestions}</div><div id="score-badge">${getBadge(score)}</div>`;
+  resultEl.innerHTML = `<div>Your score is ${score} out of ${totalQuestions}</div>
+    <div id="score-badge">${getBadge(score)}</div>`;
 }
 
 function getBadge(score) {

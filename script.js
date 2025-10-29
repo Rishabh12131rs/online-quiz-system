@@ -2,61 +2,88 @@ let currentQuestion = {};
 let currentAnswers = [];
 let correctAnswer = '';
 let score = 0;
-function showResult(final = false) {
-    if (final) {
-        document.getElementById('question').innerHTML = '';
-        document.getElementById('answers').innerHTML = '';
-        document.getElementById('result').innerHTML = `Quiz Finished!<br>Your Score: ${score}`;
-        let btn = document.createElement('button');
-        btn.textContent = "Restart Quiz";
-        btn.id = "restart-btn";
-        btn.onclick = () => location.reload();
-        document.getElementById('result').appendChild(btn);
-        document.getElementById('next-btn').style.display = 'none';
-    }
+let totalQuestions = 10;
+let currentCount = 0;
+
+const questionEl = document.getElementById('question');
+const answersEl = document.getElementById('answers');
+const resultEl = document.getElementById('result');
+const progressBarEl = document.getElementById('progress-bar');
+const nextBtn = document.getElementById('next-btn');
+
+function updateProgressBar() {
+  progressBarEl.style.width = ((currentCount / totalQuestions) * 100) + '%';
 }
 
-let totalQuestions = 10, currentCount = 0;
-
 function fetchQuestion() {
-    if (currentCount >= totalQuestions) {
-        showResult(true);
-        return;
-    }
-    fetch('https://opentdb.com/api.php?amount=1&type=multiple')
-        .then(response => response.json())
-        .then(data => {
-            let question = data.results[0];
-            correctAnswer = question.correct_answer;
-            currentAnswers = [...question.incorrect_answers, correctAnswer]
-                .sort(() => Math.random() - 0.5);
-            document.getElementById('question').innerHTML = `Q${currentCount + 1}: ` + question.question;
-            document.getElementById('answers').innerHTML = '';
-            document.getElementById('result').innerHTML = '';
-            document.getElementById('next-btn').style.display = 'none';
+  if (currentCount >= totalQuestions) {
+    showResults();
+    return;
+  }
+  updateProgressBar();
+  fetch('https://opentdb.com/api.php?amount=1&type=multiple')
+    .then(res => res.json())
+    .then(data => {
+      let questionData = data.results[0];
+      currentQuestion = questionData;
+      correctAnswer = questionData.correct_answer;
+      currentAnswers = [...questionData.incorrect_answers, correctAnswer]
+        .sort(() => Math.random() - 0.5);
 
-            currentAnswers.forEach(answer => {
-                let btn = document.createElement('button');
-                btn.textContent = answer;
-                btn.onclick = () => checkAnswer(answer);
-                document.getElementById('answers').appendChild(btn);
-            });
-        });
+      questionEl.innerHTML = `Q${currentCount + 1}: ${decodeHTML(questionData.question)}`;
+      answersEl.innerHTML = '';
+      resultEl.innerHTML = '';
+      nextBtn.style.display = 'none';
+
+      currentAnswers.forEach(answer => {
+        let btn = document.createElement('button');
+        btn.textContent = decodeHTML(answer);
+        btn.onclick = () => checkAnswer(answer);
+        answersEl.appendChild(btn);
+      });
+    }).catch(err => {
+      questionEl.innerText = "Error loading question, try refresh!";
+      console.error(err);
+    });
 }
 
 function checkAnswer(selected) {
-    if (selected === correctAnswer) {
-        document.getElementById('result').innerHTML = "Correct!";
-        score++;
-    } else {
-        document.getElementById('result').innerHTML = "Wrong! Correct answer: " + correctAnswer;
-    }
-    document.getElementById('next-btn').style.display = 'inline-block';
-    document.querySelectorAll('#answers button').forEach(btn => btn.disabled = true);
-    currentCount++;
+  const buttons = answersEl.querySelectorAll('button');
+  buttons.forEach(button => button.disabled = true);
+  nextBtn.style.display = 'inline-block';
+
+  if (selected === correctAnswer) {
+    score++;
+    resultEl.textContent = "Correct! 🎉";
+    resultEl.style.color = '#00b200';
+  } else {
+    resultEl.textContent = `Wrong! Correct answer: ${correctAnswer}`;
+    resultEl.style.color = '#e63946';
+  }
+  currentCount++;
+  updateProgressBar();
 }
 
-document.getElementById('next-btn').onclick = fetchQuestion;
+nextBtn.onclick = fetchQuestion;
 
+function showResults() {
+  questionEl.innerHTML = "Quiz Completed!";
+  answersEl.innerHTML = '';
+  nextBtn.style.display = 'none';
+  resultEl.innerHTML = `<div>Your score is ${score} out of ${totalQuestions}</div><div id="score-badge">${getBadge(score)}</div>`;
+}
+
+function getBadge(score) {
+  if (score === totalQuestions) return "🏆 Perfect Score!";
+  if (score > totalQuestions * 0.7) return "🎉 Great Job!";
+  if (score > totalQuestions * 0.4) return "👍 Good Effort!";
+  return "😐 Keep Practicing!";
+}
+
+function decodeHTML(html) {
+  let txt = document.createElement("textarea");
+  txt.innerHTML = html;
+  return txt.value;
+}
 
 fetchQuestion();

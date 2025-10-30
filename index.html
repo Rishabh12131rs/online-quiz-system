@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>QuizHub Login and Quiz</title>
+  <title>QuizHub: Quizzes & Games</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="main-container">
+    <!-- Authentication Section -->
     <div id="auth-container">
       <h1>Welcome to QuizHub</h1>
       <div id="auth-tabs">
@@ -28,24 +29,44 @@
       </form>
     </div>
 
+    <!-- Main Menu Section -->
+    <div id="main-menu" style="display:none;">
+      <button id="menu-quiz-btn" class="menu-btn active" type="button">Quiz</button>
+      <button id="menu-games-btn" class="menu-btn" type="button">Games</button>
+      <span id="welcome-user"></span>
+      <button id="logout-btn" type="button">Logout</button>
+    </div>
+
+    <!-- Quiz Section -->
     <div id="quiz-container" style="display:none;">
-      <div id="user-header">
-        <span id="welcome-user"></span>
-        <button id="logout-btn" type="button">Logout</button>
-      </div>
       <h2>Play Online Quiz</h2>
       <div id="welcome">
         <p>Select topic and start. Your scores are saved for your profile!</p>
-        <label for="topic">Topic:</label>
+        <label for="topic">Topic / Subject:</label>
         <select id="topic">
           <option value="9">General Knowledge</option>
+          <option value="11">Movies</option>
+          <option value="12">Music</option>
           <option value="17">Science & Nature</option>
+          <option value="18">Computer</option>
+          <option value="19">Mathematics</option>
+          <option value="22">Geography</option>
           <option value="23">History</option>
+          <option value="21">Sports</option>
+          <option value="15">Video Games</option>
+          <option value="24">Politics</option>
+          <option value="25">Art</option>
+          <option value="26">Celebrities</option>
+          <option value="27">Animals</option>
+          <option value="28">Vehicles</option>
+          <option value="31">Anime & Manga</option>
+          <option value="32">Cartoons</option>
         </select>
         <label for="numQuestions">Questions:</label>
         <select id="numQuestions">
           <option value="5">5</option>
           <option value="10" selected>10</option>
+          <option value="15">15</option>
         </select>
         <button id="start-btn" type="button">Start Quiz</button>
       </div>
@@ -61,6 +82,15 @@
       <div id="review"></div>
       <audio id="sound-correct" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12cfb7b47b.mp3"></audio>
       <audio id="sound-wrong" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12cfa48913.mp3"></audio>
+    </div>
+
+    <!-- Games Section -->
+    <div id="games-container" style="display:none;">
+      <h2>Games & Puzzles</h2>
+      <div id="games-list">
+        <button class="game-launch" data-game="tictactoe" type="button">Tic-Tac-Toe</button>
+      </div>
+      <div id="game-area"></div>
     </div>
   </div>
   <script src="script.js"></script>

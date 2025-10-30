@@ -153,27 +153,32 @@ function loadTicTacToe() {
   render();
 }
 
-// --- Working Local Chess Game (with move validation) ---
+// --- Working Chess Game ---
 function loadChess() {
   gameArea.innerHTML = `
     <div class="chess-container">
-      <div id="chessboard" style="margin:10px auto;width:320px;"></div>
-      <button id="chess-reset-btn" style="margin-top:8px;">Reset Board</button>
+      <div id="chessboard-box">
+        <div id="chessboard" style="margin:10px auto;width:320px;"></div>
+      </div>
+      <button id="chess-reset-btn" style="margin-top:15px;">Reset Board</button>
     </div>
   `;
-  var game = new Chess();
-  var board = Chessboard('chessboard', {
-    draggable: true,
-    position: 'start',
-    onDrop: function (source, target) {
-      var move = game.move({from: source, to: target, promotion: 'q'});
-      if (move === null) return 'snapback';
-    }
-  });
-  document.getElementById('chess-reset-btn').onclick = function(){
-    game.reset();
-    board.start();
-  };
+  // Ensure chessboard div is in DOM before initializing
+  setTimeout(function() {
+    var game = new Chess();
+    var board = Chessboard('chessboard', {
+      draggable: true,
+      position: 'start',
+      onDrop: function (source, target) {
+        var move = game.move({from: source, to: target, promotion: 'q'});
+        if (move === null) return 'snapback';
+      }
+    });
+    document.getElementById('chess-reset-btn').onclick = function(){
+      game.reset();
+      board.start();
+    };
+  }, 200);
 }
 
 // --- Quiz Logic (unchanged, last version) ---

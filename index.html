@@ -1,21 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Online Quiz</title>
-<link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Modern Quiz System</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="quiz-container">
     <h1>Modern Quiz System</h1>
-    <div id="progress-container">
+    <div id="topic-select">
+      <label for="topic">Choose Topic:</label>
+      <select id="topic">
+        <option value="9">General Knowledge</option>
+        <option value="17">Science & Nature</option>
+        <option value="23">History</option>
+      </select>
+      <button id="start-btn">Start Quiz</button>
+    </div>
+    <div id="progress-container" style="display:none;">
       <div id="progress-bar"></div>
     </div>
+    <div id="timer" style="display:none;">Time Left: <span id="timer-value">10</span>s</div>
     <div id="question"></div>
     <div id="answers"></div>
     <button id="next-btn" style="display:none;">Next Question</button>
     <div id="result"></div>
+    <div id="leaderboard"></div>
+    <div id="review"></div>
+    <audio id="sound-correct" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12cfb7b47b.mp3"></audio>
+    <audio id="sound-wrong" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12cfa48913.mp3"></audio>
   </div>
   <script src="script.js"></script>
 </body>

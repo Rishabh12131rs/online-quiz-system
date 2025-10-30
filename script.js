@@ -1,3 +1,74 @@
+// --- Login/Register Handlers ---
+const loginTab = document.getElementById('login-tab');
+const signupTab = document.getElementById('signup-tab');
+const loginForm = document.getElementById('login-form');
+const signupForm = document.getElementById('signup-form');
+const loginErr = document.getElementById('login-error');
+const signupErr = document.getElementById('signup-error');
+const authContainer = document.getElementById('auth-container');
+const quizContainer = document.getElementById('quiz-container');
+const welcomeUser = document.getElementById('welcome-user');
+const logoutBtn = document.getElementById('logout-btn');
+
+loginTab.onclick = () => {
+  loginTab.classList.add('active'); signupTab.classList.remove('active');
+  loginForm.style.display = '';
+  signupForm.style.display = 'none';
+  loginErr.textContent = '';
+}
+signupTab.onclick = () => {
+  signupTab.classList.add('active'); loginTab.classList.remove('active');
+  signupForm.style.display = '';
+  loginForm.style.display = 'none';
+  signupErr.textContent = '';
+}
+
+// Simple local register
+signupForm.onsubmit = function(e) {
+  e.preventDefault();
+  let username = document.getElementById('signup-username').value.trim();
+  let password = document.getElementById('signup-password').value;
+  if(username.length < 3 || password.length < 3) { signupErr.textContent = 'Minimum 3 characters.'; return;}
+  let accounts = JSON.parse(localStorage.getItem('quizAccounts')||"{}");
+  if(accounts[username]) { signupErr.textContent="User exists."; return;}
+  accounts[username] = password;
+  localStorage.setItem('quizAccounts', JSON.stringify(accounts));
+  signupErr.textContent = "Registered! Please log in.";
+  setTimeout(()=>{loginTab.click();}, 1300);
+}
+
+loginForm.onsubmit = function(e) {
+  e.preventDefault();
+  let username = document.getElementById('login-username').value.trim();
+  let password = document.getElementById('login-password').value;
+  let accounts = JSON.parse(localStorage.getItem('quizAccounts')||"{}");
+  if(accounts[username] && accounts[username] === password) {
+    loginErr.textContent='';
+    localStorage.setItem('quizUser', username);
+    showQuiz(username);
+  } else {
+    loginErr.textContent="Invalid username or password.";
+  }
+}
+
+function showQuiz(username) {
+  authContainer.style.display = 'none';
+  quizContainer.style.display = '';
+  welcomeUser.textContent = "Hello, " + username;
+}
+logoutBtn.onclick = function() {
+  localStorage.removeItem('quizUser');
+  quizContainer.style.display = 'none';
+  authContainer.style.display = '';
+}
+
+// Auto-login if session exists
+window.onload = function() {
+  let user = localStorage.getItem('quizUser');
+  if(user) showQuiz(user);
+}
+
+// --- Quiz Logic ---
 let totalQuestions, currentCount = 0, score = 0, bestScore = 0, timerInterval, timerValue, timerDuration = 15;
 let questions = [], selectedAnswers = [], correctAnswers = [];
 const topicSelect = document.getElementById('topic');
@@ -17,8 +88,8 @@ const reviewDiv = document.getElementById('review');
 const soundCorrect = document.getElementById('sound-correct');
 const soundWrong = document.getElementById('sound-wrong');
 
-startBtn.onclick = startQuiz;
-nextBtn.onclick = showNextQuestion;
+if(startBtn) startBtn.onclick = startQuiz;
+if(nextBtn) nextBtn.onclick = showNextQuestion;
 
 function startQuiz() {
   score = 0; currentCount = 0; questions = []; selectedAnswers = []; correctAnswers = [];
@@ -32,7 +103,8 @@ function startQuiz() {
     .then(res=>res.json()).then(data=>{
       questions = data.results;
       showNextQuestion();
-    });
+    })
+    .catch(()=>{ resultDiv.innerHTML='Unable to load quiz questions.'; });
 }
 
 function showNextQuestion() {
@@ -60,6 +132,7 @@ function showNextQuestion() {
     answersDiv.appendChild(btn);
   }
 }
+
 function selectAnswer(selected) {
   clearInterval(timerInterval);
   const currentQ = questions[currentCount];
@@ -90,16 +163,28 @@ function showResults() {
   questionDiv.innerHTML = `Quiz Completed!`;
   answersDiv.innerHTML = '';
   nextBtn.style.display = 'none';
-  bestScore = Math.max(score, Number(localStorage.getItem("bestQuizScore")||0));
-  if(score > Number(localStorage.getItem("bestQuizScore")||0)) localStorage.setItem("bestQuizScore", score);
+  // Score per user
+  let user = localStorage.getItem('quizUser');
+  let userScores = JSON.parse(localStorage.getItem('quizScores')||"{}");
+  let oldScore = userScores[user]||0;
+  if(score > oldScore) userScores[user] = score;
+  localStorage.setItem('quizScores', JSON.stringify(userScores));
+
   let badge = getBadge(score);
   resultDiv.innerHTML = `<div>Your score is <b>${score}</b> out of <b>${totalQuestions}</b></div>
     <div id="score-badge">${badge}</div>
-    <div>Best score this session: <b>${bestScore}</b></div>`;
-  leaderboardDiv.innerHTML = `<hr/>`;
+    <div>Best score as ${user}: <b>${userScores[user]}</b></div>`;
+  leaderboardDiv.innerHTML = `<hr/><h4>Leaderboard</h4>` + leaderboardHTML();
   showReview();
   welcomeDiv.style.display = 'block';
   startBtn.textContent = "Restart Quiz";
+}
+
+function leaderboardHTML() {
+  let userScores = JSON.parse(localStorage.getItem('quizScores')||"{}");
+  let items = Object.keys(userScores).sort((a,b)=>userScores[b]-userScores[a])
+      .map(u=>`<div><b>${u}:</b> ${userScores[u]}</div>`);
+  return items.slice(0, 5).join('');
 }
 
 function getBadge(score) {

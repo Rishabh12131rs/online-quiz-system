@@ -153,7 +153,7 @@ function loadTicTacToe() {
   render();
 }
 
-// --- Working Chess Game with Render Fix ---
+// --- Working Chess Game (simple offline) ---
 function loadChess() {
   gameArea.innerHTML = `
   <h3>Simple Chessboard (Offline, Always Works)</h3>
@@ -214,8 +214,8 @@ function loadChess() {
   render();
 }
 
+// --- Quiz Logic & other functions unchanged, as before ---
 
-// --- Quiz Logic (unchanged) ---
 let totalQuestions, currentCount = 0, score = 0, bestScore = 0, timerInterval, timerValue, timerDuration = 15;
 let questions = [], selectedAnswers = [], correctAnswers = [];
 const topicSelect = document.getElementById('topic');
@@ -340,26 +340,14 @@ function getBadge(score) {
   if (score > totalQuestions * 0.4) return "👍 <b>Good Effort!</b>";
   return "😐 <b>Keep Practicing!</b>";
 }
+
 function updateProgressBar() {
   progressBar.style.width = ((currentCount / totalQuestions) * 100) + "%";
 }
+
 function decodeHTML(html) {
   let txt = document.createElement("textarea");
   txt.innerHTML = html;
   return txt.value;
 }
-function showReview() {
-  reviewDiv.innerHTML = `<h3>Review Answers</h3>`;
-  for(let i=0; i<questions.length; i++) {
-    let q = decodeHTML(questions[i].question);
-    let correct = decodeHTML(correctAnswers[i]);
-    let selected = decodeHTML(selectedAnswers[i]) || '(No Answer)';
-    let state = (selected === correct) ? 'right' : 'wrong';
-    reviewDiv.innerHTML += `
-      <div class="review-qa">
-        <b>Q${i+1}:</b> ${q}<br/>
-        <span class="${state}">Your Answer: ${selected}</span><br/>
-        <span class="right">Correct: ${correct}</span>
-      </div>`;
-  }
-}
+

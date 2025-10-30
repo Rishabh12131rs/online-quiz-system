@@ -6,8 +6,8 @@ const signupForm = document.getElementById('signup-form');
 const loginErr = document.getElementById('login-error');
 const signupErr = document.getElementById('signup-error');
 const authContainer = document.getElementById('auth-container');
-const quizContainer = document.getElementById('quiz-container');
 const mainMenu = document.getElementById('main-menu');
+const quizContainer = document.getElementById('quiz-container');
 const welcomeUser = document.getElementById('welcome-user');
 const logoutBtn = document.getElementById('logout-btn');
 const gamesContainer = document.getElementById('games-container');
@@ -150,7 +150,7 @@ function loadTicTacToe() {
   `;
 }
 
-// --- Quiz Logic ---
+// --- Quiz Logic (unchanged) ---
 let totalQuestions, currentCount = 0, score = 0, bestScore = 0, timerInterval, timerValue, timerDuration = 15;
 let questions = [], selectedAnswers = [], correctAnswers = [];
 const topicSelect = document.getElementById('topic');

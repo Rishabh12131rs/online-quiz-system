@@ -93,61 +93,64 @@ menuGamesBtn.onclick = () => {
 
 document.querySelectorAll('.game-launch').forEach(btn => {
   btn.onclick = () => {
-    if(btn.dataset.game==="chess") loadChess();
-    if(btn.dataset.game==="puzzle") loadSliderPuzzle();
     if(btn.dataset.game==="tictactoe") loadTicTacToe();
+    // You can add more functions for other games here, using pure JS/HTML only
   };
 });
 
-function loadChess() {
-  gameArea.innerHTML = `<iframe src="https://embed.lichess.org/tiny" width="350" height="400" frameborder="0"></iframe>`;
-}
-function loadSliderPuzzle() {
-  gameArea.innerHTML = `<iframe src="https://games.construct.net/70/slider-3x3/index.html" width="350" height="400" frameborder="0"></iframe>`;
-}
+// --- Pure JS In-Browser Tic-Tac-Toe Game ---
 function loadTicTacToe() {
   gameArea.innerHTML = `
-  <style>
-    .tt-row{display:flex;}
-    .tt-cell{width:60px;height:60px;font-size:40px;text-align:center;border:1px solid #999;background:#f9f9f9;cursor:pointer;}
-  </style>
-  <div id="tt-status"></div>
-  <div id="tt-board"></div>
-  <button onclick="resetTT()">Restart</button>
-  <script>
-  var ttBoard = [['','',''],['','',''],['','','']];
-  var ttPlayer = 'X', ttOver = false;
-  function renderTT() {
-    var html = '';
-    for(let i=0;i<3;i++){ html+='<div class="tt-row">';
-      for(let j=0;j<3;j++)
-        html += '<div class="tt-cell" onclick="moveTT('+i+','+j+')">'+ttBoard[i][j]+'</div>';
-      html+='</div>';
-    }
-    document.getElementById('tt-board').innerHTML = html;
-    document.getElementById('tt-status').innerHTML = ttOver ?
-      (winnerTT(ttPlayer)?(ttPlayer+' Wins!'):'Draw!') :
-      ('Player: '+ttPlayer);
-  }
-  function moveTT(i,j) {
-    if(ttOver || ttBoard[i][j]) return;
-    ttBoard[i][j] = ttPlayer;
-    if(winnerTT(ttPlayer)){ttOver=true;}
-    else if (ttBoard.flat().every(Boolean)) {ttOver = true;}
-    else {ttPlayer = ttPlayer==='X'?'O':'X';}
-    renderTT();
-  }
-  function winnerTT(p){
-    for(let i=0;i<3;i++) if(ttBoard[i][0]===p&&ttBoard[i][1]===p&&ttBoard[i][2]===p)return true;
-    for(let i=0;i<3;i++) if(ttBoard[0][i]===p&&ttBoard[1][i]===p&&ttBoard[2][i]===p)return true;
-    if(ttBoard[0][0]===p&&ttBoard[1][1]===p&&ttBoard[2][2]===p)return true;
-    if(ttBoard[2][0]===p&&ttBoard[1][1]===p&&ttBoard[0][2]===p)return true;
-    return false;
-  }
-  function resetTT(){ttBoard=[['','',''],['','',''],['','','']];ttPlayer='X';ttOver=false;renderTT();}
-  resetTT();
-  <\/script>
+    <style>
+      .ttt-row{display:flex;}
+      .ttt-cell{width:60px;height:60px;font-size:2rem;text-align:center;border:1px solid #888;background:#f3f3f3;cursor:pointer;}
+    </style>
+    <h3>Tic-Tac-Toe</h3>
+    <div id="ttt-board"></div>
+    <div id="ttt-result"></div>
+    <button onclick="resetTTT()">Restart</button>
   `;
+  let board = [["", "", ""],["", "", ""],["", "", ""]];
+  let player = "X", winner = null;
+  function render() {
+    let html = "";
+    for(let i=0;i<3;i++){
+      html += '<div class="ttt-row">';
+      for(let j=0;j<3;j++){
+        html += `<div class="ttt-cell" data-row="${i}" data-col="${j}">${board[i][j]}</div>`;
+      }
+      html+="</div>";
+    }
+    document.getElementById("ttt-board").innerHTML = html;
+    document.getElementById("ttt-result").innerText = winner
+      ? (winner==="D" ? "Draw!" : winner + " wins!")
+      : "Player: " + player;
+    document.querySelectorAll(".ttt-cell").forEach(el=>{
+      el.onclick = function(){
+        let r=this.dataset.row, c=this.dataset.col;
+        if(board[r][c] || winner) return;
+        board[r][c]=player;
+        winner=checkWin();
+        if(!winner) player = player==="X" ? "O" : "X";
+        render();
+      }
+    });
+  }
+  function checkWin() {
+    for(let i=0;i<3;i++)
+      if(board[i][0] && board[i][0]==board[i][1] && board[i][1]==board[i][2]) return board[i][0];
+    for(let j=0;j<3;j++)
+      if(board[0][j] && board[0][j]==board[1][j] && board[1][j]==board[2][j]) return board[0][j];
+    if(board[0][0] && board[0][0]==board[1][1] && board[1][1]==board[2][2]) return board[0][0];
+    if(board[2][0] && board[2][0]==board[1][1] && board[1][1]==board[0][2]) return board[2][0];
+    if(board.flat().every(v=>v)) return "D"; // Draw
+    return null;
+  }
+  window.resetTTT = function(){
+    for(let i=0;i<3;i++)for(let j=0;j<3;j++)board[i][j]="";
+    player="X";winner=null;render();
+  };
+  render();
 }
 
 // --- Quiz Logic (unchanged) ---

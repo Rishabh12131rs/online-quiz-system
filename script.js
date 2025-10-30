@@ -1,4 +1,4 @@
-// --- Authentication ---
+// --- Login/Register Handlers ---
 const loginTab = document.getElementById('login-tab');
 const signupTab = document.getElementById('signup-tab');
 const loginForm = document.getElementById('login-form');
@@ -6,14 +6,9 @@ const signupForm = document.getElementById('signup-form');
 const loginErr = document.getElementById('login-error');
 const signupErr = document.getElementById('signup-error');
 const authContainer = document.getElementById('auth-container');
-const mainMenu = document.getElementById('main-menu');
 const quizContainer = document.getElementById('quiz-container');
 const welcomeUser = document.getElementById('welcome-user');
 const logoutBtn = document.getElementById('logout-btn');
-const gamesContainer = document.getElementById('games-container');
-const menuQuizBtn = document.getElementById('menu-quiz-btn');
-const menuGamesBtn = document.getElementById('menu-games-btn');
-const gameArea = document.getElementById('game-area');
 
 loginTab.onclick = function() {
   loginTab.classList.add('active'); signupTab.classList.remove('active');
@@ -49,174 +44,175 @@ loginForm.onsubmit = function(e) {
   if(accounts[username] && accounts[username] === password) {
     loginErr.textContent='';
     localStorage.setItem('quizUser', username);
-    showMainMenu(username);
+    showQuiz(username);
   } else {
     loginErr.textContent="Invalid username or password.";
   }
 };
 
-function showMainMenu(username) {
+function showQuiz(username) {
   authContainer.style.display = 'none';
-  mainMenu.style.display = '';
   quizContainer.style.display = '';
-  gamesContainer.style.display = 'none';
   welcomeUser.textContent = "Hello, " + username;
-  menuQuizBtn.classList.add('active');
-  menuGamesBtn.classList.remove('active');
 }
-
 logoutBtn.onclick = function() {
   localStorage.removeItem('quizUser');
-  mainMenu.style.display = 'none';
   quizContainer.style.display = 'none';
-  gamesContainer.style.display = 'none';
   authContainer.style.display = '';
 };
 
+// Auto-login if session exists
 window.onload = function() {
   let user = localStorage.getItem('quizUser');
-  if(user) showMainMenu(user);
+  if(user) showQuiz(user);
 };
 
-// --- Main Menu (Quiz/Games Tab) ---
-menuQuizBtn.onclick = () => {
-  menuQuizBtn.classList.add('active'); menuGamesBtn.classList.remove('active');
-  quizContainer.style.display = '';
-  gamesContainer.style.display = 'none';
-};
-menuGamesBtn.onclick = () => {
-  menuGamesBtn.classList.add('active'); menuQuizBtn.classList.remove('active');
-  gamesContainer.style.display = '';
-  quizContainer.style.display = 'none';
-  gameArea.innerHTML = '';
-};
+// --- Quiz Logic ---
+let totalQuestions, currentCount = 0, score = 0, bestScore = 0, timerInterval, timerValue, timerDuration = 15;
+let questions = [], selectedAnswers = [], correctAnswers = [];
+const topicSelect = document.getElementById('topic');
+const numQSelect = document.getElementById('numQuestions');
+const startBtn = document.getElementById('start-btn');
+const welcomeDiv = document.getElementById('welcome');
+const progressBar = document.getElementById('progress-bar');
+const progressContainer = document.getElementById('progress-container');
+const questionDiv = document.getElementById('question');
+const answersDiv = document.getElementById('answers');
+const resultDiv = document.getElementById('result');
+const leaderboardDiv = document.getElementById('leaderboard');
+const nextBtn = document.getElementById('next-btn');
+const timerDiv = document.getElementById('timer');
+const timerValueSpan = document.getElementById('timer-value');
+const reviewDiv = document.getElementById('review');
+const soundCorrect = document.getElementById('sound-correct');
+const soundWrong = document.getElementById('sound-wrong');
 
-document.querySelectorAll('.game-launch').forEach(btn => {
-  btn.onclick = () => {
-    if(btn.dataset.game==="tictactoe") loadTicTacToe();
-    if(btn.dataset.game==="chess") loadChess();
-  };
-});
+if(startBtn) startBtn.onclick = startQuiz;
+if(nextBtn) nextBtn.onclick = showNextQuestion;
 
-// --- Tic-Tac-Toe ---
-function loadTicTacToe() {
-  gameArea.innerHTML = `
-    <style>
-      .ttt-row{display:flex;}
-      .ttt-cell{width:60px;height:60px;font-size:2rem;text-align:center;border:1px solid #888;background:#f3f3f3;cursor:pointer;}
-    </style>
-    <h3>Tic-Tac-Toe</h3>
-    <div id="ttt-board"></div>
-    <div id="ttt-result"></div>
-    <button onclick="resetTTT()">Restart</button>
-  `;
-  let board = [["", "", ""],["", "", ""],["", "", ""]];
-  let player = "X", winner = null;
-  
-  function render() {
-    let html = "";
-    for(let i=0;i<3;i++){
-      html += '<div class="ttt-row">';
-      for(let j=0;j<3;j++){
-        html += `<div class="ttt-cell" data-row="${i}" data-col="${j}">${board[i][j]}</div>`;
-      }
-      html+="</div>";
-    }
-    document.getElementById("ttt-board").innerHTML = html;
-    document.getElementById("ttt-result").innerText = winner
-      ? (winner==="D" ? "Draw!" : winner + " wins!")
-      : "Player: " + player;
-    document.querySelectorAll(".ttt-cell").forEach(el=>{
-      el.onclick = function(){
-        let r=this.dataset.row, c=this.dataset.col;
-        if(board[r][c] || winner) return;
-        board[r][c]=player;
-        winner=checkWin();
-        if(!winner) player = player==="X" ? "O" : "X";
-        render();
-      }
-    });
-  }
-  function checkWin() {
-    for(let i=0;i<3;i++)
-      if(board[i][0] && board[i][0]==board[i][1] && board[i][1]==board[i][2]) return board[i][0];
-    for(let j=0;j<3;j++)
-      if(board[0][j] && board[0][j]==board[1][j] && board[1][j]==board[2][j]) return board[0][j];
-    if(board[0][0] && board[0][0]==board[1][1] && board[1][1]==board[2][2]) return board[0][0];
-    if(board[2][0] && board[2][0]==board[1][1] && board[1][1]==board[0][2]) return board[2][0];
-    if(board.flat().every(v=>v)) return "D"; // Draw
-    return null;
-  }
-  window.resetTTT = function(){
-    for(let i=0;i<3;i++)for(let j=0;j<3;j++)board[i][j]="";
-    player="X";winner=null;render();
-  };
-  render();
+function startQuiz() {
+  score = 0; currentCount = 0; questions = []; selectedAnswers = []; correctAnswers = [];
+  reviewDiv.innerHTML = '';
+  welcomeDiv.style.display = 'none';
+  progressContainer.style.display = 'block';
+  timerDiv.style.display = 'block';
+  leaderboardDiv.innerHTML = '';
+  totalQuestions = parseInt(numQSelect.value);
+  fetch(`https://opentdb.com/api.php?amount=${totalQuestions}&category=${topicSelect.value}&type=multiple`)
+    .then(res=>res.json()).then(data=>{
+      questions = data.results;
+      showNextQuestion();
+    })
+    .catch(()=>{ resultDiv.innerHTML='Unable to load quiz questions.'; });
 }
 
-// --- Chess Game with Rules ---
-function loadChess() {
-  gameArea.innerHTML = `
-  <h3>Chess with Rules</h3>
-  <div id="chessboard" style="width: 320px; margin: auto;"></div>
-  <button id="reset-chess-btn" style="margin-top: 10px;">Reset Board</button>`;
+function showNextQuestion() {
+  if(timerInterval) clearInterval(timerInterval);
+  if(currentCount >= totalQuestions) return showResults();
+  updateProgressBar();
+  questionDiv.innerHTML = `Q${currentCount+1}: ${decodeHTML(questions[currentCount].question)}`;
+  answersDiv.innerHTML = '';
+  resultDiv.innerHTML = '';
+  nextBtn.style.display = 'none';
+  timerValue = timerDuration;
+  timerValueSpan.textContent = timerValue;
+  timerDiv.style.color = '#125c83';
+  timerInterval = setInterval(()=>{
+    timerValue--; timerValueSpan.textContent = timerValue;
+    if(timerValue < 8) timerDiv.style.color = '#f15e46';
+    if(timerValue <= 0) { clearInterval(timerInterval); selectAnswer(null);}
+  }, 1000);
+  let opts = [...questions[currentCount].incorrect_answers, questions[currentCount].correct_answer]
+      .sort(()=>Math.random()-0.5);
+  for(let opt of opts) {
+    let btn = document.createElement('button');
+    btn.textContent = decodeHTML(opt);
+    btn.onclick = ()=>selectAnswer(opt);
+    answersDiv.appendChild(btn);
+  }
+}
 
-  var game = new Chess();
-
-  var board = Chessboard('chessboard', {
-    draggable: true,
-    position: 'start',
-    onDragStart: function(source, piece, position, orientation) {
-      if (game.game_over()) return false;
-
-      if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-          (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
-        return false;
-      }
-    },
-    onDrop: function(source, target) {
-      var move = game.move({
-        from: source,
-        to: target,
-        promotion: 'q'
-      });
-
-      if (move === null) return 'snapback';
-
-      updateStatus();
-    },
-    onSnapEnd: function() {
-      board.position(game.fen());
-    }
+function selectAnswer(selected) {
+  clearInterval(timerInterval);
+  const currentQ = questions[currentCount];
+  const correct = currentQ.correct_answer;
+  correctAnswers.push(correct);
+  selectedAnswers.push(selected);
+  let allBtns = answersDiv.querySelectorAll('button');
+  allBtns.forEach(btn=>{
+    btn.disabled = true;
+    if(btn.textContent === decodeHTML(correct)) btn.classList.add('correct');
+    if(selected && btn.textContent === decodeHTML(selected) && selected !== correct) btn.classList.add('wrong');
   });
-
-  function updateStatus() {
-    var status = '';
-    var moveColor = 'White';
-    if (game.turn() === 'b') {
-      moveColor = 'Black';
-    }
-    if (game.in_checkmate()) {
-      status = 'Game over, ' + moveColor + ' is in checkmate.';
-    } else if (game.in_draw()) {
-      status = 'Game over, drawn position.';
-    } else {
-      status = moveColor + ' to move';
-      if (game.in_check()) {
-        status += ', ' + moveColor + ' is in check';
-      }
-    }
-    console.log(status);
+  if(selected === correct) {
+    score++; soundCorrect.play();
+    resultDiv.innerHTML = `<span class="success">Correct! 🎉</span>`;
+  } else {
+    soundWrong.play();
+    let toShow = selected ? `Wrong! Correct answer: ${decodeHTML(correct)}` : `Time's up! Correct answer: ${decodeHTML(correct)}`;
+    resultDiv.innerHTML = `<span class="fail">${toShow}</span>`;
   }
-
-  document.getElementById('reset-chess-btn').onclick = () => {
-    game.reset();
-    board.start();
-    updateStatus();
-  };
-
-  updateStatus();
+  currentCount++;
+  nextBtn.style.display = 'inline-block';
 }
 
-// Rest of your quiz functions unchanged
-// ...
+function showResults() {
+  updateProgressBar();
+  timerDiv.style.display = 'none';
+  questionDiv.innerHTML = `Quiz Completed!`;
+  answersDiv.innerHTML = '';
+  nextBtn.style.display = 'none';
+  // Score per user
+  let user = localStorage.getItem('quizUser');
+  let userScores = JSON.parse(localStorage.getItem('quizScores')||"{}");
+  let oldScore = userScores[user]||0;
+  if(score > oldScore) userScores[user] = score;
+  localStorage.setItem('quizScores', JSON.stringify(userScores));
+
+  let badge = getBadge(score);
+  resultDiv.innerHTML = `<div>Your score is <b>${score}</b> out of <b>${totalQuestions}</b></div>
+    <div id="score-badge">${badge}</div>
+    <div>Best score as ${user}: <b>${userScores[user]}</b></div>`;
+  leaderboardDiv.innerHTML = `<hr/><h4>Leaderboard</h4>` + leaderboardHTML();
+  showReview();
+  welcomeDiv.style.display = 'block';
+  startBtn.textContent = "Restart Quiz";
+}
+
+function leaderboardHTML() {
+  let userScores = JSON.parse(localStorage.getItem('quizScores')||"{}");
+  let items = Object.keys(userScores).sort((a,b)=>userScores[b]-userScores[a])
+      .map(u=>`<div><b>${u}:</b> ${userScores[u]}</div>`);
+  return items.slice(0, 5).join('');
+}
+
+function getBadge(score) {
+  if (score === totalQuestions) return "🏆 <b>Perfect Score!</b>";
+  if (score > totalQuestions * 0.7) return "🎉 <b>Great Job!</b>";
+  if (score > totalQuestions * 0.4) return "👍 <b>Good Effort!</b>";
+  return "😐 <b>Keep Practicing!</b>";
+}
+function updateProgressBar() {
+  progressBar.style.width = ((currentCount / totalQuestions) * 100) + "%";
+}
+function decodeHTML(html) {
+  let txt = document.createElement("textarea");
+  txt.innerHTML = html;
+  return txt.value;
+}
+function showReview() {
+  reviewDiv.innerHTML = `<h3>Review Answers</h3>`;
+  for(let i=0; i<questions.length; i++) {
+    let q = decodeHTML(questions[i].question);
+    let correct = decodeHTML(correctAnswers[i]);
+    let selected = decodeHTML(selectedAnswers[i]) || '(No Answer)';
+    let state = (selected === correct) ? 'right' : 'wrong';
+    reviewDiv.innerHTML += `
+      <div class="review-qa">
+        <b>Q${i+1}:</b> ${q}<br/>
+        <span class="${state}">Your Answer: ${selected}</span><br/>
+        <span class="right">Correct: ${correct}</span>
+      </div>`;
+  }
+}
+

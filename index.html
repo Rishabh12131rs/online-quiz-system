@@ -3,15 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>QuizHub: Quizzes & Games</title>
-<link rel="stylesheet" href="style.css" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard.js/1.0.0/chessboard.min.css"/>
-
+  <title>QuizHub Login and Quiz</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="main-container">
-
-    <!-- Authentication Section -->
     <div id="auth-container">
       <h1>Welcome to QuizHub</h1>
       <div id="auth-tabs">
@@ -32,16 +28,11 @@
       </form>
     </div>
 
-    <!-- Main Menu Section -->
-    <div id="main-menu" style="display:none;">
-      <button id="menu-quiz-btn" class="menu-btn active" type="button">Quiz</button>
-      <button id="menu-games-btn" class="menu-btn" type="button">Games</button>
-      <span id="welcome-user"></span>
-      <button id="logout-btn" type="button">Logout</button>
-    </div>
-
-    <!-- Quiz Section -->
     <div id="quiz-container" style="display:none;">
+      <div id="user-header">
+        <span id="welcome-user"></span>
+        <button id="logout-btn" type="button">Logout</button>
+      </div>
       <h2>Play Online Quiz</h2>
       <div id="welcome">
         <p>Select topic and start. Your scores are saved for your profile!</p>
@@ -71,25 +62,7 @@
       <audio id="sound-correct" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12cfb7b47b.mp3"></audio>
       <audio id="sound-wrong" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12cfa48913.mp3"></audio>
     </div>
-
-    <!-- Games Section -->
-    <div id="games-container" style="display:none;">
-      <h2>Games & Puzzles</h2>
-      <div id="games-list">
-        <button class="game-launch" data-game="chess" type="button">Chess</button>
-        <button class="game-launch" data-game="tictactoe" type="button">Tic-Tac-Toe</button>
-      </div>
-      <div id="game-area"></div>
-    </div>
   </div>
-
-  <!-- Load chess.js, chessboard.js then your script.js -->
-
-<script src="https://cdn.jsdelivr.net/gh/jhlywa/chess.js@master/chess.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard.js/1.0.0/chessboard.min.js"></script>
-<script src="script.js"></script>
-
-
-
+  <script src="script.js"></script>
 </body>
 </html>

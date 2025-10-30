@@ -9,26 +9,74 @@
 <body>
   <div id="main-container">
 
-    <!-- Auth and login/logout -->
-    <div id="auth-container"> ... <!-- same as above login/signup HTML --> ... </div>
+    <!-- Authentication Section -->
+    <div id="auth-container">
+      <h1>Welcome to QuizHub</h1>
+      <div id="auth-tabs">
+        <button id="login-tab" class="active" type="button">Login</button>
+        <button id="signup-tab" type="button">Register</button>
+      </div>
+      <form id="login-form" autocomplete="off">
+        <input type="text" id="login-username" placeholder="Username" required>
+        <input type="password" id="login-password" placeholder="Password" required>
+        <button type="submit">Login</button>
+        <div id="login-error" class="error-msg"></div>
+      </form>
+      <form id="signup-form" style="display:none;" autocomplete="off">
+        <input type="text" id="signup-username" placeholder="Choose Username" required>
+        <input type="password" id="signup-password" placeholder="Choose Password" required>
+        <button type="submit">Register</button>
+        <div id="signup-error" class="error-msg"></div>
+      </form>
+    </div>
 
+    <!-- Main Menu Section -->
     <div id="main-menu" style="display:none;">
-      <button id="menu-quiz-btn" class="menu-btn active">Quiz</button>
-      <button id="menu-games-btn" class="menu-btn">Games</button>
+      <button id="menu-quiz-btn" class="menu-btn active" type="button">Quiz</button>
+      <button id="menu-games-btn" class="menu-btn" type="button">Games</button>
       <span id="welcome-user"></span>
       <button id="logout-btn" type="button">Logout</button>
     </div>
 
-    <!-- Quiz section -->
-    <div id="quiz-container" style="display:none;"> ... <!-- Your quiz code from previous steps --> ... </div>
+    <!-- Quiz Section -->
+    <div id="quiz-container" style="display:none;">
+      <h2>Play Online Quiz</h2>
+      <div id="welcome">
+        <p>Select topic and start. Your scores are saved for your profile!</p>
+        <label for="topic">Topic:</label>
+        <select id="topic">
+          <option value="9">General Knowledge</option>
+          <option value="17">Science & Nature</option>
+          <option value="23">History</option>
+        </select>
+        <label for="numQuestions">Questions:</label>
+        <select id="numQuestions">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+        </select>
+        <button id="start-btn" type="button">Start Quiz</button>
+      </div>
+      <div id="progress-container" style="display:none;">
+        <div id="progress-bar"></div>
+      </div>
+      <div id="timer" style="display:none;">Time Left: <span id="timer-value">15</span>s</div>
+      <div id="question"></div>
+      <div id="answers"></div>
+      <button id="next-btn" style="display:none;" type="button">Next Question</button>
+      <div id="result"></div>
+      <div id="leaderboard"></div>
+      <div id="review"></div>
+      <audio id="sound-correct" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12cfb7b47b.mp3"></audio>
+      <audio id="sound-wrong" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12cfa48913.mp3"></audio>
+    </div>
 
-    <!-- Games section -->
+    <!-- Games Section -->
     <div id="games-container" style="display:none;">
       <h2>Games & Puzzles</h2>
       <div id="games-list">
-        <button class="game-launch" data-game="chess">Chess</button>
-        <button class="game-launch" data-game="puzzle">Slider Puzzle</button>
-        <button class="game-launch" data-game="tictactoe">Tic-Tac-Toe</button>
+        <button class="game-launch" data-game="chess" type="button">Chess</button>
+        <button class="game-launch" data-game="puzzle" type="button">Slider Puzzle</button>
+        <button class="game-launch" data-game="tictactoe" type="button">Tic-Tac-Toe</button>
       </div>
       <div id="game-area"></div>
     </div>

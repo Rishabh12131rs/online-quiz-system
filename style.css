@@ -45,13 +45,12 @@ button:hover { background:#2f80ed; color:#fff; }
 .review-qa span { font-weight:600;}
 .review-qa .right { color: #38e2b0;}
 .review-qa .wrong { color: #f15e46;}
-@media (max-width: 660px) {
-  #main-container {padding:13px 2vw; width:99vw;}
-  .menu-btn {margin:10px 5px;padding:9px 18px;font-size:17px;}
+.menu-btn {margin:10px 5px;padding:9px 18px;font-size:17px;}
 .menu-btn.active {background:#38e2b0;color:#234;}
 #games-list {margin-bottom:15px;}
 #games-list button{margin:0 7px 9px;}
 #games-container {text-align:center;}
 #game-area {margin:18px 0;}
-
+@media (max-width: 660px) {
+  #main-container {padding:13px 2vw; width:99vw;}
 }

@@ -156,63 +156,74 @@ function loadTicTacToe() {
 // --- Working Chess Game (simple offline) ---
 function loadChess() {
   gameArea.innerHTML = `
-  <h3>Simple Chessboard (Offline, Always Works)</h3>
-  <div id="simple-chessboard"></div>
-  <button id="reset-chess-btn">Reset</button>`;
-  const startPos = [
-    ["r","n","b","q","k","b","n","r"],
-    ["p","p","p","p","p","p","p","p"],
-    ["","","","","","","",""],
-    ["","","","","","","",""],
-    ["","","","","","","",""],
-    ["","","","","","","",""],
-    ["P","P","P","P","P","P","P","P"],
-    ["R","N","B","Q","K","B","N","R"]
-  ];
-  let board = JSON.parse(JSON.stringify(startPos));
-  function render() {
-    let html = '<table style="border-spacing:0;margin:auto;">';
-    for (let i=0;i<8;i++) {
-      html += "<tr>";
-      for (let j=0;j<8;j++) {
-        let color=(i+j)%2?"#a8bfc9":"#f3f6f7";
-        html+=`<td style="width:42px;height:42px;text-align:center;font-size:30px;cursor:pointer;background:${color}" 
-          data-row="${i}" data-col="${j}">${pieceToChar(board[i][j])}</td>`;
+  <h3>Chess with Rules</h3>
+  <div id="chessboard" style="width: 320px; margin: auto;"></div>
+  <button id="reset-chess-btn" style="margin-top: 10px;">Reset Board</button>`;
+
+  var game = new Chess();
+
+  var board = Chessboard('chessboard', {
+    draggable: true,
+    position: 'start',
+    onDragStart: function(source, piece, position, orientation) {
+      if (game.game_over()) return false;
+
+      // Only allow movement of pieces of current turn color
+      if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+          (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+        return false;
       }
-      html += "</tr>";
+    },
+    onDrop: function(source, target) {
+      // See if move is legal
+      var move = game.move({
+        from: source,
+        to: target,
+        promotion: 'q' // auto promote to queen
+      });
+
+      // Illegal move
+      if (move === null) return 'snapback';
+
+      updateStatus();
+    },
+    onSnapEnd: function() {
+      board.position(game.fen());
     }
-    html += "</table>";
-    document.getElementById("simple-chessboard").innerHTML = html;
-    Array.from(document.querySelectorAll("#simple-chessboard td")).forEach(cell=>{
-      cell.onclick = function() {
-        handleChessClick(parseInt(this.dataset.row), parseInt(this.dataset.col));
-      };
-    });
-  }
-  let selected = null;
-  function handleChessClick(row, col) {
-    if (!selected && board[row][col]) {
-      selected = [row, col];
-      document.querySelectorAll("#simple-chessboard td")[row*8+col].style.outline="2px solid green";
-    } else if (selected) {
-      const [r0,c0] = selected;
-      if (row!==r0 || col!==c0) {
-        board[row][col] = board[r0][c0];
-        board[r0][c0] = "";
+  });
+
+  function updateStatus() {
+    var status = '';
+
+    var moveColor = 'White';
+    if (game.turn() === 'b') {
+      moveColor = 'Black';
+    }
+
+    if (game.in_checkmate()) {
+      status = 'Game over, ' + moveColor + ' is in checkmate.';
+    } else if (game.in_draw()) {
+      status = 'Game over, drawn position.';
+    } else {
+      status = moveColor + ' to move';
+
+      if (game.in_check()) {
+        status += ', ' + moveColor + ' is in check';
       }
-      selected = null;
-      render();
     }
+
+    console.log(status); // You can also create an element to display this to user
   }
-  function pieceToChar(p) {
-    return {k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟",K:"♔",Q:"♕",R:"♖",B:"♗",N:"♘",P:"♙"}[p]||"";
-  }
-  document.getElementById("reset-chess-btn").onclick=function(){
-    board = JSON.parse(JSON.stringify(startPos));
-    render();
-  }
-  render();
+
+  document.getElementById('reset-chess-btn').onclick = () => {
+    game.reset();
+    board.start();
+    updateStatus();
+  };
+
+  updateStatus();
 }
+
 
 // --- Quiz Logic & other functions unchanged, as before ---
 

@@ -153,18 +153,27 @@ function loadTicTacToe() {
   render();
 }
 
-// --- Chess Game ---
+// --- Working Local Chess Game (with move validation) ---
 function loadChess() {
   gameArea.innerHTML = `
     <div class="chess-container">
-      <div id="chessboard" style="margin:10px auto;width:300px;"></div>
+      <div id="chessboard" style="margin:10px auto;width:320px;"></div>
       <button id="chess-reset-btn" style="margin-top:8px;">Reset Board</button>
     </div>
   `;
-  var board = Chessboard('chessboard', { draggable: true, dropOffBoard: 'snapback', position: 'start' });
+  var game = new Chess();
+  var board = Chessboard('chessboard', {
+    draggable: true,
+    position: 'start',
+    onDrop: function (source, target) {
+      var move = game.move({from: source, to: target, promotion: 'q'});
+      if (move === null) return 'snapback';
+    }
+  });
   document.getElementById('chess-reset-btn').onclick = function(){
+    game.reset();
     board.start();
-  }
+  };
 }
 
 // --- Quiz Logic (unchanged, last version) ---

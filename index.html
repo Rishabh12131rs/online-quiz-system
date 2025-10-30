@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>QuizHub: Quizzes & Games</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard.min.css" />
 </head>
 <body>
   <div id="main-container">
@@ -75,12 +76,12 @@
       <h2>Games & Puzzles</h2>
       <div id="games-list">
         <button class="game-launch" data-game="chess" type="button">Chess</button>
-        <button class="game-launch" data-game="puzzle" type="button">Slider Puzzle</button>
         <button class="game-launch" data-game="tictactoe" type="button">Tic-Tac-Toe</button>
       </div>
       <div id="game-area"></div>
     </div>
   </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

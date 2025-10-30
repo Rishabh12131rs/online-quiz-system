@@ -1,4 +1,4 @@
-// --- Authentication Handlers ---
+// --- Authentication ---
 const loginTab = document.getElementById('login-tab');
 const signupTab = document.getElementById('signup-tab');
 const loginForm = document.getElementById('login-form');
@@ -94,11 +94,11 @@ menuGamesBtn.onclick = () => {
 document.querySelectorAll('.game-launch').forEach(btn => {
   btn.onclick = () => {
     if(btn.dataset.game==="tictactoe") loadTicTacToe();
-    // You can add more functions for other games here, using pure JS/HTML only
+    if(btn.dataset.game==="chess") loadChess();
   };
 });
 
-// --- Pure JS In-Browser Tic-Tac-Toe Game ---
+// --- Working Tic-Tac-Toe Game ---
 function loadTicTacToe() {
   gameArea.innerHTML = `
     <style>
@@ -153,7 +153,21 @@ function loadTicTacToe() {
   render();
 }
 
-// --- Quiz Logic (unchanged) ---
+// --- Chess Game ---
+function loadChess() {
+  gameArea.innerHTML = `
+    <div class="chess-container">
+      <div id="chessboard" style="margin:10px auto;width:300px;"></div>
+      <button id="chess-reset-btn" style="margin-top:8px;">Reset Board</button>
+    </div>
+  `;
+  var board = Chessboard('chessboard', { draggable: true, dropOffBoard: 'snapback', position: 'start' });
+  document.getElementById('chess-reset-btn').onclick = function(){
+    board.start();
+  }
+}
+
+// --- Quiz Logic (unchanged, last version) ---
 let totalQuestions, currentCount = 0, score = 0, bestScore = 0, timerInterval, timerValue, timerDuration = 15;
 let questions = [], selectedAnswers = [], correctAnswers = [];
 const topicSelect = document.getElementById('topic');

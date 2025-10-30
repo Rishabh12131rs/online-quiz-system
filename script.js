@@ -153,7 +153,7 @@ function loadTicTacToe() {
   render();
 }
 
-// --- Working Chess Game ---
+// --- Working Chess Game with Render Fix ---
 function loadChess() {
   gameArea.innerHTML = `
     <div class="chess-container">
@@ -163,7 +163,10 @@ function loadChess() {
       <button id="chess-reset-btn" style="margin-top:15px;">Reset Board</button>
     </div>
   `;
-  // Ensure chessboard div is in DOM before initializing
+  if (typeof Chess === 'undefined' || typeof Chessboard === 'undefined') {
+    setTimeout(loadChess, 300);
+    return;
+  }
   setTimeout(function() {
     var game = new Chess();
     var board = Chessboard('chessboard', {
@@ -178,10 +181,10 @@ function loadChess() {
       game.reset();
       board.start();
     };
-  }, 200);
+  }, 100);
 }
 
-// --- Quiz Logic (unchanged, last version) ---
+// --- Quiz Logic (unchanged) ---
 let totalQuestions, currentCount = 0, score = 0, bestScore = 0, timerInterval, timerValue, timerDuration = 15;
 let questions = [], selectedAnswers = [], correctAnswers = [];
 const topicSelect = document.getElementById('topic');

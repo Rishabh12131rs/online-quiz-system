@@ -10,20 +10,19 @@ const quizContainer = document.getElementById('quiz-container');
 const welcomeUser = document.getElementById('welcome-user');
 const logoutBtn = document.getElementById('logout-btn');
 
-loginTab.onclick = () => {
+loginTab.onclick = function() {
   loginTab.classList.add('active'); signupTab.classList.remove('active');
   loginForm.style.display = '';
   signupForm.style.display = 'none';
   loginErr.textContent = '';
-}
-signupTab.onclick = () => {
+};
+signupTab.onclick = function() {
   signupTab.classList.add('active'); loginTab.classList.remove('active');
   signupForm.style.display = '';
   loginForm.style.display = 'none';
   signupErr.textContent = '';
-}
+};
 
-// Simple local register
 signupForm.onsubmit = function(e) {
   e.preventDefault();
   let username = document.getElementById('signup-username').value.trim();
@@ -35,7 +34,7 @@ signupForm.onsubmit = function(e) {
   localStorage.setItem('quizAccounts', JSON.stringify(accounts));
   signupErr.textContent = "Registered! Please log in.";
   setTimeout(()=>{loginTab.click();}, 1300);
-}
+};
 
 loginForm.onsubmit = function(e) {
   e.preventDefault();
@@ -49,7 +48,7 @@ loginForm.onsubmit = function(e) {
   } else {
     loginErr.textContent="Invalid username or password.";
   }
-}
+};
 
 function showQuiz(username) {
   authContainer.style.display = 'none';
@@ -60,13 +59,13 @@ logoutBtn.onclick = function() {
   localStorage.removeItem('quizUser');
   quizContainer.style.display = 'none';
   authContainer.style.display = '';
-}
+};
 
 // Auto-login if session exists
 window.onload = function() {
   let user = localStorage.getItem('quizUser');
   if(user) showQuiz(user);
-}
+};
 
 // --- Quiz Logic ---
 let totalQuestions, currentCount = 0, score = 0, bestScore = 0, timerInterval, timerValue, timerDuration = 15;
@@ -216,3 +215,4 @@ function showReview() {
       </div>`;
   }
 }
+

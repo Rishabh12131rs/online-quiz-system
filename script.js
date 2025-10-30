@@ -155,11 +155,10 @@ function loadTicTacToe() {
 
 // --- Working Chess Game with Render Fix ---
 function loadChess() {
-  gameArea.innerHTML = `<h3>Simple Chessboard</h3>
+  gameArea.innerHTML = `
+  <h3>Simple Chessboard (Offline, Always Works)</h3>
   <div id="simple-chessboard"></div>
   <button id="reset-chess-btn">Reset</button>`;
-  const files = "abcdefgh".split("");
-  const ranks = [8,7,6,5,4,3,2,1];
   const startPos = [
     ["r","n","b","q","k","b","n","r"],
     ["p","p","p","p","p","p","p","p"],

@@ -155,34 +155,66 @@ function loadTicTacToe() {
 
 // --- Working Chess Game with Render Fix ---
 function loadChess() {
-  gameArea.innerHTML = `
-    <div class="chess-container">
-      <div id="chessboard-box">
-        <div id="chessboard" style="margin:10px auto;width:320px;"></div>
-      </div>
-      <button id="chess-reset-btn" style="margin-top:15px;">Reset Board</button>
-    </div>
-  `;
-  if (typeof Chess === 'undefined' || typeof Chessboard === 'undefined') {
-    setTimeout(loadChess, 300);
-    return;
-  }
-  setTimeout(function() {
-    var game = new Chess();
-    var board = Chessboard('chessboard', {
-      draggable: true,
-      position: 'start',
-      onDrop: function (source, target) {
-        var move = game.move({from: source, to: target, promotion: 'q'});
-        if (move === null) return 'snapback';
+  gameArea.innerHTML = `<h3>Simple Chessboard</h3>
+  <div id="simple-chessboard"></div>
+  <button id="reset-chess-btn">Reset</button>`;
+  const files = "abcdefgh".split("");
+  const ranks = [8,7,6,5,4,3,2,1];
+  const startPos = [
+    ["r","n","b","q","k","b","n","r"],
+    ["p","p","p","p","p","p","p","p"],
+    ["","","","","","","",""],
+    ["","","","","","","",""],
+    ["","","","","","","",""],
+    ["","","","","","","",""],
+    ["P","P","P","P","P","P","P","P"],
+    ["R","N","B","Q","K","B","N","R"]
+  ];
+  let board = JSON.parse(JSON.stringify(startPos));
+  function render() {
+    let html = '<table style="border-spacing:0;margin:auto;">';
+    for (let i=0;i<8;i++) {
+      html += "<tr>";
+      for (let j=0;j<8;j++) {
+        let color=(i+j)%2?"#a8bfc9":"#f3f6f7";
+        html+=`<td style="width:42px;height:42px;text-align:center;font-size:30px;cursor:pointer;background:${color}" 
+          data-row="${i}" data-col="${j}">${pieceToChar(board[i][j])}</td>`;
       }
+      html += "</tr>";
+    }
+    html += "</table>";
+    document.getElementById("simple-chessboard").innerHTML = html;
+    Array.from(document.querySelectorAll("#simple-chessboard td")).forEach(cell=>{
+      cell.onclick = function() {
+        handleChessClick(parseInt(this.dataset.row), parseInt(this.dataset.col));
+      };
     });
-    document.getElementById('chess-reset-btn').onclick = function(){
-      game.reset();
-      board.start();
-    };
-  }, 100);
+  }
+  let selected = null;
+  function handleChessClick(row, col) {
+    if (!selected && board[row][col]) {
+      selected = [row, col];
+      document.querySelectorAll("#simple-chessboard td")[row*8+col].style.outline="2px solid green";
+    } else if (selected) {
+      const [r0,c0] = selected;
+      if (row!==r0 || col!==c0) {
+        board[row][col] = board[r0][c0];
+        board[r0][c0] = "";
+      }
+      selected = null;
+      render();
+    }
+  }
+  function pieceToChar(p) {
+    return {k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟",K:"♔",Q:"♕",R:"♖",B:"♗",N:"♘",P:"♙"}[p]||"";
+  }
+  document.getElementById("reset-chess-btn").onclick=function(){
+    board = JSON.parse(JSON.stringify(startPos));
+    render();
+  }
+  render();
 }
+
 
 // --- Quiz Logic (unchanged) ---
 let totalQuestions, currentCount = 0, score = 0, bestScore = 0, timerInterval, timerValue, timerDuration = 15;

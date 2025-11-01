@@ -30,11 +30,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextBtn = document.getElementById('nextBtn');
     const questionNum = document.getElementById('questionNum');
     const scoreLabel = document.getElementById('scoreLabel');
+    const timerDisplay = document.getElementById('timer-display');
 
     // --- App State ---
     let questions = [];
     let currentIndex = 0;
     let score = 0;
+    let timerInterval; // This will hold our countdown
+    let timeLeft = 10; // Time per question (in seconds)
 
     // --- Page/Modal Toggling ---
     signInBtn.onclick = () => authContainer.style.display = 'flex';
@@ -123,6 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         quizControls.style.display = 'none';
         quizArea.innerHTML = 'Loading questions...';
         quizNav.style.display = 'none';
+        timerDisplay.style.display = 'none';
         score = 0;
         currentIndex = 0;
 
@@ -144,14 +148,19 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(() => {
                 quizArea.innerHTML = 'Could not load questions from Internet.';
                 quizControls.style.display = 'flex';
+                timerDisplay.style.display = 'none'; // Hide timer on error
             });
     };
 
     function showQuestion() {
+        // Clear any old timer
+        clearInterval(timerInterval);
+        
         if (currentIndex >= questions.length) {
             quizArea.innerHTML = `<h2>Quiz Complete!</h2><p>Your final score is: ${score} / ${questions.length}</p>`;
             quizNav.style.display = 'none';
             quizControls.style.display = 'flex';
+            timerDisplay.style.display = 'none'; // Hide timer at the end
             saveUserScore(localStorage.getItem('quizUser') || 'Anonymous', score);
             showLeaderboard();
             return;
@@ -176,9 +185,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         updateControls();
+        
+        // --- NEW TIMER LOGIC ---
+        timeLeft = 10; // Reset timer to 10 seconds
+        timerDisplay.textContent = timeLeft;
+        timerDisplay.className = ''; // Reset low-time class
+        timerDisplay.style.display = 'block';
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            timerDisplay.textContent = timeLeft;
+
+            if (timeLeft <= 3) {
+                timerDisplay.className = 'low-time'; // Add warning class
+            }
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                document.getElementById('feedback').innerHTML = `<span style="color:red;">Time's up! Correct was: ${decodeHTML(questions[currentIndex].correct_answer)}</span>`;
+                disableOptions();
+            }
+        }, 1000); // Run this every 1 second
     }
 
     function selectAnswer(selectedButton) {
+        clearInterval(timerInterval); // Stop the clock
+
         const isCorrect = selectedButton.dataset.correct === 'true';
         const feedbackDiv = document.getElementById('feedback');
         
@@ -205,7 +237,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateControls() {
         prevBtn.disabled = currentIndex === 0;
-        nextBtn.disabled = currentIndex >= questions.length - 1;
+        // Allow next button until results screen
+        nextBtn.disabled = currentIndex >= questions.length; 
         questionNum.textContent = `Q${currentIndex + 1}/${questions.length}`;
         scoreLabel.textContent = 'Score: ' + score;
     }
@@ -222,6 +255,8 @@ document.addEventListener('DOMContentLoaded', () => {
             showQuestion();
             disableOptions(); // Re-disable options on previous questions
             document.getElementById('feedback').innerHTML = "You've already answered this.";
+            clearInterval(timerInterval); // Stop timer when going back
+            timerDisplay.style.display = 'none'; // Hide timer when going back
         }
     };
 

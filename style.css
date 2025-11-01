@@ -1,191 +1,190 @@
 body {
-  background: #fcf8f1;
-  font-family: 'Montserrat', 'Baloo 2', Arial, sans-serif;
-  margin: 0;
+    background: #fcf8f1;
+    font-family: 'Montserrat', 'Baloo 2', Arial, sans-serif;
+    margin: 0;
 }
 header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 32px 4vw 10px 4vw;
-  background: #fffbe7;
-  border-bottom: 2px solid #ebe6f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 32px 4vw 10px 4vw;
+    background: #fffbe7;
+    border-bottom: 2px solid #ebe6f6;
 }
 .logo-nav {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
 }
 .quizhub-logo {
-  height: 54px;
+    height: 54px;
 }
 .site-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #3ecaaa;
-  font-family: 'Baloo 2', 'Montserrat', Arial;
-  letter-spacing: 1.5px;
-  margin-top: 2px;
+    font-size: 28px;
+    font-weight: 700;
+    color: #3ecaaa;
+    font-family: 'Baloo 2', 'Montserrat', Arial;
+    letter-spacing: 1.5px;
+    margin-top: 2px;
 }
 .pin-auth {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 20px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 20px;
 }
 .pin-label { margin-right: 4px; }
 .pin-input {
-  border: 2px solid #ccc; border-radius: 22px;
-  font-size:20px; width: 110px; padding: 8px 12px;
-  outline:none; background:#fff;
+    border: 2px solid #ccc; border-radius: 22px;
+    font-size:20px; width: 110px; padding: 8px 12px;
+    outline:none; background:#fff;
 }
 .sign-btn {
-  background: #c7fdaf;
-  color: #222;
-  border: none;
-  padding: 11px 30px;
-  border-radius: 24px;
-  font-size: 19px;
-  font-family: 'Montserrat', Arial, sans-serif;
-  font-weight:700;
-  box-shadow: 0 2px 4px #e2ecf0;
-  cursor: pointer;
-  transition: background .18s;
+    background: #c7fdaf;
+    color: #222;
+    border: none;
+    padding: 11px 30px;
+    border-radius: 24px;
+    font-size: 19px;
+    font-family: 'Montserrat', Arial, sans-serif;
+    font-weight:700;
+    box-shadow: 0 2px 4px #e2ecf0;
+    cursor: pointer;
+    transition: background .18s;
 }
 .sign-btn:hover { background: #84f281; }
 
 .subject-nav {
-  display: flex;
-  justify-content: center;
-  gap: 21px;
-  background: none;
-  padding: 23px 2vw 12px 2vw;
-  font-size: 17px;
+    display: flex;
+    justify-content: center;
+    gap: 21px;
+    background: none;
+    padding: 23px 2vw 12px 2vw;
+    font-size: 17px;
 }
 .subject-nav a {
-  text-decoration: none;
-  color: #444;
-  font-weight:500;
-  font-family: 'Baloo 2', 'Montserrat', Arial, sans-serif;
-  text-align: center;
-  width: 81px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  transition: color .3s;
+    text-decoration: none;
+    color: #444;
+    font-weight:500;
+    font-family: 'Baloo 2', 'Montserrat', Arial, sans-serif;
+    text-align: center;
+    width: 81px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: color .3s;
 }
 .nav-icon {
-  font-size: 34px;
+    font-size: 34px;
 }
 .subject-nav a:hover {
-  color: #36c5ed;
+    color: #36c5ed;
 }
 
 .features-row {
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
-  gap: 46px;
-  margin: 54px 0 16px 0;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 46px;
+    margin: 54px 0 16px 0;
 }
 .card-home {
-  background: #ffffff;
-  border-radius: 21px;
-  box-shadow: 0 8px 34px #eaeaea;
-  padding: 38px 32px;
-  min-width: 270px;
-  max-width: 344px;
-  font-family: 'Baloo 2', 'Montserrat', Arial, sans-serif;
-  text-align: center;
-  margin: 0 0 15px 0;
-  transition: transform .13s;
+    background: #ffffff;
+    border-radius: 21px;
+    box-shadow: 0 8px 34px #eaeaea;
+    padding: 38px 32px;
+    min-width: 270px;
+    max-width: 344px;
+    font-family: 'Baloo 2', 'Montserrat', Arial, sans-serif;
+    text-align: center;
+    margin: 0 0 15px 0;
+    transition: transform .13s;
 }
 .card-home:hover {
-  transform: translateY(-6px) scale(1.03);
-  box-shadow: 0 6px 40px #b9dadc;
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: 0 6px 40px #b9dadc;
 }
 .card-create {
-  background: #defcef;
-  border: 1.5px solid #3ecaaa;
+    background: #defcef;
+    border: 1.5px solid #3ecaaa;
 }
 .card-ai {
-  background: #e3fafe;
-  border: 1.5px solid #36c5ed;
+    background: #e3fafe;
+    border: 1.5px solid #36c5ed;
 }
 .card-btn {
-  background: #36c5ed;
-  color: #fff;
-  font-size: 21px;
-  border: none;
-  border-radius: 23px;
-  padding: 13px 40px;
-  margin-top: 17px;
-  font-weight:700;
-  box-shadow: 0 2px 7px #bee9f2;
-  cursor: pointer;
-  transition: background .2s, color .17s;
-  font-family: 'Montserrat', Arial, sans-serif;
+    background: #36c5ed;
+    color: #fff;
+    font-size: 21px;
+    border: none;
+    border-radius: 23px;
+    padding: 13px 40px;
+    margin-top: 17px;
+    font-weight:700;
+    box-shadow: 0 2px 7px #bee9f2;
+    cursor: pointer;
+    transition: background .2s, color .17s;
+    font-family: 'Montserrat', Arial, sans-serif;
 }
 .card-btn:hover { background: #ffb353; color: #222; }
 
 .section-title {
-  font-size: 25px;
-  margin:52px 0 13px 7vw;
-  font-family: 'Baloo 2', 'Montserrat', Arial, sans-serif;
-  color: #222;
-  letter-spacing: 1px;
+    font-size: 25px;
+    margin:52px 0 13px 7vw;
+    font-family: 'Baloo 2', 'Montserrat', Arial, sans-serif;
+    color: #222;
+    letter-spacing: 1px;
 }
 
 .quiz-list {
-  display: flex;
-  gap: 30px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 35px;
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 35px;
 }
 .quiz-card {
-  background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 5px 20px #e0e0e0;
-  padding: 27px 20px;
-  min-width: 130px;
-  font-size: 17px;
-  color: #444;
-  font-family: 'Montserrat', Arial, sans-serif;
-  text-align:center;
-  margin-bottom: 10px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 5px 20px #e0e0e0;
+    padding: 27px 20px;
+    min-width: 130px;
+    font-size: 17px;
+    color: #444;
+    font-family: 'Montserrat', Arial, sans-serif;
+    text-align:center;
+    margin-bottom: 10px;
 }
 
 footer {
-  text-align: center;
-  padding: 29px 0;
-  font-size: 18px;
-  background: #fffbe7;
-  color: #222;
-  letter-spacing: 1px;
-  border-top: 1.5px solid #e6e6e6;
-  line-height:2.2;
-  border-radius: 18px 18px 0 0;
-  margin-top: 22px;
+    text-align: center;
+    padding: 29px 0;
+    font-size: 18px;
+    background: #fffbe7;
+    color: #222;
+    letter-spacing: 1px;
+    border-top: 1.5px solid #e6e6e6;
+    line-height:2.2;
+    border-radius: 18px 18px 0 0;
+    margin-top: 22px;
 }
 
 @media (max-width: 900px) {
-  .features-row { gap:26px;}
-  .section-title{margin:18px 0 2px 3vw;}
+    .features-row { gap:26px;}
+    .section-title{margin:18px 0 2px 3vw;}
 }
 @media (max-width: 650px) {
-  header, .features-row, .quiz-list, .subject-nav {
-    flex-direction: column;
-    align-items: center;
-  }
-  .quizhub-logo {height:38px;}
-  .features-row {margin:22px 0;}
-  .card-home {padding:28px 11vw;}
-  .quiz-list { padding:10px 6vw 16px 6vw;}
-  .section-title { margin:21px 0 7px 3vw;}
+    header, .features-row, .quiz-list, .subject-nav {
+        flex-direction: column;
+        align-items: center;
+    }
+    .quizhub-logo {height:38px;}
+    .features-row {margin:22px 0;}
+    .card-home {padding:28px 11vw;}
+    .quiz-list { padding:10px 6vw 16px 6vw;}
+    .section-title { margin:21px 0 7px 3vw;}
 }
-/* ... (all your existing CSS) ... */
 
 /* Modal Styles */
 .modal-overlay {
@@ -347,4 +346,23 @@ footer {
 #leaderboard li {
     font-size: 1.1rem;
     margin-bottom: 8px;
+}
+
+/* Timer Styles */
+#timer-display {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #3ecaaa;
+    text-align: center;
+    margin: 15px auto;
+    width: 70px;
+    height: 70px;
+    border: 5px solid #3ecaaa;
+    border-radius: 50%;
+    line-height: 60px; /* Vertically centers the text */
+}
+
+#timer-display.low-time {
+    color: #ffb353;
+    border-color: #ffb353;
 }

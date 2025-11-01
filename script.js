@@ -41,6 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const questionListContainer = document.getElementById('question-list-container');
     const saveQuizBtn = document.getElementById('save-quiz-btn');
     const quizTitleInput = document.getElementById('quiz-title-input');
+    const manageQuizzesBtn = document.getElementById('manage-quizzes-btn');
+    const manageContainer = document.getElementById('manage-container');
+    const closeManageBtn = document.getElementById('close-manage-btn');
+    const myQuizListContainer = document.getElementById('my-quiz-list-container');
 
     // --- App State ---
     let questions = [];
@@ -77,6 +81,17 @@ document.addEventListener('DOMContentLoaded', () => {
         questionListContainer.innerHTML = ''; // Clear the editor
         quizTitleInput.value = '';
         loadMyQuizzes(); // Refresh the main page list
+    };
+    
+    manageQuizzesBtn.onclick = () => {
+        editorContainer.style.display = 'none'; // Hide the editor
+        manageContainer.style.display = 'flex'; // Show the manage modal
+        loadManageList(); // Load the list of quizzes
+    };
+    closeManageBtn.onclick = () => {
+        mainContent.style.display = 'block'; // Go back to main page
+        manageContainer.style.display = 'none';
+        loadMyQuizzes(); // Refresh main page quiz list
     };
 
     // --- Authentication Logic ---
@@ -148,16 +163,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Quiz Logic ---
-    startQuizBtn.onclick = function () { // This is for OpenTDB quizzes
+
+    // REUSABLE FUNCTION for starting OpenTDB quizzes
+    function startApiQuiz(category, count) {
+        // Show quiz container
+        mainContent.style.display = 'none';
+        quizAppContainer.style.display = 'block';
+
+        // Hide controls, show loading
         quizControls.style.display = 'none';
         quizArea.innerHTML = 'Loading questions...';
         quizNav.style.display = 'none';
         timerDisplay.style.display = 'none';
+        
+        // Reset state
         score = 0;
         currentIndex = 0;
-
-        const category = document.getElementById('quiz-category').value;
-        const count = document.getElementById('quiz-count').value;
 
         fetch(`https://opentdb.com/api.php?amount=${count}&category=${category}&type=multiple`)
             .then(res => res.json())
@@ -176,6 +197,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 quizControls.style.display = 'flex';
                 timerDisplay.style.display = 'none'; 
             });
+    }
+    
+    // startQuizBtn (from the modal) now uses the new function
+    startQuizBtn.onclick = function () { 
+        const category = document.getElementById('quiz-category').value;
+        const count = document.getElementById('quiz-count').value;
+        startApiQuiz(category, count);
     };
 
     function startCustomQuiz(quizObject) {
@@ -212,7 +240,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const q = questions[currentIndex];
         
-        // --- LOGIC TO HANDLE BOTH QUIZ TYPES ---
         let questionText, options, correctAnswer;
         
         if (q.incorrect_answers) { 
@@ -220,16 +247,13 @@ document.addEventListener('DOMContentLoaded', () => {
             questionText = q.question;
             options = [...q.incorrect_answers, q.correct_answer];
             correctAnswer = q.correct_answer;
-            // Shuffle options
             options.sort(() => Math.random() - 0.5); 
         } else { 
             // This is our Custom Quiz
             questionText = q.question;
-            options = [...q.options]; // Copy the array
+            options = [...q.options]; 
             correctAnswer = q.options[q.correct_answer_index];
-            // No need to shuffle, they are already in order
         }
-        // --- END OF LOGIC ---
 
         let html = `<div class="question-block"><h4>Q${currentIndex + 1}: ${decodeHTML(questionText)}</h4>`;
         options.forEach((opt) => {
@@ -245,10 +269,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateControls();
         
-        // --- TIMER LOGIC ---
-        timeLeft = 10; // Reset timer to 10 seconds
+        timeLeft = 10; 
         timerDisplay.textContent = timeLeft;
-        timerDisplay.className = ''; // Reset low-time class
+        timerDisplay.className = ''; 
         timerDisplay.style.display = 'block';
 
         timerInterval = setInterval(() => {
@@ -262,17 +285,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
                 
-                // --- LOGIC FOR GETTING CORRECT ANSWER ---
                 const q = questions[currentIndex];
                 let correctAnswerText;
                 if (q.correct_answer) {
-                    // OpenTDB format
                     correctAnswerText = q.correct_answer;
                 } else {
-                    // Custom format
                     correctAnswerText = q.options[q.correct_answer_index];
                 }
-                // --- END OF LOGIC ---
 
                 document.getElementById('feedback').innerHTML = `<span style="color:red;">Time's up! Correct was: ${decodeHTML(correctAnswerText)}</span>`;
                 disableOptions();
@@ -286,12 +305,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function selectAnswer(selectedButton) {
-        clearInterval(timerInterval); // Stop the clock
+        clearInterval(timerInterval); 
 
         const isCorrect = selectedButton.dataset.correct === 'true';
         const feedbackDiv = document.getElementById('feedback');
         
-        disableOptions(); // Disable all buttons first
+        disableOptions(); 
 
         if (isCorrect) {
             selectedButton.classList.add('correct'); 
@@ -300,17 +319,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             selectedButton.classList.add('incorrect'); 
             
-            // --- LOGIC FOR GETTING CORRECT ANSWER ---
             const q = questions[currentIndex];
             let correctAnswerText;
             if (q.correct_answer) {
-                // OpenTDB format
                 correctAnswerText = q.correct_answer;
             } else {
-                // Custom format
                 correctAnswerText = q.options[q.correct_answer_index];
             }
-            // --- END OF LOGIC ---
 
             feedbackDiv.innerHTML = `<span style="color:red;">Wrong! Correct was: ${decodeHTML(correctAnswerText)}</span>`;
             
@@ -482,18 +497,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         alert(`Quiz "${title}" saved successfully!`);
         
-        closeEditorBtn.click(); // This will also trigger loadMyQuizzes
+        closeEditorBtn.click(); 
     };
 
     // --- Load and Display "My Quizzes" ---
     function loadMyQuizzes() {
         let myQuizzes = JSON.parse(localStorage.getItem('myQuizzes') || '[]');
         
-        // Clear the sample quizzes
         quizList.innerHTML = ''; 
 
         if (myQuizzes.length === 0) {
-            // Optional: Show a message if no quizzes are saved
             quizList.innerHTML = '<p>You haven\'t created any quizzes yet! Try making one.</p>';
             return;
         }
@@ -502,9 +515,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const quizCard = document.createElement('div');
             quizCard.className = 'quiz-card';
             quizCard.textContent = quiz.title;
-            quizCard.dataset.quizId = quiz.id; // Store ID for later
+            quizCard.dataset.quizId = quiz.id; 
 
-            // Add the click handler to play the custom quiz
             quizCard.onclick = () => {
                 startCustomQuiz(quiz); 
             };
@@ -513,17 +525,79 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Load and Display "Manage My Quizzes" List ---
+    function loadManageList() {
+        let myQuizzes = JSON.parse(localStorage.getItem('myQuizzes') || '[]');
+        myQuizListContainer.innerHTML = ''; 
+
+        if (myQuizzes.length === 0) {
+            myQuizListContainer.innerHTML = '<p>You haven\'t created any quizzes yet!</p>';
+            return;
+        }
+
+        myQuizzes.forEach((quiz, index) => {
+            const quizCard = document.createElement('div');
+            quizCard.className = 'manage-quiz-card';
+            
+            quizCard.innerHTML = `
+                <h4>${quiz.title}</h4>
+                <button class="delete-quiz-btn" data-id="${quiz.id}">Delete</button>
+            `;
+
+            quizCard.querySelector('.delete-quiz-btn').onclick = (e) => {
+                const quizId = e.target.dataset.id;
+                deleteQuiz(quizId);
+            };
+
+            myQuizListContainer.appendChild(quizCard);
+        });
+    }
+
+    // --- Delete Quiz Function ---
+    function deleteQuiz(quizId) {
+        if (!confirm("Are you sure you want to delete this quiz? This cannot be undone.")) {
+            return; 
+        }
+
+        let myQuizzes = JSON.parse(localStorage.getItem('myQuizzes') || '[]');
+        const updatedQuizzes = myQuizzes.filter(quiz => quiz.id !== quizId);
+        localStorage.setItem('myQuizzes', JSON.stringify(updatedQuizzes));
+        loadManageList(); 
+    }
+
     // --- Initialization ---
     function init() {
         const currentUser = localStorage.getItem('quizUser');
         updateUserUI(currentUser);
-        loadMyQuizzes(); // Load custom quizzes on page load
+        loadMyQuizzes(); 
         
-        // Setup initial tab state
         loginTab.classList.add('active');
-        signupTab.classList.add('active');
+        signupTab.classList.remove('active');
         loginForm.style.display = 'flex';
         signupForm.style.display = 'none';
+
+        // Add event listeners for the nav links
+        document.querySelectorAll('.subject-nav a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault(); 
+                const category = link.dataset.category;
+                
+                if (category === 'home') {
+                    // If we're in a modal, close it. Otherwise, reload.
+                    if (mainContent.style.display === 'none') {
+                        closeQuizBtn.click(); 
+                        closeEditorBtn.click();
+                        closeManageBtn.click();
+                        mainContent.style.display = 'block'; // Ensure main content is visible
+                        editorContainer.style.display = 'none';
+                        quizAppContainer.style.display = 'none';
+                        manageContainer.style.display = 'none';
+                    }
+                } else if (category) {
+                    startApiQuiz(category, 10); // Default to 10 questions
+                }
+            });
+        });
     }
 
     init();

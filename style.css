@@ -482,3 +482,47 @@ footer {
 #editor-controls #save-quiz-btn:hover {
     background: #6ace68;
 }
+
+/* Manage Quizzes Modal Styles */
+#manage-modal-content {
+    max-width: 600px;
+}
+
+#my-quiz-list-container {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-top: 10px;
+}
+
+.manage-quiz-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f9f9f9;
+    padding: 15px 20px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    border: 1px solid #eee;
+}
+
+.manage-quiz-card h4 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.delete-quiz-btn {
+    background: #ff8a8a;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.delete-quiz-btn:hover {
+    background: #f56c6c;
+}

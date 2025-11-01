@@ -3,113 +3,54 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>QuizHub: Quizzes & Games</title>
+  <title>QuizHub: Play & Create Quizzes</title>
   <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&family=Montserrat:wght@600&display=swap" rel="stylesheet">
 </head>
 <body>
-  <header>
-    <h1>QuizHub</h1>
-    <p>Your centre for quizzes & fun games!</p>
-  </header>
-  <div id="main-container">
-    <!-- Authentication Section -->
-    <div id="auth-container">
-      <h1>Welcome to QuizHub</h1>
-      <div id="auth-tabs">
-        <button id="login-tab" class="active" type="button">Login</button>
-        <button id="signup-tab" type="button">Register</button>
-      </div>
-      <form id="login-form" autocomplete="off">
-        <input type="text" id="login-username" placeholder="Username" required>
-        <input type="password" id="login-password" placeholder="Password" required>
-        <button type="submit">Login</button>
-        <div id="login-error" class="error-msg"></div>
-      </form>
-      <form id="signup-form" style="display:none;" autocomplete="off">
-        <input type="text" id="signup-username" placeholder="Choose Username" required>
-        <input type="password" id="signup-password" placeholder="Choose Password" required>
-        <button type="submit">Register</button>
-        <div id="signup-error" class="error-msg"></div>
-      </form>
+  <div class="logo-area">
+    <img src="https://i.imgur.com/4M34hi2.png" alt="QuizHub Logo" class="quizhub-logo">
+    <div class="pin-banner">
+      <span class="pin-label">Join Game? Enter PIN:</span>
+      <input type="text" class="pin-input" placeholder="123 456" maxlength="6">
     </div>
+    <button class="sign-btn">Sign in</button>
+  </div>
 
-    <!-- Dashboard -->
-    <div id="dashboard" style="display:none; margin-bottom:15px;"></div>
+  <nav class="subject-nav">
+    <a href="#"><span>🏠</span> <div>Start</div></a>
+    <a href="#"><span>🎨</span> <div>Art & Literature</div></a>
+    <a href="#"><span>⭐</span> <div>Entertainment</div></a>
+    <a href="#"><span>🌍</span> <div>Geography</div></a>
+    <a href="#"><span>🏛️</span> <div>History</div></a>
+    <a href="#"><span>💬</span> <div>Languages</div></a>
+    <a href="#"><span>🧬</span> <div>Science & Nature</div></a>
+    <a href="#"><span>🏀</span> <div>Sports</div></a>
+    <a href="#"><span>❓</span> <div>Trivia</div></a>
+  </nav>
 
-    <!-- Main Menu Section -->
-    <div id="main-menu" style="display:none;">
-      <button id="menu-quiz-btn" class="menu-btn active" type="button">Quiz</button>
-      <button id="menu-games-btn" class="menu-btn" type="button">Games</button>
-      <span id="welcome-user"></span>
-
-      <!-- Dark Mode Toggle -->
-      <label class="switch">
-        <input type="checkbox" id="toggle-theme">
-        <span class="slider round"></span> Dark Mode
-      </label>
-
-      <button id="logout-btn" type="button">Logout</button>
+  <div class="main-actions">
+    <div class="card card-green">
+      <h2>Create a quiz</h2>
+      <p>Play for free with <b>300 participants</b></p>
+      <button class="card-btn">Quiz editor</button>
     </div>
-
-    <!-- Quiz Section -->
-    <div id="quiz-container" style="display:none;">
-      <h2>Play Online Quiz</h2>
-      <div id="welcome">
-        <p>Select topic and start. Your scores are saved for your profile!</p>
-        <label for="topic">Topic / Subject:</label>
-        <select id="topic">
-          <option value="9">🧠 General Knowledge</option>
-          <option value="11">🎬 Movies</option>
-          <option value="12">🎵 Music</option>
-          <option value="17">🧬 Science & Nature</option>
-          <option value="18">💻 Computer</option>
-          <option value="19">📐 Mathematics</option>
-          <option value="22">🌏 Geography</option>
-          <option value="23">📚 History</option>
-          <option value="21">⚽ Sports</option>
-          <option value="15">🕹️ Video Games</option>
-          <option value="24">🏛️ Politics</option>
-          <option value="25">🎨 Art</option>
-          <option value="26">💫 Celebrities</option>
-          <option value="27">🐒 Animals</option>
-          <option value="28">🚗 Vehicles</option>
-          <option value="31">🍥 Anime & Manga</option>
-          <option value="32">📺 Cartoons</option>
-        </select>
-        <label for="numQuestions">Questions:</label>
-        <select id="numQuestions">
-          <option value="5">5</option>
-          <option value="10" selected>10</option>
-          <option value="15">15</option>
-        </select>
-        <button id="start-btn" type="button">Start Quiz</button>
-      </div>
-      <div id="progress-container" style="display:none;">
-        <div id="progress-bar"></div>
-      </div>
-      <div id="timer" style="display:none;">Time Left: <span id="timer-value">15</span>s</div>
-      <div id="question"></div>
-      <div id="answers"></div>
-      <button id="next-btn" style="display:none;" type="button">Next Question</button>
-      <div id="result"></div>
-      <div id="leaderboard"></div>
-      <div id="review"></div>
-      <audio id="sound-correct" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12cfb7b47b.mp3"></audio>
-      <audio id="sound-wrong" src="https://cdn.pixabay.com/audio/2022/10/16/audio_12cfa48913.mp3"></audio>
-    </div>
-
-    <!-- Games Section -->
-    <div id="games-container" style="display:none;">
-      <h2>Games & Puzzles</h2>
-      <div id="games-list">
-        <button class="game-launch" data-game="tictactoe" type="button">Tic-Tac-Toe</button>
-      </div>
-      <div id="game-area"></div>
+    <div class="card card-blue">
+      <h2>A.I.</h2>
+      <p>Generate a quiz from any subject or PDF</p>
+      <button class="card-btn">Quiz generator</button>
     </div>
   </div>
+
+  <h3 class="section-title">Recently published</h3>
+  <div class="quiz-list">
+    <div class="quiz-card">Quiz 1 (Sample)</div>
+    <div class="quiz-card">Quiz 2 (Sample)</div>
+    <div class="quiz-card">Quiz 3 (Sample)</div>
+  </div>
+
   <footer>
     <p>Made for Smart India Hackathon | &copy; 2025 QuizHub</p>
   </footer>
-  <script src="script.js"></script>
 </body>
 </html>

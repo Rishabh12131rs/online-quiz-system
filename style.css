@@ -1,135 +1,163 @@
-/* Include all your previous styles plus this toggle and dark mode */
-
 body {
-  font-family: 'Montserrat', 'Segoe UI', sans-serif;
-  background: linear-gradient(115deg, #2f80ed 0%, #56c5ed 50%, #7fd7b8 100%);
-  margin: 0;
-  min-height: 100vh;
-  display: flex; align-items: center; justify-content: center;
+  background: #fdf7f0;
+  font-family: 'Montserrat', 'Baloo 2', Arial, sans-serif;
+  padding: 0; margin: 0;
 }
-header {
+.logo-area {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  justify-content: space-between;
+  border-bottom: 3px solid #e6e6e6;
+  background: #fffbe7;
+}
+.quizhub-logo {
+  height: 56px;
+  margin-right: 15px;
+}
+.pin-banner {
+  background: #fcbeb6;
+  padding: 12px 18px 12px 20px;
+  border-radius: 30px;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  font-family: 'Baloo 2', 'Montserrat', Arial, sans-serif;
+  font-weight: 700;
+  margin-right: 10px;
+}
+.pin-label { margin-right: 7px; }
+.pin-input {
+  border: 2px solid #333; border-radius: 25px; width: 120px; height:36px;
+  font-size: 22px; text-align: center; margin-left: 6px; outline: none; background: #fff;
+}
+.sign-btn {
+  background: #c7fdaf;
+  color: #222;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 24px;
+  font-size: 20px;
+  font-family: 'Montserrat', Arial, sans-serif;
+  font-weight:600;
+  margin-left: 10px;
+  box-shadow: 0 1px 4px #ddd;
+  cursor: pointer;
+  transition: background .2s;
+}
+.sign-btn:hover { background: #87f170; }
+
+.subject-nav {
+  display: flex;
+  justify-content: space-around;
+  background: #fff;
+  padding: 15px 7vw;
+  border-bottom: 2px solid #ebebeb;
+  font-size: 20px;
+}
+.subject-nav a {
+  text-decoration: none;
+  color: #333;
+  font-weight:500;
+  font-family: 'Baloo 2', 'Montserrat', Arial, sans-serif;
   text-align: center;
-  background: linear-gradient(90deg, #2f80ed 0%, #38e2b0 100%);
-  color: #fff;
-  padding: 22px 3vw 10px 3vw;
-  border-radius: 0 0 16px 16px;
-  margin-bottom: 16px;
+  width: 88px;
+  display: flex;
+  flex-direction: column;
+  align-items:center;
+  transition: color .3s;
 }
+.subject-nav span {
+  font-size: 31px; margin-bottom: 2px;
+}
+.subject-nav a:hover, .subject-nav a:active {
+  color: #62c072;
+}
+
+.main-actions {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  padding: 40px 0 12px 0;
+  background: none;
+}
+.card {
+  background: #fff;
+  border-radius: 19px;
+  box-shadow: 0 6px 24px #e0e0e0;
+  padding: 28px 32px;
+  min-width: 270px;
+  max-width: 320px;
+  font-family: 'Montserrat', 'Baloo 2', Arial, sans-serif;
+  text-align: center;
+}
+.card-green { background: #defcef; }
+.card-blue { background: #e3fafe; }
+.card-btn {
+  background: #1cbc5c;
+  color: #fff;
+  font-size: 20px;
+  border: none;
+  border-radius: 23px;
+  padding: 13px 40px;
+  margin-top: 15px; cursor: pointer;
+  font-weight:600;
+  box-shadow: 0 2px 7px #a0e0ce;
+  transition: background .2s;
+}
+.card-blue .card-btn {
+  background: #2cb9ee;
+  box-shadow: 0 2px 7px #bcecf2;
+}
+.card-btn:hover { background: #ffb353; color: #333; }
+
+.section-title {
+  font-size: 26px; margin:30px 0 6px 38px;
+  font-family: 'Baloo 2', 'Montserrat', Arial, sans-serif;
+  color: #444;
+  letter-spacing: 1px;
+}
+
+.quiz-list {
+  display: flex;
+  gap: 25px;
+  padding: 10px 38px 25px 38px;
+  flex-wrap: wrap;
+}
+.quiz-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 5px 20px #e0e0e0;
+  padding: 28px 16px;
+  min-width: 140px;
+  font-size: 17px;
+  color: #444;
+  font-family: 'Montserrat', Arial, sans-serif;
+  text-align:center;
+  margin-bottom: 10px;
+}
+
 footer {
   text-align: center;
-  padding: 18px 0;
-  font-size: 17px;
-  color: #fff;
-  background: #2f80ed;
+  padding: 28px 0;
+  font-size: 18px;
+  color: #222;
+  background: #fffbe7;
+  letter-spacing: 1px;
+  border-top: 1.5px solid #e6e6e6;
   margin-top: 28px;
-  border-radius: 14px 14px 0 0;
-}
-#main-container {
-  width: 99vw; max-width: 445px; background: #fff;
-  border-radius: 18px; padding: 30px 20px; box-shadow: 0 18px 40px rgba(48,128,200,0.13);
-}
-h1, h2 { text-align: center; font-weight: 700; color: #2f80ed;}
-#error-msg { color: #d11b3d; }
-#error-msg, .error-msg { font-size: 15px; margin-top: 6px; min-height: 18px;}
-input[type="text"], input[type="password"] {
-  width: 78%; margin: 7px auto; display: block;
-  padding: 11px; border-radius:8px; font-size:17px;
-  border: 1px solid #38e2b0; transition: all .16s;
-}
-input:focus { outline: 2px solid #2f80ed; }
-button { background: #38e2b0; color: #1e427b; font-weight:600; border:none; margin:10px 0; padding:11px 28px; border-radius:12px; cursor:pointer; font-size:17px;}
-button:hover { background:#2f80ed; color:#fff; }
-#auth-tabs { text-align:center;}
-#auth-tabs button { font-size: 16px; font-weight: 500; padding: 8px 28px; border-radius:9px; border:none; background:#ececec; margin:2px;}
-#auth-tabs .active { background: #38e2b0; color: #234; }
-#error-msg { color: #d11b3d;}
-#user-header {text-align:right; margin-bottom:12px;}
-#user-header #welcome-user {font-weight:600;}
-#welcome {margin-bottom:13px;}
-#dashboard div { font-size:17px; background:#f9fafa;border-radius:14px;padding:13px;margin-top:6px;}
-#progress-container {background: #e0e0e0; height: 14px; width: 100%; border-radius: 7px; overflow: hidden; margin-bottom: 20px;}
-#progress-bar {height: 100%; width: 0%; background: linear-gradient(90deg, #2f80ed 0%, #7fd7b8 100%); transition: width 0.4s;}
-#timer {font-size: 16px; font-weight:bold; margin-bottom: 12px; color: #125c83;}
-#question {font-size: 22px; margin-bottom: 15px; min-height: 52px; color: #222;}
-#answers button {background: #f9fafa; border: 2px solid #2f80ed; border-radius: 11px; padding: 13px; width: 100%; margin-bottom: 10px; font-size: 18px; font-weight: 600; color: #2f80ed; cursor: pointer;}
-#answers button:hover:not(:disabled) {background: #2f80ed; color: #fff;}
-#answers .correct {background: #38e2b0; color:#fff; border-color:#00b296;}
-#answers .wrong {background: #f15e46; color:#fff; border-color:#d11b3d;}
-#answers button:disabled {opacity: 0.83; cursor:not-allowed;}
-#next-btn {background: #38e2b0; border:none; border-radius:12px; padding:15px 40px; font-weight:700; font-size:18px; color:#223f3a; cursor:pointer; margin-top:18px;}
-#next-btn:hover {background:#2f80ed; color:#fff;}
-#result {margin-top:15px; font-size:20px; font-weight:700;}
-#leaderboard {margin-top:20px;}
-#review { margin-top: 17px; text-align:left;}
-.review-qa { padding:10px 10px 10px 15px; border-radius: 10px; margin-bottom: 13px; background: #f8f8f8;}
-.review-qa span { font-weight:600;}
-.review-qa .right { color: #38e2b0;}
-.review-qa .wrong { color: #f15e46;}
-.menu-btn {margin:10px 5px;padding:9px 18px;font-size:17px;}
-.menu-btn.active {background:#38e2b0;color:#234;}
-#games-list {margin-bottom:15px;}
-#games-list button{margin:0 7px 9px;}
-#games-container {text-align:center;}
-#game-area {margin:18px 0;}
-
-/* Dark mode toggle switch */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 54px;
-  height: 28px;
-  margin-left: 10px;
-  vertical-align: middle;
-}
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-  border-radius: 28px;
-}
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 22px; width: 22px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
-}
-input:checked + .slider {
-  background-color: #2f80ed;
-}
-input:checked + .slider:before {
-  transform: translateX(26px);
+  line-height:2.2;
 }
 
-/* Dark mode styles */
-body.dark-mode {
-  background: #121212;
-  color: #eee;
+@media (max-width: 900px) {
+  .main-actions { gap: 14px; }
+  .subject-nav { font-size: 16px; padding: 10px 2vw; }
 }
-body.dark-mode #main-container {
-  background: #222;
-  box-shadow: 0 18px 40px rgba(0,0,0,0.6);
-}
-body.dark-mode button {
-  background: #38e2b0;
-  color: #123;
-}
-
-@media (max-width: 660px) {
-  #main-container, header, footer {
-    border-radius: 0;
-    padding: 13px 2vw;
-    width: 99vw;
-  }
-  h1, h2 { font-size: 1.4em; }
+@media (max-width: 600px) {
+  .logo-area, .main-actions, .quiz-list, .subject-nav { flex-direction: column; align-items: center;}
+  .quizhub-logo {height:38px;}
+  .pin-banner {padding:9px 11px;}
+  .main-actions {padding:20px 0;}
+  .card {padding:22px 9vw;}
+  .quiz-list { padding:10px 6vw 16px 6vw;}
 }

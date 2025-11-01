@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Quiz Logic ---
 
     // REUSABLE FUNCTION for starting OpenTDB quizzes
-    function startApiQuiz(category, count) {
+    function startApiQuiz(category, count, difficulty) { // *** ADDED difficulty PARAM ***
         // Show quiz container
         mainContent.style.display = 'none';
         quizAppContainer.style.display = 'block';
@@ -180,7 +180,13 @@ document.addEventListener('DOMContentLoaded', () => {
         score = 0;
         currentIndex = 0;
 
-        fetch(`https://opentdb.com/api.php?amount=${count}&category=${category}&type=multiple`)
+        // *** BUILD API URL WITH DIFFICULTY ***
+        let apiUrl = `https://opentdb.com/api.php?amount=${count}&category=${category}&type=multiple`;
+        if (difficulty && difficulty !== "any") {
+            apiUrl += `&difficulty=${difficulty}`;
+        }
+
+        fetch(apiUrl) // *** Use new URL ***
             .then(res => res.json())
             .then(data => {
                 questions = data.results;
@@ -188,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showQuestion();
                     quizNav.style.display = 'flex';
                 } else {
-                    quizArea.innerHTML = 'Could not load questions. Try a different category.';
+                    quizArea.innerHTML = 'Could not load questions. Try a different category/difficulty.';
                     quizControls.style.display = 'flex';
                 }
             })
@@ -203,7 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
     startQuizBtn.onclick = function () { 
         const category = document.getElementById('quiz-category').value;
         const count = document.getElementById('quiz-count').value;
-        startApiQuiz(category, count);
+        const difficulty = document.getElementById('quiz-difficulty').value; // *** GET DIFFICULTY ***
+        startApiQuiz(category, count, difficulty); // *** PASS DIFFICULTY ***
     };
 
     function startCustomQuiz(quizObject) {
@@ -594,7 +601,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         manageContainer.style.display = 'none';
                     }
                 } else if (category) {
-                    startApiQuiz(category, 10); // Default to 10 questions
+                    startApiQuiz(category, 10, 'any'); // *** PASS 'any' AS DEFAULT DIFFICULTY ***
                 }
             });
         });

@@ -188,14 +188,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const q = questions[currentIndex];
-        let options = [...q.incorrect_answers, q.correct_answer];
+        // Check if this is an OpenTDB question or our custom format
+        let questionText, options, correctAnswer;
+        if (q.question) {
+            questionText = q.question;
+            options = [...q.incorrect_answers, q.correct_answer];
+            correctAnswer = q.correct_answer;
+        } else {
+            // Handle custom quiz format (which we'll define)
+            // This is a placeholder for when we load custom quizzes
+            questionText = "Custom Question (Not Implemented)";
+            options = ["A", "B", "C", "D"];
+            correctAnswer = "A";
+        }
+        
         // Simple shuffle
         options.sort(() => Math.random() - 0.5);
 
-        let html = `<div class="question-block"><h4>Q${currentIndex + 1}: ${decodeHTML(q.question)}</h4>`;
+        let html = `<div class="question-block"><h4>Q${currentIndex + 1}: ${decodeHTML(questionText)}</h4>`;
         options.forEach((opt) => {
             // Use data-answer attribute for checking
-            const isCorrect = decodeHTML(opt) === decodeHTML(q.correct_answer);
+            const isCorrect = decodeHTML(opt) === decodeHTML(correctAnswer);
             html += `<button class="option-btn" data-correct="${isCorrect}">${decodeHTML(opt)}</button>`;
         });
         html += '</div><br><div id="feedback"></div>';
@@ -223,7 +236,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
-                document.getElementById('feedback').innerHTML = `<span style="color:red;">Time's up! Correct was: ${decodeHTML(questions[currentIndex].correct_answer)}</span>`;
+                const q = questions[currentIndex];
+                const correctAnswer = q.correct_answer || "Error"; // Handle both formats
+                document.getElementById('feedback').innerHTML = `<span style="color:red;">Time's up! Correct was: ${decodeHTML(correctAnswer)}</span>`;
                 disableOptions();
                 // Also show the correct answer
                 const correctButton = document.querySelector(`.option-btn[data-correct="true"]`);
@@ -248,7 +263,9 @@ document.addEventListener('DOMContentLoaded', () => {
             score++;
         } else {
             selectedButton.classList.add('incorrect'); // Turn selected button red
-            feedbackDiv.innerHTML = `<span style="color:red;">Wrong! Correct was: ${decodeHTML(questions[currentIndex].correct_answer)}</span>`;
+            const q = questions[currentIndex];
+            const correctAnswer = q.correct_answer || "Error"; // Handle both formats
+            feedbackDiv.innerHTML = `<span style="color:red;">Wrong! Correct was: ${decodeHTML(correctAnswer)}</span>`;
             
             // Find and show the correct answer in green
             const correctButton = document.querySelector(`.option-btn[data-correct="true"]`);
@@ -367,6 +384,69 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Add event listener for the "Add Question" button ---
     addQuestionBtn.onclick = createNewQuestionEditor;
+
+    // --- Add event listener for the "Save Quiz" button ---
+    saveQuizBtn.onclick = () => {
+        const title = quizTitleInput.value.trim();
+        if (title.length < 3) {
+            alert("Please enter a quiz title (at least 3 characters).");
+            return;
+        }
+
+        const questionCards = questionListContainer.querySelectorAll('.question-editor-card');
+        if (questionCards.length === 0) {
+            alert("Please add at least one question.");
+            return;
+        }
+
+        let newQuiz = {
+            id: 'custom_' + new Date().getTime(), // Unique ID based on time
+            title: title,
+            author: localStorage.getItem('quizUser') || 'Anonymous',
+            questions: []
+        };
+
+        let allValid = true;
+        
+        questionCards.forEach(card => {
+            const questionText = card.querySelector('textarea').value.trim();
+            const optionInputs = card.querySelectorAll('.option-input-group input[type="text"]');
+            const correctInput = card.querySelector('.option-input-group input[type="radio"]:checked');
+
+            const options = [];
+            optionInputs.forEach(input => options.push(input.value.trim()));
+            
+            const correctAnswerIndex = parseInt(correctInput.value, 10);
+            
+            // Basic Validation
+            if (questionText.length < 5) allValid = false;
+            if (options.some(opt => opt.length === 0)) allValid = false; // Check for empty options
+            if (!correctInput) allValid = false; // Check if a correct answer is selected
+
+            newQuiz.questions.push({
+                question: questionText,
+                options: options,
+                // We save the *index* of the correct answer
+                correct_answer_index: correctAnswerIndex 
+            });
+        });
+
+        if (!allValid) {
+            alert("Please make sure all questions and answers are filled in and a correct answer is selected.");
+            return;
+        }
+
+        // --- Save to localStorage ---
+        // We'll store all custom quizzes in a single array under "myQuizzes"
+        let myQuizzes = JSON.parse(localStorage.getItem('myQuizzes') || '[]');
+        myQuizzes.push(newQuiz);
+        localStorage.setItem('myQuizzes', JSON.stringify(myQuizzes));
+
+        alert(`Quiz "${title}" saved successfully!`);
+        
+        // Close the editor
+        closeEditorBtn.click();
+    };
 
     // --- Initialization ---
     function init() {

@@ -1,3 +1,5 @@
+/* Include all your previous styles plus this toggle and dark mode */
+
 body {
   font-family: 'Montserrat', 'Segoe UI', sans-serif;
   background: linear-gradient(115deg, #2f80ed 0%, #56c5ed 50%, #7fd7b8 100%);

@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const questionNum = document.getElementById('questionNum');
     const scoreLabel = document.getElementById('scoreLabel');
     const timerDisplay = document.getElementById('timer-display');
+    const quizList = document.querySelector('.quiz-list'); // Get the quiz list container
 
     // Editor Elements
     const createQuizBtn = document.getElementById('create-quiz-btn');
@@ -55,23 +56,27 @@ document.addEventListener('DOMContentLoaded', () => {
     playQuizBtn.onclick = () => {
         mainContent.style.display = 'none';
         quizAppContainer.style.display = 'block';
+        quizControls.style.display = 'flex'; // Show API controls
+        quizNav.style.display = 'none'; // Hide nav until quiz starts
+        quizArea.innerHTML = "Click 'Start Quiz' to begin!"; // Reset text
         showLeaderboard(); // Show leaderboard on load
     };
     closeQuizBtn.onclick = () => {
         mainContent.style.display = 'block';
         quizAppContainer.style.display = 'none';
+        loadMyQuizzes(); // Refresh the main page list when closing a quiz
     };
 
     createQuizBtn.onclick = () => {
         mainContent.style.display = 'none';
         editorContainer.style.display = 'flex';
-        // We'll add logic to load a quiz later
     };
     closeEditorBtn.onclick = () => {
         mainContent.style.display = 'block';
         editorContainer.style.display = 'none';
         questionListContainer.innerHTML = ''; // Clear the editor
         quizTitleInput.value = '';
+        loadMyQuizzes(); // Refresh the main page list
     };
 
     // --- Authentication Logic ---
@@ -103,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
             signupErr.textContent = 'Username already exists.';
             return;
         }
-        users[username] = password; // Note: In a real app, hash this password!
+        users[username] = password; 
         localStorage.setItem('quizUsers', JSON.stringify(users));
         signupErr.textContent = 'Registered! Please login.';
         setTimeout(() => loginTab.click(), 1000);
@@ -143,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Quiz Logic ---
-    startQuizBtn.onclick = function () {
+    startQuizBtn.onclick = function () { // This is for OpenTDB quizzes
         quizControls.style.display = 'none';
         quizArea.innerHTML = 'Loading questions...';
         quizNav.style.display = 'none';
@@ -169,9 +174,27 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(() => {
                 quizArea.innerHTML = 'Could not load questions from Internet.';
                 quizControls.style.display = 'flex';
-                timerDisplay.style.display = 'none'; // Hide timer on error
+                timerDisplay.style.display = 'none'; 
             });
     };
+
+    function startCustomQuiz(quizObject) {
+        // Set the global questions array
+        questions = quizObject.questions; 
+        
+        // Reset state
+        score = 0;
+        currentIndex = 0;
+        
+        // Toggle UI
+        mainContent.style.display = 'none';
+        quizAppContainer.style.display = 'block';
+        quizControls.style.display = 'none'; // Hide OpenTDB controls
+        quizNav.style.display = 'flex'; // Show the next/prev buttons
+        
+        // Start the quiz
+        showQuestion(); 
+    }
 
     function showQuestion() {
         // Clear any old timer
@@ -180,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentIndex >= questions.length) {
             quizArea.innerHTML = `<h2>Quiz Complete!</h2><p>Your final score is: ${score} / ${questions.length}</p>`;
             quizNav.style.display = 'none';
-            quizControls.style.display = 'flex';
+            quizControls.style.display = 'flex'; // Show controls again
             timerDisplay.style.display = 'none'; // Hide timer at the end
             saveUserScore(localStorage.getItem('quizUser') || 'Anonymous', score);
             showLeaderboard();
@@ -188,26 +211,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const q = questions[currentIndex];
-        // Check if this is an OpenTDB question or our custom format
+        
+        // --- LOGIC TO HANDLE BOTH QUIZ TYPES ---
         let questionText, options, correctAnswer;
-        if (q.question) {
+        
+        if (q.incorrect_answers) { 
+            // This is an OpenTDB quiz
             questionText = q.question;
             options = [...q.incorrect_answers, q.correct_answer];
             correctAnswer = q.correct_answer;
-        } else {
-            // Handle custom quiz format (which we'll define)
-            // This is a placeholder for when we load custom quizzes
-            questionText = "Custom Question (Not Implemented)";
-            options = ["A", "B", "C", "D"];
-            correctAnswer = "A";
+            // Shuffle options
+            options.sort(() => Math.random() - 0.5); 
+        } else { 
+            // This is our Custom Quiz
+            questionText = q.question;
+            options = [...q.options]; // Copy the array
+            correctAnswer = q.options[q.correct_answer_index];
+            // No need to shuffle, they are already in order
         }
-        
-        // Simple shuffle
-        options.sort(() => Math.random() - 0.5);
+        // --- END OF LOGIC ---
 
         let html = `<div class="question-block"><h4>Q${currentIndex + 1}: ${decodeHTML(questionText)}</h4>`;
         options.forEach((opt) => {
-            // Use data-answer attribute for checking
             const isCorrect = decodeHTML(opt) === decodeHTML(correctAnswer);
             html += `<button class="option-btn" data-correct="${isCorrect}">${decodeHTML(opt)}</button>`;
         });
@@ -220,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateControls();
         
-        // --- NEW TIMER LOGIC ---
+        // --- TIMER LOGIC ---
         timeLeft = 10; // Reset timer to 10 seconds
         timerDisplay.textContent = timeLeft;
         timerDisplay.className = ''; // Reset low-time class
@@ -231,22 +256,33 @@ document.addEventListener('DOMContentLoaded', () => {
             timerDisplay.textContent = timeLeft;
 
             if (timeLeft <= 3) {
-                timerDisplay.className = 'low-time'; // Add warning class
+                timerDisplay.className = 'low-time'; 
             }
 
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
+                
+                // --- LOGIC FOR GETTING CORRECT ANSWER ---
                 const q = questions[currentIndex];
-                const correctAnswer = q.correct_answer || "Error"; // Handle both formats
-                document.getElementById('feedback').innerHTML = `<span style="color:red;">Time's up! Correct was: ${decodeHTML(correctAnswer)}</span>`;
+                let correctAnswerText;
+                if (q.correct_answer) {
+                    // OpenTDB format
+                    correctAnswerText = q.correct_answer;
+                } else {
+                    // Custom format
+                    correctAnswerText = q.options[q.correct_answer_index];
+                }
+                // --- END OF LOGIC ---
+
+                document.getElementById('feedback').innerHTML = `<span style="color:red;">Time's up! Correct was: ${decodeHTML(correctAnswerText)}</span>`;
                 disableOptions();
-                // Also show the correct answer
+                
                 const correctButton = document.querySelector(`.option-btn[data-correct="true"]`);
                 if (correctButton) {
                     correctButton.classList.add('correct');
                 }
             }
-        }, 1000); // Run this every 1 second
+        }, 1000); 
     }
 
     function selectAnswer(selectedButton) {
@@ -258,16 +294,26 @@ document.addEventListener('DOMContentLoaded', () => {
         disableOptions(); // Disable all buttons first
 
         if (isCorrect) {
-            selectedButton.classList.add('correct'); // Turn selected button green
+            selectedButton.classList.add('correct'); 
             feedbackDiv.innerHTML = `<span style="color:green;">Correct!</span>`;
             score++;
         } else {
-            selectedButton.classList.add('incorrect'); // Turn selected button red
-            const q = questions[currentIndex];
-            const correctAnswer = q.correct_answer || "Error"; // Handle both formats
-            feedbackDiv.innerHTML = `<span style="color:red;">Wrong! Correct was: ${decodeHTML(correctAnswer)}</span>`;
+            selectedButton.classList.add('incorrect'); 
             
-            // Find and show the correct answer in green
+            // --- LOGIC FOR GETTING CORRECT ANSWER ---
+            const q = questions[currentIndex];
+            let correctAnswerText;
+            if (q.correct_answer) {
+                // OpenTDB format
+                correctAnswerText = q.correct_answer;
+            } else {
+                // Custom format
+                correctAnswerText = q.options[q.correct_answer_index];
+            }
+            // --- END OF LOGIC ---
+
+            feedbackDiv.innerHTML = `<span style="color:red;">Wrong! Correct was: ${decodeHTML(correctAnswerText)}</span>`;
+            
             const correctButton = document.querySelector(`.option-btn[data-correct="true"]`);
             if (correctButton) {
                 correctButton.classList.add('correct');
@@ -285,14 +331,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateControls() {
         prevBtn.disabled = currentIndex === 0;
-        // Allow next button until results screen
         nextBtn.disabled = currentIndex >= questions.length; 
         questionNum.textContent = `Q${currentIndex + 1}/${questions.length}`;
         scoreLabel.textContent = 'Score: ' + score;
     }
 
     nextBtn.onclick = function () {
-        if (currentIndex < questions.length) { // Allow going to "results" screen
+        if (currentIndex < questions.length) { 
             currentIndex++;
             showQuestion();
         }
@@ -301,10 +346,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentIndex > 0) {
             currentIndex--;
             showQuestion();
-            disableOptions(); // Re-disable options on previous questions
+            disableOptions(); 
             document.getElementById('feedback').innerHTML = "You've already answered this.";
-            clearInterval(timerInterval); // Stop timer when going back
-            timerDisplay.style.display = 'none'; // Hide timer when going back
+            clearInterval(timerInterval); 
+            timerDisplay.style.display = 'none'; 
         }
     };
 
@@ -319,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!username) username = 'Anonymous';
         let scores = JSON.parse(localStorage.getItem('quizScores') || '{}');
         let prevScore = scores[username] || 0;
-        // Only save if it's a new high score
+        
         if (newScore > prevScore) {
             scores[username] = newScore;
             localStorage.setItem('quizScores', JSON.stringify(scores));
@@ -334,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
             html += '<p>No scores yet. Play a quiz!</p>';
         } else {
             html += '<ol>';
-            for (let [user, score] of sortedUsers.slice(0, 10)) { // Show top 10
+            for (let [user, score] of sortedUsers.slice(0, 10)) { 
                 html += `<li>${user}: ${score}</li>`;
             }
             html += '</ol>';
@@ -343,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Quiz Editor Logic ---
-    let questionEditorId = 0; // To give each question a unique ID
+    let questionEditorId = 0; 
 
     function createNewQuestionEditor() {
         const questionId = questionEditorId++;
@@ -374,7 +419,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <button class="delete-question-btn">Delete Question</button>
         `;
 
-        // Add delete functionality
         questionCard.querySelector('.delete-question-btn').onclick = () => {
             questionCard.remove();
         };
@@ -382,10 +426,8 @@ document.addEventListener('DOMContentLoaded', () => {
         questionListContainer.appendChild(questionCard);
     }
 
-    // --- Add event listener for the "Add Question" button ---
     addQuestionBtn.onclick = createNewQuestionEditor;
 
-    // --- Add event listener for the "Save Quiz" button ---
     saveQuizBtn.onclick = () => {
         const title = quizTitleInput.value.trim();
         if (title.length < 3) {
@@ -400,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         let newQuiz = {
-            id: 'custom_' + new Date().getTime(), // Unique ID based on time
+            id: 'custom_' + new Date().getTime(), 
             title: title,
             author: localStorage.getItem('quizUser') || 'Anonymous',
             questions: []
@@ -418,15 +460,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const correctAnswerIndex = parseInt(correctInput.value, 10);
             
-            // Basic Validation
             if (questionText.length < 5) allValid = false;
-            if (options.some(opt => opt.length === 0)) allValid = false; // Check for empty options
-            if (!correctInput) allValid = false; // Check if a correct answer is selected
+            if (options.some(opt => opt.length === 0)) allValid = false; 
+            if (!correctInput) allValid = false; 
 
             newQuiz.questions.push({
                 question: questionText,
                 options: options,
-                // We save the *index* of the correct answer
                 correct_answer_index: correctAnswerIndex 
             });
         });
@@ -436,25 +476,52 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // --- Save to localStorage ---
-        // We'll store all custom quizzes in a single array under "myQuizzes"
         let myQuizzes = JSON.parse(localStorage.getItem('myQuizzes') || '[]');
         myQuizzes.push(newQuiz);
         localStorage.setItem('myQuizzes', JSON.stringify(myQuizzes));
 
         alert(`Quiz "${title}" saved successfully!`);
         
-        // Close the editor
-        closeEditorBtn.click();
+        closeEditorBtn.click(); // This will also trigger loadMyQuizzes
     };
+
+    // --- Load and Display "My Quizzes" ---
+    function loadMyQuizzes() {
+        let myQuizzes = JSON.parse(localStorage.getItem('myQuizzes') || '[]');
+        
+        // Clear the sample quizzes
+        quizList.innerHTML = ''; 
+
+        if (myQuizzes.length === 0) {
+            // Optional: Show a message if no quizzes are saved
+            quizList.innerHTML = '<p>You haven\'t created any quizzes yet! Try making one.</p>';
+            return;
+        }
+
+        myQuizzes.forEach(quiz => {
+            const quizCard = document.createElement('div');
+            quizCard.className = 'quiz-card';
+            quizCard.textContent = quiz.title;
+            quizCard.dataset.quizId = quiz.id; // Store ID for later
+
+            // Add the click handler to play the custom quiz
+            quizCard.onclick = () => {
+                startCustomQuiz(quiz); 
+            };
+
+            quizList.appendChild(quizCard);
+        });
+    }
 
     // --- Initialization ---
     function init() {
         const currentUser = localStorage.getItem('quizUser');
         updateUserUI(currentUser);
+        loadMyQuizzes(); // Load custom quizzes on page load
+        
         // Setup initial tab state
         loginTab.classList.add('active');
-        signupTab.classList.remove('active');
+        signupTab.classList.add('active');
         loginForm.style.display = 'flex';
         signupForm.style.display = 'none';
     }

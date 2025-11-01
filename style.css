@@ -1,15 +1,16 @@
 body {
-    background: #fcf8f1;
+    background: #F8F9FA; /* New clean background */
     font-family: 'Montserrat', 'Baloo 2', Arial, sans-serif;
     margin: 0;
+    color: #1A1A1A; /* New primary text color */
 }
 header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 32px 4vw 10px 4vw;
-    background: #fffbe7;
-    border-bottom: 2px solid #ebe6f6;
+    background: #FFFFFF; /* New header background */
+    border-bottom: 2px solid #E0E0E0; /* New border color */
 }
 .logo-nav {
     display: flex;
@@ -22,7 +23,7 @@ header {
 .site-title {
     font-size: 28px;
     font-weight: 700;
-    color: #3ecaaa;
+    color: #6246EA; /* New Primary Brand Color */
     font-family: 'Baloo 2', 'Montserrat', Arial;
     letter-spacing: 1.5px;
     margin-top: 2px;
@@ -40,19 +41,19 @@ header {
     outline:none; background:#fff;
 }
 .sign-btn {
-    background: #c7fdaf;
-    color: #222;
+    background: #FF8A00; /* New Accent Color (CTA) */
+    color: #FFFFFF; /* New text color for button */
     border: none;
     padding: 11px 30px;
     border-radius: 24px;
     font-size: 19px;
     font-family: 'Montserrat', Arial, sans-serif;
     font-weight:700;
-    box-shadow: 0 2px 4px #e2ecf0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Softer shadow */
     cursor: pointer;
     transition: background .18s;
 }
-.sign-btn:hover { background: #84f281; }
+.sign-btn:hover { background: #E07B00; } /* Darker accent */
 
 .subject-nav {
     display: flex;
@@ -64,7 +65,7 @@ header {
 }
 .subject-nav a {
     text-decoration: none;
-    color: #444;
+    color: #555555; /* New secondary text color */
     font-weight:500;
     font-family: 'Baloo 2', 'Montserrat', Arial, sans-serif;
     text-align: center;
@@ -79,7 +80,7 @@ header {
     font-size: 34px;
 }
 .subject-nav a:hover {
-    color: #36c5ed;
+    color: #6246EA; /* New Primary Brand Color on hover */
 }
 
 .features-row {
@@ -90,9 +91,9 @@ header {
     margin: 54px 0 16px 0;
 }
 .card-home {
-    background: #ffffff;
+    background: #FFFFFF;
     border-radius: 21px;
-    box-shadow: 0 8px 34px #eaeaea;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.07); /* Softer shadow */
     padding: 38px 32px;
     min-width: 270px;
     max-width: 344px;
@@ -103,18 +104,18 @@ header {
 }
 .card-home:hover {
     transform: translateY(-6px) scale(1.03);
-    box-shadow: 0 6px 40px #b9dadc;
+    box-shadow: 0 8px 30px rgba(98, 70, 234, 0.15); /* New hover shadow */
 }
 .card-create {
-    background: #defcef;
-    border: 1.5px solid #3ecaaa;
+    background: #F4F2FF; /* New light purple */
+    border: 1.5px solid #6246EA; /* New primary border */
 }
 .card-ai {
-    background: #e3fafe;
-    border: 1.5px solid #36c5ed;
+    background: #FFF8F0; /* New light orange */
+    border: 1.5px solid #FF8A00; /* New accent border */
 }
 .card-btn {
-    background: #36c5ed;
+    background: #6246EA; /* New Primary Brand Color */
     color: #fff;
     font-size: 21px;
     border: none;
@@ -122,18 +123,18 @@ header {
     padding: 13px 40px;
     margin-top: 17px;
     font-weight:700;
-    box-shadow: 0 2px 7px #bee9f2;
+    box-shadow: 0 2px 7px rgba(98, 70, 234, 0.2); /* New shadow */
     cursor: pointer;
     transition: background .2s, color .17s;
     font-family: 'Montserrat', Arial, sans-serif;
 }
-.card-btn:hover { background: #ffb353; color: #222; }
+.card-btn:hover { background: #FF8A00; color: #FFFFFF; } /* New hover */
 
 .section-title {
     font-size: 25px;
     margin:52px 0 13px 7vw;
     font-family: 'Baloo 2', 'Montserrat', Arial, sans-serif;
-    color: #222;
+    color: #1A1A1A;
     letter-spacing: 1px;
 }
 
@@ -147,7 +148,7 @@ header {
 .quiz-card {
     background: #fff;
     border-radius: 14px;
-    box-shadow: 0 5px 20px #e0e0e0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06); /* Softer shadow */
     padding: 27px 20px;
     min-width: 130px;
     font-size: 17px;
@@ -155,23 +156,23 @@ header {
     font-family: 'Montserrat', Arial, sans-serif;
     text-align:center;
     margin-bottom: 10px;
-    cursor: pointer; /* Makes it look clickable */
-    transition: all 0.2s ease-in-out; /* Smooth hover */
+    cursor: pointer; 
+    transition: all 0.2s ease-in-out; 
 }
 
 .quiz-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 25px #d8d8d8;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12); /* Softer hover shadow */
 }
 
 footer {
     text-align: center;
     padding: 29px 0;
     font-size: 18px;
-    background: #fffbe7;
-    color: #222;
+    background: #FFFFFF; /* New footer background */
+    color: #555555;
     letter-spacing: 1px;
-    border-top: 1.5px solid #e6e6e6;
+    border-top: 1.5px solid #E0E0E0; /* New border */
     line-height:2.2;
     border-radius: 18px 18px 0 0;
     margin-top: 22px;
@@ -240,7 +241,7 @@ footer {
 }
 .auth-tabs button.active {
     background: #fff;
-    border-bottom: 3px solid #3ecaaa;
+    border-bottom: 3px solid #6246EA; /* New Primary Brand Color */
 }
 .modal-content form {
     display: flex;
@@ -254,7 +255,7 @@ footer {
     border-radius: 10px;
 }
 .modal-content form button {
-    background: #3ecaaa;
+    background: #6246EA; /* New Primary Brand Color */
     color: white;
     font-size: 18px;
     font-weight: 700;
@@ -264,7 +265,7 @@ footer {
     cursor: pointer;
 }
 .error-msg {
-    color: red;
+    color: #E74C3C; /* New Red */
     text-align: center;
     font-size: 15px;
 }
@@ -291,7 +292,7 @@ footer {
     border: 2px solid #ccc;
 }
 #quiz-controls button {
-    background: #36c5ed;
+    background: #6246EA; /* New Primary Brand Color */
     color: white;
     font-weight: 700;
     cursor: pointer;
@@ -320,8 +321,8 @@ footer {
     text-align: left;
 }
 .option-btn:hover {
-    background: #e3fafe;
-    border-color: #36c5ed;
+    background: #F4F2FF; /* New light purple */
+    border-color: #6246EA; /* New primary color */
 }
 .option-btn:disabled {
     cursor: not-allowed;
@@ -340,7 +341,7 @@ footer {
 }
 #leaderboard {
     margin-top: 30px;
-    background: #fcf8f1;
+    background: #F8F9FA; /* New light background */
     padding: 20px;
     border-radius: 10px;
 }
@@ -359,33 +360,33 @@ footer {
 #timer-display {
     font-size: 2.5rem;
     font-weight: 700;
-    color: #3ecaaa;
+    color: #6246EA; /* New Primary Brand Color */
     text-align: center;
     margin: 15px auto;
     width: 70px;
     height: 70px;
-    border: 5px solid #3ecaaa;
+    border: 5px solid #6246EA; /* New Primary Brand Color */
     border-radius: 50%;
     line-height: 60px; /* Vertically centers the text */
 }
 
 #timer-display.low-time {
-    color: #ffb353;
-    border-color: #ffb353;
+    color: #FF8A00; /* New Accent Color */
+    border-color: #FF8A00; /* New Accent Color */
 }
 
 /* Answer Feedback Styles */
 .option-btn.correct {
-    background: #defcef;
-    border-color: #3ecaaa;
-    color: #222;
+    background: #D5F5E3; /* New light green */
+    border-color: #2ECC71; /* New strong green */
+    color: #1A1A1A;
     font-weight: 700;
 }
 
 .option-btn.incorrect {
-    background: #ffe0e0;
-    border-color: #ff8a8a;
-    color: #222;
+    background: #FADBD8; /* New light red */
+    border-color: #E74C3C; /* New strong red */
+    color: #1A1A1A;
     opacity: 0.9;
 }
 
@@ -459,15 +460,15 @@ footer {
 }
 .delete-question-btn {
     background: none;
-    border: 1px solid #ff8a8a;
-    color: #ff8a8a;
+    border: 1px solid #E74C3C; /* New Red */
+    color: #E74C3C; /* New Red */
     border-radius: 5px;
     padding: 5px 10px;
     cursor: pointer;
     margin-top: 10px;
 }
 .delete-question-btn:hover {
-    background: #ffe0e0;
+    background: #FADBD8; /* New light red */
 }
 
 #editor-controls {
@@ -477,10 +478,11 @@ footer {
     margin-top: 20px;
 }
 #editor-controls #save-quiz-btn {
-    background: #84f281; /* Green save button */
+    background: #2ECC71; /* New strong green */
+    color: #FFFFFF;
 }
 #editor-controls #save-quiz-btn:hover {
-    background: #6ace68;
+    background: #28B463; /* Darker green */
 }
 
 /* Manage Quizzes Modal Styles */
@@ -512,7 +514,7 @@ footer {
 }
 
 .delete-quiz-btn {
-    background: #ff8a8a;
+    background: #E74C3C; /* New strong red */
     color: white;
     border: none;
     border-radius: 8px;
@@ -524,5 +526,5 @@ footer {
 }
 
 .delete-quiz-btn:hover {
-    background: #f56c6c;
+    background: #C0392B; /* Darker red */
 }

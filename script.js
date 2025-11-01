@@ -1,191 +1,201 @@
-// --- Authentication ---
+// Authentication elements
+const authContainer = document.getElementById('auth-container');
 const loginTab = document.getElementById('login-tab');
 const signupTab = document.getElementById('signup-tab');
 const loginForm = document.getElementById('login-form');
 const signupForm = document.getElementById('signup-form');
 const loginErr = document.getElementById('login-error');
 const signupErr = document.getElementById('signup-error');
-const authContainer = document.getElementById('auth-container');
-const mainMenu = document.getElementById('main-menu');
-const quizContainer = document.getElementById('quiz-container');
+const main = document.querySelector('main');
 const welcomeUser = document.getElementById('welcome-user');
 const logoutBtn = document.getElementById('logout-btn');
-const gamesContainer = document.getElementById('games-container');
-const menuQuizBtn = document.getElementById('menu-quiz-btn');
-const menuGamesBtn = document.getElementById('menu-games-btn');
-const gameArea = document.getElementById('game-area');
 
-loginTab.onclick = function() {
-  loginTab.classList.add('active'); signupTab.classList.remove('active');
+loginTab.onclick = () => {
+  loginTab.classList.add('active');
+  signupTab.classList.remove('active');
   loginForm.style.display = '';
   signupForm.style.display = 'none';
   loginErr.textContent = '';
 };
-signupTab.onclick = function() {
-  signupTab.classList.add('active'); loginTab.classList.remove('active');
+signupTab.onclick = () => {
+  signupTab.classList.add('active');
+  loginTab.classList.remove('active');
   signupForm.style.display = '';
   loginForm.style.display = 'none';
   signupErr.textContent = '';
 };
 
-signupForm.onsubmit = function(e) {
+signupForm.onsubmit = e => {
   e.preventDefault();
-  let username = document.getElementById('signup-username').value.trim();
-  let password = document.getElementById('signup-password').value;
-  if(username.length < 3 || password.length < 3) { signupErr.textContent = 'Minimum 3 characters.'; return;}
-  let accounts = JSON.parse(localStorage.getItem('quizAccounts')||"{}");
-  if(accounts[username]) { signupErr.textContent="User exists."; return;}
-  accounts[username] = password;
-  localStorage.setItem('quizAccounts', JSON.stringify(accounts));
-  signupErr.textContent = "Registered! Please log in.";
-  setTimeout(()=>{loginTab.click();}, 1300);
+  const username = signupForm.querySelector('#signup-username').value.trim();
+  const password = signupForm.querySelector('#signup-password').value;
+  if (username.length < 3 || password.length < 3) {
+    signupErr.textContent = 'Minimum 3 characters required.';
+    return;
+  }
+  const users = JSON.parse(localStorage.getItem('quizUsers') || '{}');
+  if (users[username]) {
+    signupErr.textContent = 'Username already exists.';
+    return;
+  }
+  users[username] = password;
+  localStorage.setItem('quizUsers', JSON.stringify(users));
+  signupErr.textContent = 'Registered! Please login.';
+  setTimeout(() => loginTab.click(), 1000);
 };
 
-loginForm.onsubmit = function(e) {
+loginForm.onsubmit = e => {
   e.preventDefault();
-  let username = document.getElementById('login-username').value.trim();
-  let password = document.getElementById('login-password').value;
-  let accounts = JSON.parse(localStorage.getItem('quizAccounts')||"{}");
-  if(accounts[username] && accounts[username] === password) {
-    loginErr.textContent='';
+  const username = loginForm.querySelector('#login-username').value.trim();
+  const password = loginForm.querySelector('#login-password').value;
+  const users = JSON.parse(localStorage.getItem('quizUsers') || '{}');
+  if (users[username] && users[username] === password) {
+    loginErr.textContent = '';
     localStorage.setItem('quizUser', username);
-    showMainMenu(username);
+    authContainer.style.display = 'none';
+    main.style.display = '';
+    logoutBtn.style.display = '';
+    welcomeUser.textContent = `Hello, ${username}`;
   } else {
-    loginErr.textContent="Invalid username or password.";
+    loginErr.textContent = 'Invalid username or password.';
   }
 };
 
-function showMainMenu(username) {
-  authContainer.style.display = 'none';
-  mainMenu.style.display = '';
-  quizContainer.style.display = '';
-  gamesContainer.style.display = 'none';
-  welcomeUser.textContent = "Hello, " + username;
-  menuQuizBtn.classList.add('active');
-  menuGamesBtn.classList.remove('active');
-  showDashboard(username);
-}
-
-function showDashboard(username) {
-  let scores = JSON.parse(localStorage.getItem('quizScores')||"{}");
-  let bestScore = scores[username] || 0;
-  document.getElementById("dashboard").style.display = '';
-  document.getElementById("dashboard").innerHTML = 
-    `<div style="background:#f9fafa;border-radius:14px;padding:13px;margin-top:6px;">
-      <b>User:</b> ${username}<br>
-      <b>Best Score:</b> ${bestScore}<br>
-      <b>Quiz Subjects:</b> ${Object.keys(scores).length}<br>
-      <span style="color:#38e2b0;">Welcome back! Ready for your next quiz?</span>
-    </div>`;
-}
-
-logoutBtn.onclick = function() {
+logoutBtn.onclick = () => {
   localStorage.removeItem('quizUser');
-  mainMenu.style.display = 'none';
-  quizContainer.style.display = 'none';
-  gamesContainer.style.display = 'none';
   authContainer.style.display = '';
-  document.getElementById("dashboard").style.display = 'none';
+  main.style.display = 'none';
+  logoutBtn.style.display = 'none';
+  welcomeUser.textContent = '';
 };
 
-window.onload = function() {
-  let user = localStorage.getItem('quizUser');
-  if(user) showMainMenu(user);
+// Quiz Logic with API and Scores
+let questions = [];
+let currentIndex = 0;
+let score = 0;
 
-  // Dark mode toggle
-  const themeToggle = document.getElementById('toggle-theme');
-  let savedTheme = localStorage.getItem('theme') || 'light';
-  if(savedTheme === 'dark') {
-    document.body.classList.add('dark-mode');
-    if(themeToggle) themeToggle.checked = true;
-  }
-  if(themeToggle) {
-    themeToggle.addEventListener('change', () => {
-      if(themeToggle.checked) {
-        document.body.classList.add('dark-mode');
-        localStorage.setItem('theme', 'dark');
-      } else {
-        document.body.classList.remove('dark-mode');
-        localStorage.setItem('theme', 'light');
-      }
+document.getElementById('startQuizBtn').onclick = function () {
+  document.getElementById('quiz-controls').style.display = 'none';
+  document.getElementById('quiz-area').innerHTML = 'Loading questions...';
+  score = 0;
+  currentIndex = 0;
+
+  const category = document.getElementById('quiz-category').value;
+  const count = document.getElementById('quiz-count').value;
+
+  fetch(`https://opentdb.com/api.php?amount=${count}&category=${category}&type=multiple`)
+    .then(res => res.json())
+    .then(data => {
+      questions = data.results;
+      showQuestion();
+      document.getElementById('quiz-controls').style.display = '';
+      showLeaderboard();
+      updateControls();
+    })
+    .catch(() => {
+      document.getElementById('quiz-area').innerHTML = 'Could not load questions from Internet.';
     });
-  }
 };
 
-// --- Main Menu ---
-menuQuizBtn.onclick = () => {
-  menuQuizBtn.classList.add('active'); menuGamesBtn.classList.remove('active');
-  quizContainer.style.display = '';
-  gamesContainer.style.display = 'none';
-};
-menuGamesBtn.onclick = () => {
-  menuGamesBtn.classList.add('active'); menuQuizBtn.classList.remove('active');
-  gamesContainer.style.display = '';
-  quizContainer.style.display = 'none';
-  gameArea.innerHTML = '';
-};
+function showQuestion() {
+  const q = questions[currentIndex];
+  let options = [...q.incorrect_answers, q.correct_answer];
+  options.sort(() => Math.random() - 0.5);
 
-document.querySelectorAll('.game-launch').forEach(btn => {
-  btn.onclick = () => {
-    if(btn.dataset.game==="tictactoe") loadTicTacToe();
-  };
-});
-
-// --- Tic-Tac-Toe Game ---
-function loadTicTacToe() {
-  gameArea.innerHTML = `
-    <style>
-      .ttt-row{display:flex;}
-      .ttt-cell{width:60px;height:60px;font-size:2rem;text-align:center;border:1px solid #888;background:#f3f3f3;cursor:pointer;}
-    </style>
-    <h3>Tic-Tac-Toe</h3>
-    <div id="ttt-board"></div>
-    <div id="ttt-result"></div>
-    <button onclick="resetTTT()">Restart</button>
-  `;
-  let board = [["", "", ""],["", "", ""],["", "", ""]];
-  let player = "X", winner = null;
-  
-  function render() {
-    let html = "";
-    for(let i=0;i<3;i++){
-      html += '<div class="ttt-row">';
-      for(let j=0;j<3;j++){
-        html += `<div class="ttt-cell" data-row="${i}" data-col="${j}">${board[i][j]}</div>`;
-      }
-      html+="</div>";
-    }
-    document.getElementById("ttt-board").innerHTML = html;
-    document.getElementById("ttt-result").innerText = winner
-      ? (winner==="D" ? "Draw!" : winner + " wins!")
-      : "Player: " + player;
-    document.querySelectorAll(".ttt-cell").forEach(el=>{
-      el.onclick = function(){
-        let r=this.dataset.row, c=this.dataset.col;
-        if(board[r][c] || winner) return;
-        board[r][c]=player;
-        winner=checkWin();
-        if(!winner) player = player==="X" ? "O" : "X";
-        render();
-      }
-    });
-  }
-  function checkWin() {
-    for(let i=0;i<3;i++)
-      if(board[i][0] && board[i][0]==board[i][1] && board[i][1]==board[i][2]) return board[i][0];
-    for(let j=0;j<3;j++)
-      if(board[0][j] && board[0][j]==board[1][j] && board[1][j]==board[2][j]) return board[0][j];
-    if(board[0][0] && board[0][0]==board[1][1] && board[1][1]==board[2][2]) return board[0][0];
-    if(board[2][0] && board[2][0]==board[1][1] && board[1][1]==board[0][2]) return board[2][0];
-    if(board.flat().every(v=>v)) return "D";
-    return null;
-  }
-  window.resetTTT = function(){
-    for(let i=0;i<3;i++)for(let j=0;j<3;j++)board[i][j]="";
-    player="X";winner=null;render();
-  };
-  render();
+  let html = `<div class="question-block"><h4>Q${currentIndex + 1}: ${decodeHTML(q.question)}</h4>`;
+  options.forEach((opt) => {
+    html += `<button class="option-btn" onclick="selectAnswer('${decodeHTML(opt)}')">${decodeHTML(opt)}</button> `;
+  });
+  html += '</div><br><div id="feedback"></div>';
+  document.getElementById('quiz-area').innerHTML = html;
+  updateControls();
 }
 
-// --- Quiz Logic ---
-// (unchanged)
+function selectAnswer(selected) {
+  const q = questions[currentIndex];
+  const feedbackDiv = document.getElementById('feedback');
+  if (selected === decodeHTML(q.correct_answer)) {
+    feedbackDiv.innerHTML = `<span style="color:green;">Correct!</span>`;
+    score++;
+  } else {
+    feedbackDiv.innerHTML = `<span style="color:red;">Wrong! Correct: ${decodeHTML(q.correct_answer)}</span>`;
+  }
+  disableOptions();
+  document.getElementById('scoreLabel').textContent = 'Score: ' + score;
+  saveUserScore(localStorage.getItem('quizUser') || 'Anonymous', score);
+  showLeaderboard();
+}
+
+function disableOptions() {
+  document.querySelectorAll('.option-btn').forEach((btn) => (btn.disabled = true));
+}
+
+function updateControls() {
+  document.getElementById('prevBtn').disabled = currentIndex === 0;
+  document.getElementById('nextBtn').disabled = currentIndex >= questions.length - 1;
+  document.getElementById('questionNum').textContent = `Q${currentIndex + 1}`;
+  document.getElementById('scoreLabel').textContent = 'Score: ' + score;
+}
+
+document.getElementById('nextBtn').onclick = function () {
+  if (currentIndex < questions.length - 1) {
+    currentIndex++;
+    showQuestion();
+  }
+};
+document.getElementById('prevBtn').onclick = function () {
+  if (currentIndex > 0) {
+    currentIndex--;
+    showQuestion();
+  }
+};
+
+function decodeHTML(html) {
+  const txt = document.createElement('textarea');
+  txt.innerHTML = html;
+  return txt.value;
+}
+
+// Save score locally and update leaderboard
+function saveUserScore(username, newScore) {
+  let scores = JSON.parse(localStorage.getItem('quizScores') || '{}');
+  let prevScore = scores[username] || 0;
+  if (newScore > prevScore) {
+    scores[username] = newScore;
+    localStorage.setItem('quizScores', JSON.stringify(scores));
+  }
+}
+
+// Show leaderboard UI
+function showLeaderboard() {
+  let leaderboardDiv = document.getElementById('leaderboard');
+  const scores = JSON.parse(localStorage.getItem('quizScores') || '{}');
+  let sortedUsers = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  let html = '<h3>Leaderboard</h3><ol>';
+  for (let [user, score] of sortedUsers) {
+    html += `<li>${user}: ${score}</li>`;
+  }
+  html += '</ol>';
+  leaderboardDiv.innerHTML = html;
+}
+
+// Initialize auth state
+window.onload = () => {
+  const currentUser = localStorage.getItem('quizUser');
+  if (currentUser) {
+    authContainer.style.display = 'none';
+    main.style.display = '';
+    logoutBtn.style.display = '';
+    welcomeUser.textContent = `Hello, ${currentUser}`;
+  } else {
+    authContainer.style.display = '';
+    main.style.display = 'none';
+    logoutBtn.style.display = 'none';
+  }
+  
+  // Setup initial tab state
+  loginTab.classList.add('active');
+  signupTab.classList.remove('active');
+  loginForm.style.display = '';
+  signupForm.style.display = 'none';
+};

@@ -2,55 +2,81 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <title>QuizHub: Internet Quiz with Auth & Leaderboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>QuizHub: Play & Create Quizzes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&family=Montserrat:wght@600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&family=Montserrat:wght@600&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="logo-area">
-    <img src="https://i.imgur.com/4M34hi2.png" alt="QuizHub Logo" class="quizhub-logo">
-    <div class="pin-banner">
-      <span class="pin-label">Join Game? Enter PIN:</span>
-      <input type="text" class="pin-input" placeholder="123 456" maxlength="6">
+  <header>
+    <img src="https://i.imgur.com/4M34hi2.png" alt="QuizHub Logo" class="quizhub-logo" />
+    <div class="pin-box">
+      <span>Join Game? <b>PIN:</b></span>
+      <input type="text" class="pin-input" placeholder="123456" maxlength="6" />
+      <button class="sign-btn">Sign in</button>
     </div>
-    <button class="sign-btn">Sign in</button>
+  </header>
+
+  <div id="auth-container">
+    <h1>Welcome to QuizHub</h1>
+    <div id="auth-tabs">
+      <button id="login-tab" class="active" type="button">Login</button>
+      <button id="signup-tab" type="button">Register</button>
+    </div>
+
+    <form id="login-form" autocomplete="off">
+      <input type="text" id="login-username" placeholder="Username" required />
+      <input type="password" id="login-password" placeholder="Password" required />
+      <button type="submit">Login</button>
+      <div id="login-error" class="error-msg"></div>
+    </form>
+
+    <form id="signup-form" style="display:none;" autocomplete="off">
+      <input type="text" id="signup-username" placeholder="Choose Username" required />
+      <input type="password" id="signup-password" placeholder="Choose Password" required />
+      <button type="submit">Register</button>
+      <div id="signup-error" class="error-msg"></div>
+    </form>
   </div>
 
-  <nav class="subject-nav">
-    <a href="#"><span>🏠</span> <div>Start</div></a>
-    <a href="#"><span>🎨</span> <div>Art & Literature</div></a>
-    <a href="#"><span>⭐</span> <div>Entertainment</div></a>
-    <a href="#"><span>🌍</span> <div>Geography</div></a>
-    <a href="#"><span>🏛️</span> <div>History</div></a>
-    <a href="#"><span>💬</span> <div>Languages</div></a>
-    <a href="#"><span>🧬</span> <div>Science & Nature</div></a>
-    <a href="#"><span>🏀</span> <div>Sports</div></a>
-    <a href="#"><span>❓</span> <div>Trivia</div></a>
-  </nav>
+  <main style="display:none;">
+    <div id="welcome-user"></div>
 
-  <div class="main-actions">
-    <div class="card card-green">
-      <h2>Create a quiz</h2>
-      <p>Play for free with <b>300 participants</b></p>
-      <button class="card-btn">Quiz editor</button>
+    <div class="card-grid">
+      <div class="card card-green">
+        <h2>Internet Quiz</h2>
+        <p>Get free questions instantly!</p>
+        <select id="quiz-category">
+          <option value="9">🧠 General Knowledge</option>
+          <option value="18">💻 Computer Science</option>
+          <option value="23">📚 History</option>
+          <option value="17">🧬 Science & Nature</option>
+          <option value="21">🏀 Sports</option>
+        </select>
+        <select id="quiz-count">
+          <option value="5">5 Questions</option>
+          <option value="10">10 Questions</option>
+        </select>
+        <button id="startQuizBtn" class="card-btn">Start Internet Quiz</button>
+      </div>
+      <div class="card card-blue">
+        <h2>A.I. Generator</h2>
+        <p>(Coming soon) Create quizzes from PDFs</p>
+        <button class="card-btn" disabled>Coming Soon</button>
+      </div>
     </div>
-    <div class="card card-blue">
-      <h2>A.I.</h2>
-      <p>Generate a quiz from any subject or PDF</p>
-      <button class="card-btn">Quiz generator</button>
+    <div id="quiz-area"></div>
+    <div id="quiz-controls" style="display:none;">
+      <button id="prevBtn" class="card-btn">Previous</button>
+      <span id="questionNum">Q1</span>
+      <button id="nextBtn" class="card-btn">Next</button>
+      <span id="scoreLabel">Score: 0</span>
     </div>
-  </div>
+    <div id="leaderboard"></div>
+    <button id="logout-btn" style="display:none;">Logout</button>
+  </main>
 
-  <h3 class="section-title">Recently published</h3>
-  <div class="quiz-list">
-    <div class="quiz-card">Quiz 1 (Sample)</div>
-    <div class="quiz-card">Quiz 2 (Sample)</div>
-    <div class="quiz-card">Quiz 3 (Sample)</div>
-  </div>
-
-  <footer>
-    <p>Made for Smart India Hackathon | &copy; 2025 QuizHub</p>
-  </footer>
+  <footer>&copy; 2025 QuizHub</footer>
+  <script src="script.js"></script>
 </body>
 </html>

@@ -1,163 +1,131 @@
 body {
-  background: #fdf7f0;
+  background: linear-gradient(115deg, #2f80ed 0%, #56c5ed 60%, #7fd7b8 100%);
   font-family: 'Montserrat', 'Baloo 2', Arial, sans-serif;
-  padding: 0; margin: 0;
+  margin: 0; min-height: 100vh;
 }
-.logo-area {
-  display: flex;
-  align-items: center;
-  padding: 20px;
-  justify-content: space-between;
-  border-bottom: 3px solid #e6e6e6;
-  background: #fffbe7;
+header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 22px 5vw 10px 5vw; background: #fffbe7; border-radius: 0 0 20px 20px;
+  box-shadow: 0 2px 16px #e0e0e0;
 }
-.quizhub-logo {
-  height: 56px;
-  margin-right: 15px;
-}
-.pin-banner {
-  background: #fcbeb6;
-  padding: 12px 18px 12px 20px;
-  border-radius: 30px;
-  font-size: 24px;
-  display: flex;
-  align-items: center;
-  font-family: 'Baloo 2', 'Montserrat', Arial, sans-serif;
-  font-weight: 700;
-  margin-right: 10px;
-}
-.pin-label { margin-right: 7px; }
+.quizhub-logo { height: 58px; }
+.pin-box { display: flex; align-items: center; gap: 12px; font-size: 22px;}
 .pin-input {
-  border: 2px solid #333; border-radius: 25px; width: 120px; height:36px;
-  font-size: 22px; text-align: center; margin-left: 6px; outline: none; background: #fff;
+  border: 2px solid #ddd; border-radius: 24px; font-size:20px; padding: 6px 14px; width: 100px; background:#fff;
 }
 .sign-btn {
-  background: #c7fdaf;
-  color: #222;
-  border: none;
-  padding: 12px 30px;
-  border-radius: 24px;
-  font-size: 20px;
-  font-family: 'Montserrat', Arial, sans-serif;
-  font-weight:600;
-  margin-left: 10px;
-  box-shadow: 0 1px 4px #ddd;
-  cursor: pointer;
-  transition: background .2s;
+  background: #c7fdaf; color: #222; border-radius: 22px; font-size:19px; padding:9px 24px;font-weight:600;
+  box-shadow:0 1px 4px #eee; cursor: pointer; border:none;transition:background .18s;
 }
-.sign-btn:hover { background: #87f170; }
-
+.sign-btn:hover { background:#87f170;}
+nav {background: #fff; border-bottom: 2px solid #ebebeb;}
 .subject-nav {
-  display: flex;
-  justify-content: space-around;
-  background: #fff;
-  padding: 15px 7vw;
-  border-bottom: 2px solid #ebebeb;
-  font-size: 20px;
+  display: flex; justify-content: center; gap:32px; padding:13px 0;
+  list-style:none; margin:0;
 }
-.subject-nav a {
-  text-decoration: none;
-  color: #333;
-  font-weight:500;
-  font-family: 'Baloo 2', 'Montserrat', Arial, sans-serif;
-  text-align: center;
-  width: 88px;
-  display: flex;
-  flex-direction: column;
-  align-items:center;
-  transition: color .3s;
+.subject-nav li a {
+  text-decoration:none;color:#222;font-weight:500;font-size:18px;transition:color .2s;
+  display:flex;align-items:center;gap:6px; font-family:'Baloo 2', Arial;
 }
-.subject-nav span {
-  font-size: 31px; margin-bottom: 2px;
+.subject-nav li a span {font-size:23px;}
+.subject-nav a:hover {color:#1cbc5c;}
+.card-grid {
+  display: flex; justify-content: center; gap:41px; margin:60px 0 30px 0;
 }
-.subject-nav a:hover, .subject-nav a:active {
-  color: #62c072;
-}
-
-.main-actions {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-  padding: 40px 0 12px 0;
-  background: none;
-}
-.card {
-  background: #fff;
-  border-radius: 19px;
-  box-shadow: 0 6px 24px #e0e0e0;
-  padding: 28px 32px;
-  min-width: 270px;
-  max-width: 320px;
-  font-family: 'Montserrat', 'Baloo 2', Arial, sans-serif;
-  text-align: center;
-}
-.card-green { background: #defcef; }
-.card-blue { background: #e3fafe; }
+.card {background:#fff;border-radius:19px;box-shadow:0 6px 24px #e0e0e0;
+  padding:28px 32px;min-width:240px;max-width:320px;text-align:center;}
+.card-green {background:#defcef;}
+.card-blue {background:#e3fafe;}
 .card-btn {
+  background:#1cbc5c;color:#fff;font-size:18px;border-radius:23px;padding:13px 35px;margin-top:13px;
+  font-weight:600;border:none;cursor:pointer;box-shadow:0 2px 7px #a0e0ce;transition:background .2s;
+}
+.card-blue .card-btn { background: #2cb9ee; box-shadow: 0 2px 7px #bcecf2;}
+.card-btn:disabled { background: #ccc; cursor: not-allowed;}
+.card-btn:hover:enabled { background:#ffb353;color:#333;}
+.card select { font-size:17px; padding:6px 18px; margin:8px 0; border-radius:11px; border:1px solid #1cbc5c;}
+
+#quiz-area {
+  max-width: 520px; margin: 30px auto; background: #fff; border-radius: 18px; box-shadow: 0 4px 18px #eee; padding: 24px;
+}
+.question-block { margin-bottom: 18px; padding-bottom:12px; border-bottom:1px solid #eee;}
+.question-block h4 { font-size: 19px; color: #222; font-family:'Montserrat', Arial; }
+.option-btn {
   background: #1cbc5c;
-  color: #fff;
-  font-size: 20px;
-  border: none;
-  border-radius: 23px;
-  padding: 13px 40px;
-  margin-top: 15px; cursor: pointer;
-  font-weight:600;
-  box-shadow: 0 2px 7px #a0e0ce;
-  transition: background .2s;
+  color: #fff; border: none; border-radius: 15px;
+  padding: 7px 18px; font-size: 16px; margin: 4px 7px 0 0; font-weight:500; cursor:pointer;
+  transition: background .15s;
 }
-.card-blue .card-btn {
-  background: #2cb9ee;
-  box-shadow: 0 2px 7px #bcecf2;
-}
-.card-btn:hover { background: #ffb353; color: #333; }
+.option-btn:hover { background: #ffb353; color: #333; }
 
-.section-title {
-  font-size: 26px; margin:30px 0 6px 38px;
+#quiz-controls {
+  max-width: 520px; margin: 10px auto 20px auto; display: flex;
+  justify-content: space-between; align-items: center; gap:12px;
+}
+#quiz-controls button {
+  padding: 9px 25px; font-size: 17px; border-radius: 14px;
+  background: #38e2b0; border: none; color: #123; font-weight: 700; cursor: pointer;
+  transition: background 0.3s;
+}
+#quiz-controls button:disabled {opacity: 0.5; cursor: not-allowed;}
+#quiz-controls button:hover:enabled {background: #2f80ed; color: #fff;}
+#questionNum, #scoreLabel {
+  font-weight: 700; font-size: 18px; color: #1a4e7a;
+}
+
+#leaderboard {
+  max-width: 520px;
+  margin: 0 auto 20px auto;
+  padding: 0 12px;
+}
+
+#leaderboard h3 {
   font-family: 'Baloo 2', 'Montserrat', Arial, sans-serif;
-  color: #444;
-  letter-spacing: 1px;
+  font-weight: 700;
+  font-size: 22px;
+  color: #1c7c41;
+  margin-bottom: 14px;
+  letter-spacing: 0.85px;
 }
 
-.quiz-list {
-  display: flex;
-  gap: 25px;
-  padding: 10px 38px 25px 38px;
-  flex-wrap: wrap;
+#leaderboard ol {
+  padding-left: 30px;
 }
-.quiz-card {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 5px 20px #e0e0e0;
-  padding: 28px 16px;
-  min-width: 140px;
-  font-size: 17px;
-  color: #444;
-  font-family: 'Montserrat', Arial, sans-serif;
-  text-align:center;
-  margin-bottom: 10px;
+
+#leaderboard li {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 6px 0;
+  color: #225522;
 }
 
 footer {
   text-align: center;
-  padding: 28px 0;
-  font-size: 18px;
-  color: #222;
+  padding: 22px 0;
+  font-size: 17px;
   background: #fffbe7;
+  color: #222;
   letter-spacing: 1px;
   border-top: 1.5px solid #e6e6e6;
+  line-height: 2.2;
+  border-radius: 18px 18px 0 0;
   margin-top: 28px;
-  line-height:2.2;
 }
 
 @media (max-width: 900px) {
-  .main-actions { gap: 14px; }
-  .subject-nav { font-size: 16px; padding: 10px 2vw; }
+  .card-grid {
+    gap: 23px;
+  }
 }
-@media (max-width: 600px) {
-  .logo-area, .main-actions, .quiz-list, .subject-nav { flex-direction: column; align-items: center;}
-  .quizhub-logo {height:38px;}
-  .pin-banner {padding:9px 11px;}
-  .main-actions {padding:20px 0;}
-  .card {padding:22px 9vw;}
-  .quiz-list { padding:10px 6vw 16px 6vw;}
+
+@media (max-width: 650px) {
+  header,
+  .card-grid {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .card {
+    padding: 22px 9vw;
+  }
 }

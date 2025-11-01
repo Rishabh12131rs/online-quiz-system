@@ -5,6 +5,23 @@ body {
   min-height: 100vh;
   display: flex; align-items: center; justify-content: center;
 }
+header {
+  text-align: center;
+  background: linear-gradient(90deg, #2f80ed 0%, #38e2b0 100%);
+  color: #fff;
+  padding: 22px 3vw 10px 3vw;
+  border-radius: 0 0 16px 16px;
+  margin-bottom: 16px;
+}
+footer {
+  text-align: center;
+  padding: 18px 0;
+  font-size: 17px;
+  color: #fff;
+  background: #2f80ed;
+  margin-top: 28px;
+  border-radius: 14px 14px 0 0;
+}
 #main-container {
   width: 99vw; max-width: 445px; background: #fff;
   border-radius: 18px; padding: 30px 20px; box-shadow: 0 18px 40px rgba(48,128,200,0.13);
@@ -27,6 +44,7 @@ button:hover { background:#2f80ed; color:#fff; }
 #user-header {text-align:right; margin-bottom:12px;}
 #user-header #welcome-user {font-weight:600;}
 #welcome {margin-bottom:13px;}
+#dashboard div { font-size:17px; background:#f9fafa;border-radius:14px;padding:13px;margin-top:6px;}
 #progress-container {background: #e0e0e0; height: 14px; width: 100%; border-radius: 7px; overflow: hidden; margin-bottom: 20px;}
 #progress-bar {height: 100%; width: 0%; background: linear-gradient(90deg, #2f80ed 0%, #7fd7b8 100%); transition: width 0.4s;}
 #timer {font-size: 16px; font-weight:bold; margin-bottom: 12px; color: #125c83;}
@@ -52,5 +70,6 @@ button:hover { background:#2f80ed; color:#fff; }
 #games-container {text-align:center;}
 #game-area {margin:18px 0;}
 @media (max-width: 660px) {
-  #main-container {padding:13px 2vw; width:99vw;}
+  #main-container, header, footer {padding:13px 2vw;width:99vw;border-radius:0;}
+  h1, h2 { font-size: 1.4em; }
 }

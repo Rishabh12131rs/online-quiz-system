@@ -63,6 +63,20 @@ function showMainMenu(username) {
   welcomeUser.textContent = "Hello, " + username;
   menuQuizBtn.classList.add('active');
   menuGamesBtn.classList.remove('active');
+  showDashboard(username);
+}
+
+function showDashboard(username) {
+  let scores = JSON.parse(localStorage.getItem('quizScores')||"{}");
+  let bestScore = scores[username] || 0;
+  document.getElementById("dashboard").style.display = '';
+  document.getElementById("dashboard").innerHTML = 
+    `<div style="background:#f9fafa;border-radius:14px;padding:13px;margin-top:6px;">
+      <b>User:</b> ${username}<br>
+      <b>Best Score:</b> ${bestScore}<br>
+      <b>Quiz Subjects:</b> ${Object.keys(scores).length}<br>
+      <span style="color:#38e2b0;">Welcome back! Ready for your next quiz?</span>
+    </div>`;
 }
 
 logoutBtn.onclick = function() {
@@ -71,6 +85,7 @@ logoutBtn.onclick = function() {
   quizContainer.style.display = 'none';
   gamesContainer.style.display = 'none';
   authContainer.style.display = '';
+  document.getElementById("dashboard").style.display = 'none';
 };
 
 window.onload = function() {
@@ -97,7 +112,7 @@ document.querySelectorAll('.game-launch').forEach(btn => {
   };
 });
 
-// --- Tic-Tac-Toe Game ---
+// --- Tic-Tac-Toe ---
 function loadTicTacToe() {
   gameArea.innerHTML = `
     <style>
@@ -111,6 +126,7 @@ function loadTicTacToe() {
   `;
   let board = [["", "", ""],["", "", ""],["", "", ""]];
   let player = "X", winner = null;
+  
   function render() {
     let html = "";
     for(let i=0;i<3;i++){
@@ -244,7 +260,7 @@ function selectAnswer(selected) {
 function showResults() {
   updateProgressBar();
   timerDiv.style.display = 'none';
-  questionDiv.innerHTML = `Quiz Completed!`;
+  questionDiv.innerHTML = `<span style="font-size:26px;color:#38e2b0;">Quiz Completed! 🏆</span>`;
   answersDiv.innerHTML = '';
   nextBtn.style.display = 'none';
 
@@ -255,7 +271,7 @@ function showResults() {
   localStorage.setItem('quizScores', JSON.stringify(userScores));
 
   let badge = getBadge(score);
-  resultDiv.innerHTML = `<div>Your score is <b>${score}</b> out of <b>${totalQuestions}</b></div>
+  resultDiv.innerHTML += `<div>Your score is <b>${score}</b> out of <b>${totalQuestions}</b></div>
     <div id="score-badge">${badge}</div>
     <div>Best score as ${user}: <b>${userScores[user]}</b></div>`;
   leaderboardDiv.innerHTML = `<hr/><h4>Leaderboard</h4>` + leaderboardHTML();
@@ -277,14 +293,17 @@ function getBadge(score) {
   if (score > totalQuestions * 0.4) return "👍 <b>Good Effort!</b>";
   return "😐 <b>Keep Practicing!</b>";
 }
+
 function updateProgressBar() {
   progressBar.style.width = ((currentCount / totalQuestions) * 100) + "%";
 }
+
 function decodeHTML(html) {
   let txt = document.createElement("textarea");
   txt.innerHTML = html;
   return txt.value;
 }
+
 function showReview() {
   reviewDiv.innerHTML = `<h3>Review Answers</h3>`;
   for(let i=0; i<questions.length; i++) {

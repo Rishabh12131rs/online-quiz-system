@@ -381,3 +381,97 @@ footer {
     color: #222;
     opacity: 0.9;
 }
+
+/* Quiz Editor Styles */
+#editor-modal-content {
+    max-width: 800px;
+}
+
+#quiz-meta-form {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+#quiz-meta-form input {
+    flex-grow: 1;
+    font-size: 1.2rem;
+    padding: 12px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+}
+#quiz-meta-form button {
+    margin-top: 0; /* Override card-btn margin */
+}
+
+#question-list-container {
+    max-height: 50vh;
+    overflow-y: auto;
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #eee;
+}
+
+.question-editor-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+.question-editor-card textarea {
+    width: 100%;
+    box-sizing: border-box; /* Fixes padding issues */
+    font-size: 1.1rem;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+.question-editor-card .options-editor {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+.question-editor-card .option-input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.question-editor-card .option-input-group input[type="text"] {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+/* Style for the correct answer radio button */
+.question-editor-card .option-input-group input[type="radio"] {
+    width: 20px;
+    height: 20px;
+}
+.delete-question-btn {
+    background: none;
+    border: 1px solid #ff8a8a;
+    color: #ff8a8a;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+.delete-question-btn:hover {
+    background: #ffe0e0;
+}
+
+#editor-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
+#editor-controls #save-quiz-btn {
+    background: #84f281; /* Green save button */
+}
+#editor-controls #save-quiz-btn:hover {
+    background: #6ace68;
+}

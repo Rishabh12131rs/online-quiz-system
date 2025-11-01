@@ -32,6 +32,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const scoreLabel = document.getElementById('scoreLabel');
     const timerDisplay = document.getElementById('timer-display');
 
+    // Editor Elements
+    const createQuizBtn = document.getElementById('create-quiz-btn');
+    const editorContainer = document.getElementById('editor-container');
+    const closeEditorBtn = document.getElementById('close-editor-btn');
+    const addQuestionBtn = document.getElementById('add-question-btn');
+    const questionListContainer = document.getElementById('question-list-container');
+    const saveQuizBtn = document.getElementById('save-quiz-btn');
+    const quizTitleInput = document.getElementById('quiz-title-input');
+
     // --- App State ---
     let questions = [];
     let currentIndex = 0;
@@ -51,6 +60,18 @@ document.addEventListener('DOMContentLoaded', () => {
     closeQuizBtn.onclick = () => {
         mainContent.style.display = 'block';
         quizAppContainer.style.display = 'none';
+    };
+
+    createQuizBtn.onclick = () => {
+        mainContent.style.display = 'none';
+        editorContainer.style.display = 'flex';
+        // We'll add logic to load a quiz later
+    };
+    closeEditorBtn.onclick = () => {
+        mainContent.style.display = 'block';
+        editorContainer.style.display = 'none';
+        questionListContainer.innerHTML = ''; // Clear the editor
+        quizTitleInput.value = '';
     };
 
     // --- Authentication Logic ---
@@ -303,6 +324,49 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         leaderboardDiv.innerHTML = html;
     }
+
+    // --- Quiz Editor Logic ---
+    let questionEditorId = 0; // To give each question a unique ID
+
+    function createNewQuestionEditor() {
+        const questionId = questionEditorId++;
+        const questionCard = document.createElement('div');
+        questionCard.className = 'question-editor-card';
+        questionCard.dataset.id = questionId;
+        
+        questionCard.innerHTML = `
+            <textarea placeholder="Enter your question here..."></textarea>
+            <div class="options-editor">
+                <div class="option-input-group">
+                    <input type="radio" name="correct-answer-${questionId}" value="0" checked>
+                    <input type="text" placeholder="Answer 1 (Correct)">
+                </div>
+                <div class="option-input-group">
+                    <input type="radio" name="correct-answer-${questionId}" value="1">
+                    <input type="text" placeholder="Answer 2">
+                </div>
+                <div class="option-input-group">
+                    <input type="radio" name="correct-answer-${questionId}" value="2">
+                    <input type="text" placeholder="Answer 3">
+                </div>
+                <div class="option-input-group">
+                    <input type="radio" name="correct-answer-${questionId}" value="3">
+                    <input type="text" placeholder="Answer 4">
+                </div>
+            </div>
+            <button class="delete-question-btn">Delete Question</button>
+        `;
+
+        // Add delete functionality
+        questionCard.querySelector('.delete-question-btn').onclick = () => {
+            questionCard.remove();
+        };
+
+        questionListContainer.appendChild(questionCard);
+    }
+
+    // --- Add event listener for the "Add Question" button ---
+    addQuestionBtn.onclick = createNewQuestionEditor;
 
     // --- Initialization ---
     function init() {

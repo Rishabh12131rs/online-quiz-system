@@ -366,3 +366,18 @@ footer {
     color: #ffb353;
     border-color: #ffb353;
 }
+
+/* Answer Feedback Styles */
+.option-btn.correct {
+    background: #defcef;
+    border-color: #3ecaaa;
+    color: #222;
+    font-weight: 700;
+}
+
+.option-btn.incorrect {
+    background: #ffe0e0;
+    border-color: #ff8a8a;
+    color: #222;
+    opacity: 0.9;
+}

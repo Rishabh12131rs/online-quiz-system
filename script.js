@@ -204,6 +204,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearInterval(timerInterval);
                 document.getElementById('feedback').innerHTML = `<span style="color:red;">Time's up! Correct was: ${decodeHTML(questions[currentIndex].correct_answer)}</span>`;
                 disableOptions();
+                // Also show the correct answer
+                const correctButton = document.querySelector(`.option-btn[data-correct="true"]`);
+                if (correctButton) {
+                    correctButton.classList.add('correct');
+                }
             }
         }, 1000); // Run this every 1 second
     }
@@ -214,24 +219,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const isCorrect = selectedButton.dataset.correct === 'true';
         const feedbackDiv = document.getElementById('feedback');
         
+        disableOptions(); // Disable all buttons first
+
         if (isCorrect) {
+            selectedButton.classList.add('correct'); // Turn selected button green
             feedbackDiv.innerHTML = `<span style="color:green;">Correct!</span>`;
             score++;
         } else {
+            selectedButton.classList.add('incorrect'); // Turn selected button red
             feedbackDiv.innerHTML = `<span style="color:red;">Wrong! Correct was: ${decodeHTML(questions[currentIndex].correct_answer)}</span>`;
+            
+            // Find and show the correct answer in green
+            const correctButton = document.querySelector(`.option-btn[data-correct="true"]`);
+            if (correctButton) {
+                correctButton.classList.add('correct');
+            }
         }
         
-        disableOptions();
         scoreLabel.textContent = 'Score: ' + score;
     }
 
     function disableOptions() {
         document.querySelectorAll('.option-btn').forEach((btn) => {
             btn.disabled = true;
-            if (btn.dataset.correct === 'true') {
-                btn.style.borderColor = 'green';
-                btn.style.backgroundColor = '#e0ffe0';
-            }
         });
     }
 

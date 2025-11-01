@@ -91,6 +91,25 @@ logoutBtn.onclick = function() {
 window.onload = function() {
   let user = localStorage.getItem('quizUser');
   if(user) showMainMenu(user);
+
+  // Dark mode toggle
+  const themeToggle = document.getElementById('toggle-theme');
+  let savedTheme = localStorage.getItem('theme') || 'light';
+  if(savedTheme === 'dark') {
+    document.body.classList.add('dark-mode');
+    if(themeToggle) themeToggle.checked = true;
+  }
+  if(themeToggle) {
+    themeToggle.addEventListener('change', () => {
+      if(themeToggle.checked) {
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('theme', 'light');
+      }
+    });
+  }
 };
 
 // --- Main Menu ---
@@ -112,7 +131,7 @@ document.querySelectorAll('.game-launch').forEach(btn => {
   };
 });
 
-// --- Tic-Tac-Toe ---
+// --- Tic-Tac-Toe Game ---
 function loadTicTacToe() {
   gameArea.innerHTML = `
     <style>

@@ -31,24 +31,31 @@
         <a href="#" data-category="11"><span class="nav-icon">⭐</span><div>Entertainment</div></a>
         <a href="#" data-category="22"><span class="nav-icon">🌍</span><div>Geography</div></a>
         <a href="#" data-category="23"><span class="nav-icon">🏛️</span><div>History</div></a>
-        <a href="#" data-category="9"><span class="nav-icon">💬</span><div>Languages</div></a> <a href="#" data-category="17"><span class="nav-icon">🧬</span><div>Science</div></a>
+        <a href="#" data-category="9"><span class="nav-icon">💬</span><div>Languages</div></a>
+        <a href="#" data-category="17"><span class="nav-icon">🧬</span><div>Science</div></a>
         <a href="#" data-category="21"><span class="nav-icon">🏀</span><div>Sports</div></a>
-        <a href="#" data-category="9"><span class="nav-icon">❓</span><div>Trivia</div></a> </nav>
+        <a href="#" data-category="9"><span class="nav-icon">❓</span><div>Trivia</div></a>
+    </nav>
 
     <main id="main-content">
-        <div class="features-row">
-            <div class="card-home card-create">
-                <h2>Create a quiz</h2>
-                <p>Play for free with up to 300 friends</p>
-                <button class="card-btn" id="create-quiz-btn">Quiz editor</button>
+
+        <section class="hero-section">
+            <h1 class="hero-heading">Welcome to QuizHub</h1>
+            <p class="hero-subheading">Create, play, and share quizzes in seconds.</p>
+            <div class="features-row">
+                <div class="card-home card-create">
+                    <h2>Create a quiz</h2>
+                    <p>Use our simple editor to build your own quiz.</p>
+                    <button class="card-btn" id="create-quiz-btn">Quiz editor</button>
+                </div>
+                <div class="card-home card-ai">
+                    <h2>Play a quiz</h2>
+                    <p>Test your knowledge with trivia from any category.</p>
+                    <button class="card-btn" id="play-quiz-btn">Play Trivia</button>
+                </div>
             </div>
-            <div class="card-home card-ai">
-                <h2>Play a quiz</h2>
-                <p>Test your knowledge with our trivia</p>
-                <button class="card-btn" id="play-quiz-btn">Play Trivia</button>
-            </div>
-        </div>
-        <h3 class="section-title">Recently Published</h3>
+        </section>
+        <h3 class="section-title">Your Custom Quizzes</h3>
         <div class="quiz-list">
             </div>
     </main>
@@ -93,6 +100,7 @@
                 <option value="medium">Medium</option>
                 <option value="hard">Hard</option>
             </select>
+
             <select id="quiz-count">
                 <option value="5">5 Questions</option>
                 <option value="10">10 Questions</option>

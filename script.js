@@ -14,8 +14,6 @@ firebase.initializeApp(firebaseConfig);
 
 // Initialize Cloud Firestore
 const db = firebase.firestore();
-// --- END OF FIREBASE SETUP ---
-
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -86,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
         quizControls.style.display = 'flex'; 
         quizNav.style.display = 'none'; 
         quizArea.innerHTML = "Click 'Start Quiz' to begin!"; 
-        showLeaderboard(); 
+        showLeaderboard(); // Show global leaderboard
     };
     closeQuizBtn.onclick = () => {
         mainContent.style.display = 'block';
@@ -107,7 +105,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     manageQuizzesBtn.onclick = () => {
-        // Only let signed-in users manage quizzes
         const currentUser = localStorage.getItem('quizUser');
         if (!currentUser) {
             alert("Please sign in to manage your quizzes.");
@@ -251,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showQuestion(); 
     }
 
-    // *** UPDATED: Join by ID Function (now uses Firebase) ***
+    // Join by ID Function (uses Firebase)
     joinQuizBtn.onclick = () => {
         const quizId = quizIdInput.value.trim();
         if (quizId.length < 10) { // Firebase IDs are long
@@ -280,7 +277,10 @@ document.addEventListener('DOMContentLoaded', () => {
             quizNav.style.display = 'none';
             quizControls.style.display = 'flex'; 
             timerDisplay.style.display = 'none'; 
+            
+            // *** SAVE SCORE TO GLOBAL LEADERBOARD ***
             saveUserScore(localStorage.getItem('quizUser') || 'Anonymous', score);
+            
             showLeaderboard();
             return;
         }
@@ -419,35 +419,62 @@ document.addEventListener('DOMContentLoaded', () => {
         return txt.value;
     }
 
-    // --- Leaderboard Logic (Still uses localStorage, which is fine) ---
+    // --- *** NEW GLOBAL LEADERBOARD FUNCTIONS *** ---
+
     function saveUserScore(username, newScore) {
         if (!username) username = 'Anonymous';
-        let scores = JSON.parse(localStorage.getItem('quizScores') || '{}');
-        let prevScore = scores[username] || 0;
-        
-        if (newScore > prevScore) {
-            scores[username] = newScore;
-            localStorage.setItem('quizScores', JSON.stringify(scores));
-        }
+        if (newScore === 0) return; // Don't save zero scores
+
+        // Use the username as the document ID for easy lookup
+        const userDocRef = db.collection("leaderboard").doc(username);
+
+        userDocRef.get().then((doc) => {
+            if (doc.exists) {
+                // User exists, check if new score is higher
+                const currentScore = doc.data().score || 0;
+                if (newScore > currentScore) {
+                    // Update the score
+                    userDocRef.set({ score: newScore, name: username });
+                }
+            } else {
+                // New user, just set the score
+                userDocRef.set({ score: newScore, name: username });
+            }
+        }).catch((error) => {
+            console.error("Error saving score: ", error);
+        });
     }
 
     function showLeaderboard() {
-        const scores = JSON.parse(localStorage.getItem('quizScores') || '{}');
-        let sortedUsers = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-        let html = '<h3>Leaderboard</h3>';
-        if (sortedUsers.length === 0) {
-            html += '<p>No scores yet. Play a quiz!</p>';
-        } else {
-            html += '<ol>';
-            for (let [user, score] of sortedUsers.slice(0, 10)) { 
-                html += `<li>${user}: ${score}</li>`;
+        leaderboardDiv.innerHTML = '<h3>Leaderboard</h3><p>Loading scores...</p>';
+        
+        db.collection("leaderboard")
+          .orderBy("score", "desc") // Get highest scores first
+          .limit(10) // Get only the top 10
+          .get()
+          .then((querySnapshot) => {
+            
+            if (querySnapshot.empty) {
+                leaderboardDiv.innerHTML = '<h3>Leaderboard</h3><p>No scores yet. Play a quiz!</p>';
+                return;
             }
+
+            let html = '<h3>Leaderboard</h3><ol>';
+            querySnapshot.forEach((doc) => {
+                const user = doc.data().name || doc.id; // Use saved name or doc ID
+                const score = doc.data().score;
+                html += `<li>${user}: ${score}</li>`;
+            });
             html += '</ol>';
-        }
-        leaderboardDiv.innerHTML = html;
+            leaderboardDiv.innerHTML = html;
+
+          }).catch((error) => {
+            console.error("Error getting leaderboard: ", error);
+            leaderboardDiv.innerHTML = '<h3>Leaderboard</h3><p>Could not load scores.</p>';
+          });
     }
 
-    // --- Quiz Editor Logic ---
+    // --- Quiz Editor Logic (Uses Firebase) ---
     let questionEditorId = 0; 
 
     function createNewQuestionEditor() {
@@ -488,7 +515,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addQuestionBtn.onclick = createNewQuestionEditor;
 
-    // *** UPDATED: Save Quiz Function (now uses Firebase) ***
     saveQuizBtn.onclick = () => {
         const currentUser = localStorage.getItem('quizUser');
         if (!currentUser) {
@@ -553,7 +579,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // --- UPDATED: Load and Display "Shared Quizzes" (from Firebase) ---
+    // --- Load and Display "Shared Quizzes" (from Firebase) ---
     function loadSharedQuizzes() {
         quizList.innerHTML = '<p>Loading quizzes...</p>';
 
@@ -586,7 +612,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- UPDATED: Load "Manage My Quizzes" List (from Firebase) ---
+    // --- Load "Manage My Quizzes" List (from Firebase) ---
     function loadManageList(currentUser) {
         myQuizListContainer.innerHTML = '<p>Loading your quizzes...</p>'; 
         
@@ -638,7 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- UPDATED: Delete Quiz Function (now uses Firebase) ---
+    // --- Delete Quiz Function (uses Firebase) ---
     function deleteQuiz(quizId) {
         if (!confirm("Are you sure you want to delete this quiz? This cannot be undone.")) {
             return; 

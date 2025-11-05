@@ -1,12 +1,12 @@
-// --- NEW: FIREBASE SETUP ---
-// *** PASTE YOUR FIREBASE CONFIG KEYS HERE ***
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyCOSeITzHa3Ck7bq3DlK6-Rb6J1iocYHvE",
   authDomain: "quizhub-project-4b20b.firebaseapp.com",
   projectId: "quizhub-project-4b20b",
   storageBucket: "quizhub-project-4b20b.firebasestorage.app",
   messagingSenderId: "155078169148",
-  appId: "1:155078169148:web:a3dc75c8f8b4ec86556939"
+  appId: "1:155078169148:web:a3dc75c8f8b4ec86556939",
+  measurementId: "G-5LH5BWX15G"
 };
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);

@@ -92,7 +92,7 @@ header {
 }
 .sign-btn:hover { background: #E07B00; }
 
-/* *** NEW JOIN BUTTON STYLE *** */
+/* *** JOIN BUTTON STYLE *** */
 .join-btn {
     background: var(--primary);
     color: var(--bg-white);
@@ -611,7 +611,7 @@ footer {
     color: var(--text-dark);
 }
 
-/* *** NEW SHARE BUTTON STYLE *** */
+/* *** SHARE BUTTON STYLE *** */
 .manage-quiz-card .buttons-wrapper {
     display: flex;
     gap: 10px;

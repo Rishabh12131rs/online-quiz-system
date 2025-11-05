@@ -1,3 +1,22 @@
+// --- NEW: FIREBASE SETUP ---
+// *** PASTE YOUR FIREBASE CONFIG KEYS HERE ***
+const firebaseConfig = {
+  apiKey: "AIzaSyCOSeITzHa3Ck7bq3DlK6-Rb6J1iocYHvE",
+  authDomain: "quizhub-project-4b20b.firebaseapp.com",
+  projectId: "quizhub-project-4b20b",
+  storageBucket: "quizhub-project-4b20b.firebasestorage.app",
+  messagingSenderId: "155078169148",
+  appId: "1:155078169148:web:a3dc75c8f8b4ec86556939"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+
+// Initialize Cloud Firestore
+const db = firebase.firestore();
+// --- END OF FIREBASE SETUP ---
+
+
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- Element References ---
@@ -18,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const welcomeUser = document.getElementById('welcome-user');
     const logoutBtn = document.getElementById('logout-btn');
 
-    // *** NEW: Join by ID Elements ***
+    // Join by ID Elements
     const joinQuizBtn = document.getElementById('join-quiz-btn');
     const quizIdInput = document.getElementById('quiz-id-input');
 
@@ -72,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     closeQuizBtn.onclick = () => {
         mainContent.style.display = 'block';
         quizAppContainer.style.display = 'none';
-        loadMyQuizzes(); 
+        loadSharedQuizzes(); // Refresh the main page list
     };
 
     createQuizBtn.onclick = () => {
@@ -84,21 +103,28 @@ document.addEventListener('DOMContentLoaded', () => {
         editorContainer.style.display = 'none';
         questionListContainer.innerHTML = ''; 
         quizTitleInput.value = '';
-        loadMyQuizzes(); 
+        loadSharedQuizzes(); // Refresh the main page list
     };
     
     manageQuizzesBtn.onclick = () => {
+        // Only let signed-in users manage quizzes
+        const currentUser = localStorage.getItem('quizUser');
+        if (!currentUser) {
+            alert("Please sign in to manage your quizzes.");
+            return;
+        }
         editorContainer.style.display = 'none'; 
         manageContainer.style.display = 'flex'; 
-        loadManageList(); 
+        loadManageList(currentUser); // Load quizzes for the current user
     };
     closeManageBtn.onclick = () => {
         mainContent.style.display = 'block'; 
         manageContainer.style.display = 'none';
-        loadMyQuizzes(); 
+        loadSharedQuizzes(); // Refresh main page quiz list
     };
 
     // --- Authentication Logic ---
+    // (This still uses localStorage, which is fine for client-side auth)
     loginTab.onclick = () => {
         loginTab.classList.add('active');
         signupTab.classList.remove('active');
@@ -225,23 +251,25 @@ document.addEventListener('DOMContentLoaded', () => {
         showQuestion(); 
     }
 
-    // *** NEW: Join by ID Function ***
+    // *** UPDATED: Join by ID Function (now uses Firebase) ***
     joinQuizBtn.onclick = () => {
         const quizId = quizIdInput.value.trim();
-        if (quizId.length === 0) {
-            alert("Please enter a Quiz ID.");
+        if (quizId.length < 10) { // Firebase IDs are long
+            alert("Please enter a valid Quiz ID.");
             return;
         }
 
-        const myQuizzes = JSON.parse(localStorage.getItem('myQuizzes') || '[]');
-        const quizToJoin = myQuizzes.find(quiz => quiz.id === quizId);
-
-        if (quizToJoin) {
-            quizIdInput.value = ''; // Clear the input
-            startCustomQuiz(quizToJoin);
-        } else {
-            alert("Quiz ID not found. Make sure you have created and saved this quiz on this device.");
-        }
+        db.collection("quizzes").doc(quizId).get().then((doc) => {
+            if (doc.exists) {
+                quizIdInput.value = ''; // Clear the input
+                startCustomQuiz(doc.data()); // Start quiz with data from Firebase
+            } else {
+                alert("Quiz ID not found in the database.");
+            }
+        }).catch((error) => {
+            console.error("Error getting quiz:", error);
+            alert("Error finding quiz. Check the console.");
+        });
     };
     
     function showQuestion() {
@@ -391,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return txt.value;
     }
 
-    // --- Leaderboard Logic ---
+    // --- Leaderboard Logic (Still uses localStorage, which is fine) ---
     function saveUserScore(username, newScore) {
         if (!username) username = 'Anonymous';
         let scores = JSON.parse(localStorage.getItem('quizScores') || '{}');
@@ -460,7 +488,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addQuestionBtn.onclick = createNewQuestionEditor;
 
+    // *** UPDATED: Save Quiz Function (now uses Firebase) ***
     saveQuizBtn.onclick = () => {
+        const currentUser = localStorage.getItem('quizUser');
+        if (!currentUser) {
+            alert("Please sign in to create a quiz.");
+            return;
+        }
+
         const title = quizTitleInput.value.trim();
         if (title.length < 3) {
             alert("Please enter a quiz title (at least 3 characters).");
@@ -474,9 +509,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         let newQuiz = {
-            id: 'custom_' + new Date().getTime(), 
             title: title,
-            author: localStorage.getItem('quizUser') || 'Anonymous',
+            author: currentUser, // Save who made the quiz
             questions: []
         };
 
@@ -508,100 +542,122 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        let myQuizzes = JSON.parse(localStorage.getItem('myQuizzes') || '[]');
-        myQuizzes.push(newQuiz);
-        localStorage.setItem('myQuizzes', JSON.stringify(myQuizzes));
-
-        alert(`Quiz "${title}" saved successfully!`);
-        
-        closeEditorBtn.click(); 
+        // --- Save to Firebase ---
+        db.collection("quizzes").add(newQuiz).then((docRef) => {
+            alert(`Quiz "${title}" saved successfully!`);
+            console.log("Quiz saved with ID: ", docRef.id);
+            closeEditorBtn.click(); 
+        }).catch((error) => {
+            console.error("Error adding document: ", error);
+            alert("Error saving quiz. Check the console.");
+        });
     };
 
-    // --- Load and Display "My Quizzes" ---
-    function loadMyQuizzes() {
-        let myQuizzes = JSON.parse(localStorage.getItem('myQuizzes') || '[]');
-        
-        quizList.innerHTML = ''; 
+    // --- UPDATED: Load and Display "Shared Quizzes" (from Firebase) ---
+    function loadSharedQuizzes() {
+        quizList.innerHTML = '<p>Loading quizzes...</p>';
 
-        if (myQuizzes.length === 0) {
-            quizList.innerHTML = '<p>You haven\'t created any quizzes yet! Try making one.</p>';
-            return;
-        }
-
-        myQuizzes.forEach(quiz => {
-            const quizCard = document.createElement('div');
-            quizCard.className = 'quiz-card';
-            quizCard.textContent = quiz.title;
-            quizCard.dataset.quizId = quiz.id; 
-
-            quizCard.onclick = () => {
-                startCustomQuiz(quiz); 
-            };
-
-            quizList.appendChild(quizCard);
-        });
-    }
-
-    // --- Load and Display "Manage My Quizzes" List ---
-    function loadManageList() {
-        let myQuizzes = JSON.parse(localStorage.getItem('myQuizzes') || '[]');
-        myQuizListContainer.innerHTML = ''; 
-
-        if (myQuizzes.length === 0) {
-            myQuizListContainer.innerHTML = '<p>You haven\'t created any quizzes yet!</p>';
-            return;
-        }
-
-        myQuizzes.forEach((quiz, index) => {
-            const quizCard = document.createElement('div');
-            quizCard.className = 'manage-quiz-card';
+        db.collection("quizzes").get().then((querySnapshot) => {
+            quizList.innerHTML = ''; // Clear loading message
             
-            // *** UPDATED to include Share button and wrapper ***
-            quizCard.innerHTML = `
-                <h4>${quiz.title}</h4>
-                <div class="buttons-wrapper">
-                    <button class="share-quiz-btn" data-id="${quiz.id}">Share</button>
-                    <button class="delete-quiz-btn" data-id="${quiz.id}">Delete</button>
-                </div>
-            `;
+            if (querySnapshot.empty) {
+                quizList.innerHTML = '<p>No shared quizzes found. Be the first to create one!</p>';
+                return;
+            }
 
-            // Add share functionality
-            quizCard.querySelector('.share-quiz-btn').onclick = (e) => {
-                const quizId = e.target.dataset.id;
-                navigator.clipboard.writeText(quizId).then(() => {
-                    alert(`Quiz ID "${quizId}" copied to clipboard!`);
-                }, () => {
-                    alert("Failed to copy Quiz ID.");
-                });
-            };
+            querySnapshot.forEach((doc) => {
+                const quiz = doc.data();
+                const quizId = doc.id; // Get the unique Firebase ID
+                
+                const quizCard = document.createElement('div');
+                quizCard.className = 'quiz-card';
+                quizCard.textContent = quiz.title;
+                quizCard.dataset.quizId = quizId; 
 
-            // Add delete functionality
-            quizCard.querySelector('.delete-quiz-btn').onclick = (e) => {
-                const quizId = e.target.dataset.id;
-                deleteQuiz(quizId);
-            };
+                quizCard.onclick = () => {
+                    startCustomQuiz(quiz); 
+                };
 
-            myQuizListContainer.appendChild(quizCard);
+                quizList.appendChild(quizCard);
+            });
+        }).catch(err => {
+            console.error(err);
+            quizList.innerHTML = '<p>Could not load quizzes. Check console.</p>';
         });
     }
 
-    // --- Delete Quiz Function ---
+    // --- UPDATED: Load "Manage My Quizzes" List (from Firebase) ---
+    function loadManageList(currentUser) {
+        myQuizListContainer.innerHTML = '<p>Loading your quizzes...</p>'; 
+        
+        // Query Firebase for quizzes created by the current user
+        db.collection("quizzes").where("author", "==", currentUser).get().then((querySnapshot) => {
+            myQuizListContainer.innerHTML = ''; 
+
+            if (querySnapshot.empty) {
+                myQuizListContainer.innerHTML = '<p>You haven\'t created any quizzes yet!</p>';
+                return;
+            }
+
+            querySnapshot.forEach((doc) => {
+                const quiz = doc.data();
+                const quizId = doc.id; // The unique Firebase document ID
+
+                const quizCard = document.createElement('div');
+                quizCard.className = 'manage-quiz-card';
+                
+                quizCard.innerHTML = `
+                    <h4>${quiz.title}</h4>
+                    <div class="buttons-wrapper">
+                        <button class="share-quiz-btn" data-id="${quizId}">Share</button>
+                        <button class="delete-quiz-btn" data-id="${quizId}">Delete</button>
+                    </div>
+                `;
+
+                // Add share functionality
+                quizCard.querySelector('.share-quiz-btn').onclick = (e) => {
+                    const idToShare = e.target.dataset.id;
+                    navigator.clipboard.writeText(idToShare).then(() => {
+                        alert(`Quiz ID "${idToShare}" copied to clipboard!`);
+                    }, () => {
+                        alert("Failed to copy Quiz ID.");
+                    });
+                };
+
+                // Add delete functionality
+                quizCard.querySelector('.delete-quiz-btn').onclick = (e) => {
+                    const idToDelete = e.target.dataset.id;
+                    deleteQuiz(idToDelete);
+                };
+
+                myQuizListContainer.appendChild(quizCard);
+            });
+        }).catch(err => {
+            console.error(err);
+            myQuizListContainer.innerHTML = '<p>Could not load your quizzes.</p>';
+        });
+    }
+
+    // --- UPDATED: Delete Quiz Function (now uses Firebase) ---
     function deleteQuiz(quizId) {
         if (!confirm("Are you sure you want to delete this quiz? This cannot be undone.")) {
             return; 
         }
 
-        let myQuizzes = JSON.parse(localStorage.getItem('myQuizzes') || '[]');
-        const updatedQuizzes = myQuizzes.filter(quiz => quiz.id !== quizId);
-        localStorage.setItem('myQuizzes', JSON.stringify(updatedQuizzes));
-        loadManageList(); 
+        db.collection("quizzes").doc(quizId).delete().then(() => {
+            console.log("Quiz deleted!");
+            loadManageList(localStorage.getItem('quizUser')); // Refresh the list
+        }).catch((error) => {
+            console.error("Error removing quiz: ", error);
+            alert("Could not delete quiz. Check console.");
+        });
     }
 
     // --- Initialization ---
     function init() {
         const currentUser = localStorage.getItem('quizUser');
         updateUserUI(currentUser);
-        loadMyQuizzes(); 
+        loadSharedQuizzes(); // Load all shared quizzes on page load
         
         loginTab.classList.add('active');
         signupTab.classList.remove('active');
@@ -622,10 +678,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         editorContainer.style.display = 'none';
                         quizAppContainer.style.display = 'none';
                         mainContent.style.display = 'block'; 
-                        loadMyQuizzes();
+                        loadSharedQuizzes();
                     }
                 } else if (category) {
-                    startApiQuiz(category, 10, 'any'); // Default to 10 questions, any difficulty
+                    startApiQuiz(category, 10, 'any'); 
                 }
             });
         });

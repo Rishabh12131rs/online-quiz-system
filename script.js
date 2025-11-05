@@ -18,6 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const welcomeUser = document.getElementById('welcome-user');
     const logoutBtn = document.getElementById('logout-btn');
 
+    // *** NEW: Join by ID Elements ***
+    const joinQuizBtn = document.getElementById('join-quiz-btn');
+    const quizIdInput = document.getElementById('quiz-id-input');
+
     // Quiz App Elements
     const playQuizBtn = document.getElementById('play-quiz-btn');
     const closeQuizBtn = document.getElementById('close-quiz-btn');
@@ -31,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const questionNum = document.getElementById('questionNum');
     const scoreLabel = document.getElementById('scoreLabel');
     const timerDisplay = document.getElementById('timer-display');
-    const quizList = document.querySelector('.quiz-list'); // Get the quiz list container
+    const quizList = document.querySelector('.quiz-list'); 
 
     // Editor Elements
     const createQuizBtn = document.getElementById('create-quiz-btn');
@@ -50,8 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let questions = [];
     let currentIndex = 0;
     let score = 0;
-    let timerInterval; // This will hold our countdown
-    let timeLeft = 10; // Time per question (in seconds)
+    let timerInterval; 
+    let timeLeft = 10; 
 
     // --- Page/Modal Toggling ---
     signInBtn.onclick = () => authContainer.style.display = 'flex';
@@ -60,15 +64,15 @@ document.addEventListener('DOMContentLoaded', () => {
     playQuizBtn.onclick = () => {
         mainContent.style.display = 'none';
         quizAppContainer.style.display = 'block';
-        quizControls.style.display = 'flex'; // Show API controls
-        quizNav.style.display = 'none'; // Hide nav until quiz starts
-        quizArea.innerHTML = "Click 'Start Quiz' to begin!"; // Reset text
-        showLeaderboard(); // Show leaderboard on load
+        quizControls.style.display = 'flex'; 
+        quizNav.style.display = 'none'; 
+        quizArea.innerHTML = "Click 'Start Quiz' to begin!"; 
+        showLeaderboard(); 
     };
     closeQuizBtn.onclick = () => {
         mainContent.style.display = 'block';
         quizAppContainer.style.display = 'none';
-        loadMyQuizzes(); // Refresh the main page list when closing a quiz
+        loadMyQuizzes(); 
     };
 
     createQuizBtn.onclick = () => {
@@ -78,20 +82,20 @@ document.addEventListener('DOMContentLoaded', () => {
     closeEditorBtn.onclick = () => {
         mainContent.style.display = 'block';
         editorContainer.style.display = 'none';
-        questionListContainer.innerHTML = ''; // Clear the editor
+        questionListContainer.innerHTML = ''; 
         quizTitleInput.value = '';
-        loadMyQuizzes(); // Refresh the main page list
+        loadMyQuizzes(); 
     };
     
     manageQuizzesBtn.onclick = () => {
-        editorContainer.style.display = 'none'; // Hide the editor
-        manageContainer.style.display = 'flex'; // Show the manage modal
-        loadManageList(); // Load the list of quizzes
+        editorContainer.style.display = 'none'; 
+        manageContainer.style.display = 'flex'; 
+        loadManageList(); 
     };
     closeManageBtn.onclick = () => {
-        mainContent.style.display = 'block'; // Go back to main page
+        mainContent.style.display = 'block'; 
         manageContainer.style.display = 'none';
-        loadMyQuizzes(); // Refresh main page quiz list
+        loadMyQuizzes(); 
     };
 
     // --- Authentication Logic ---
@@ -165,28 +169,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Quiz Logic ---
 
     // REUSABLE FUNCTION for starting OpenTDB quizzes
-    function startApiQuiz(category, count, difficulty) { // *** ADDED difficulty PARAM ***
-        // Show quiz container
+    function startApiQuiz(category, count, difficulty) { 
         mainContent.style.display = 'none';
         quizAppContainer.style.display = 'block';
 
-        // Hide controls, show loading
         quizControls.style.display = 'none';
         quizArea.innerHTML = 'Loading questions...';
         quizNav.style.display = 'none';
         timerDisplay.style.display = 'none';
         
-        // Reset state
         score = 0;
         currentIndex = 0;
 
-        // *** BUILD API URL WITH DIFFICULTY ***
         let apiUrl = `https://opentdb.com/api.php?amount=${count}&category=${category}&type=multiple`;
         if (difficulty && difficulty !== "any") {
             apiUrl += `&difficulty=${difficulty}`;
         }
 
-        fetch(apiUrl) // *** Use new URL ***
+        fetch(apiUrl) 
             .then(res => res.json())
             .then(data => {
                 questions = data.results;
@@ -205,41 +205,53 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
     
-    // startQuizBtn (from the modal) now uses the new function
     startQuizBtn.onclick = function () { 
         const category = document.getElementById('quiz-category').value;
         const count = document.getElementById('quiz-count').value;
-        const difficulty = document.getElementById('quiz-difficulty').value; // *** GET DIFFICULTY ***
-        startApiQuiz(category, count, difficulty); // *** PASS DIFFICULTY ***
+        const difficulty = document.getElementById('quiz-difficulty').value; 
+        startApiQuiz(category, count, difficulty); 
     };
 
     function startCustomQuiz(quizObject) {
-        // Set the global questions array
         questions = quizObject.questions; 
-        
-        // Reset state
         score = 0;
         currentIndex = 0;
         
-        // Toggle UI
         mainContent.style.display = 'none';
         quizAppContainer.style.display = 'block';
-        quizControls.style.display = 'none'; // Hide OpenTDB controls
-        quizNav.style.display = 'flex'; // Show the next/prev buttons
+        quizControls.style.display = 'none'; 
+        quizNav.style.display = 'flex'; 
         
-        // Start the quiz
         showQuestion(); 
     }
 
+    // *** NEW: Join by ID Function ***
+    joinQuizBtn.onclick = () => {
+        const quizId = quizIdInput.value.trim();
+        if (quizId.length === 0) {
+            alert("Please enter a Quiz ID.");
+            return;
+        }
+
+        const myQuizzes = JSON.parse(localStorage.getItem('myQuizzes') || '[]');
+        const quizToJoin = myQuizzes.find(quiz => quiz.id === quizId);
+
+        if (quizToJoin) {
+            quizIdInput.value = ''; // Clear the input
+            startCustomQuiz(quizToJoin);
+        } else {
+            alert("Quiz ID not found. Make sure you have created and saved this quiz on this device.");
+        }
+    };
+    
     function showQuestion() {
-        // Clear any old timer
         clearInterval(timerInterval);
         
         if (currentIndex >= questions.length) {
             quizArea.innerHTML = `<h2>Quiz Complete!</h2><p>Your final score is: ${score} / ${questions.length}</p>`;
             quizNav.style.display = 'none';
-            quizControls.style.display = 'flex'; // Show controls again
-            timerDisplay.style.display = 'none'; // Hide timer at the end
+            quizControls.style.display = 'flex'; 
+            timerDisplay.style.display = 'none'; 
             saveUserScore(localStorage.getItem('quizUser') || 'Anonymous', score);
             showLeaderboard();
             return;
@@ -250,13 +262,11 @@ document.addEventListener('DOMContentLoaded', () => {
         let questionText, options, correctAnswer;
         
         if (q.incorrect_answers) { 
-            // This is an OpenTDB quiz
             questionText = q.question;
             options = [...q.incorrect_answers, q.correct_answer];
             correctAnswer = q.correct_answer;
             options.sort(() => Math.random() - 0.5); 
         } else { 
-            // This is our Custom Quiz
             questionText = q.question;
             options = [...q.options]; 
             correctAnswer = q.options[q.correct_answer_index];
@@ -546,11 +556,26 @@ document.addEventListener('DOMContentLoaded', () => {
             const quizCard = document.createElement('div');
             quizCard.className = 'manage-quiz-card';
             
+            // *** UPDATED to include Share button and wrapper ***
             quizCard.innerHTML = `
                 <h4>${quiz.title}</h4>
-                <button class="delete-quiz-btn" data-id="${quiz.id}">Delete</button>
+                <div class="buttons-wrapper">
+                    <button class="share-quiz-btn" data-id="${quiz.id}">Share</button>
+                    <button class="delete-quiz-btn" data-id="${quiz.id}">Delete</button>
+                </div>
             `;
 
+            // Add share functionality
+            quizCard.querySelector('.share-quiz-btn').onclick = (e) => {
+                const quizId = e.target.dataset.id;
+                navigator.clipboard.writeText(quizId).then(() => {
+                    alert(`Quiz ID "${quizId}" copied to clipboard!`);
+                }, () => {
+                    alert("Failed to copy Quiz ID.");
+                });
+            };
+
+            // Add delete functionality
             quizCard.querySelector('.delete-quiz-btn').onclick = (e) => {
                 const quizId = e.target.dataset.id;
                 deleteQuiz(quizId);
@@ -590,18 +615,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const category = link.dataset.category;
                 
                 if (category === 'home') {
-                    // If we're in a modal, close it. Otherwise, reload.
+                    // If we're in a modal, close it.
                     if (mainContent.style.display === 'none') {
-                        closeQuizBtn.click(); 
-                        closeEditorBtn.click();
-                        closeManageBtn.click();
-                        mainContent.style.display = 'block'; // Ensure main content is visible
+                        // Use a way to close all modals safely
+                        manageContainer.style.display = 'none';
                         editorContainer.style.display = 'none';
                         quizAppContainer.style.display = 'none';
-                        manageContainer.style.display = 'none';
+                        mainContent.style.display = 'block'; 
+                        loadMyQuizzes();
                     }
                 } else if (category) {
-                    startApiQuiz(category, 10, 'any'); // *** PASS 'any' AS DEFAULT DIFFICULTY ***
+                    startApiQuiz(category, 10, 'any'); // Default to 10 questions, any difficulty
                 }
             });
         });

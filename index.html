@@ -15,8 +15,9 @@
             <span class="site-title">QuizHub</span>
         </div>
         <div class="pin-auth">
-            <span class="pin-label">Join Game? PIN:</span>
-            <input type="text" class="pin-input" placeholder="123456" maxlength="6">
+            <span class="pin-label">Join Game? ID:</span>
+            <input type="text" class="pin-input" id="quiz-id-input" placeholder="Quiz ID" maxlength="20">
+            <button class="join-btn" id="join-quiz-btn">Join</button>
             <button class="sign-btn" id="signInBtn">Sign in</button>
             <div id="user-display" style="display: none;">
                 <span id="welcome-user"></span>
@@ -31,10 +32,10 @@
         <a href="#" data-category="11"><span class="nav-icon">⭐</span><div>Entertainment</div></a>
         <a href="#" data-category="22"><span class="nav-icon">🌍</span><div>Geography</div></a>
         <a href="#" data-category="23"><span class="nav-icon">🏛️</span><div>History</div></a>
-        <a href="#" data-category="9"><span class="nav-icon">💬</span><div>Languages</div></a>
+        <a href="#" data-category="9"><span class="nav-icon">💬</span><div>Languages</div></a> 
         <a href="#" data-category="17"><span class="nav-icon">🧬</span><div>Science</div></a>
         <a href="#" data-category="21"><span class="nav-icon">🏀</span><div>Sports</div></a>
-        <a href="#" data-category="9"><span class="nav-icon">❓</span><div>Trivia</div></a>
+        <a href="#" data-category="9"><span class="nav-icon">❓</span><div>Trivia</div></a> 
     </nav>
 
     <main id="main-content">
@@ -55,6 +56,7 @@
                 </div>
             </div>
         </section>
+
         <h3 class="section-title">Your Custom Quizzes</h3>
         <div class="quiz-list">
             </div>

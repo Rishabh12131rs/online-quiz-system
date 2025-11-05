@@ -8,10 +8,8 @@ const firebaseConfig = {
   appId: "1:155078169148:web:a3dc75c8f8b4ec86556939",
   measurementId: "G-5LH5BWX15G"
 };
-// Initialize Firebase
+// --- 2. INITIALIZE FIREBASE ---
 firebase.initializeApp(firebaseConfig);
-
-// Initialize Cloud Firestore and Auth
 const db = firebase.firestore();
 const auth = firebase.auth();
 // --- END OF FIREBASE SETUP ---
@@ -79,14 +77,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const quizResultsListContainer = document.getElementById('quiz-results-list-container');
 
     // --- App State ---
-    let questions = []; // Holds the questions for the *current* quiz
-    let currentQuizId = null; // Holds the ID of the *current* quiz
+    let questions = []; 
+    let currentQuizId = null; 
     let currentIndex = 0;
     let score = 0;
     let timerInterval; 
     let timeLeft = 10; 
 
-    // --- *** NEW: MAIN AUTHENTICATION LISTENER *** ---
+    // --- *** MAIN AUTHENTICATION LISTENER *** ---
     auth.onAuthStateChanged(user => {
         if (user) {
             // User is signed in
@@ -154,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsContainer.style.display = 'none';
     };
 
-    // --- *** NEW: FIREBASE AUTHENTICATION LOGIC *** ---
+    // --- *** FIREBASE AUTHENTICATION LOGIC *** ---
     loginTab.onclick = () => {
         loginTab.classList.add('active');
         signupTab.classList.remove('active');
@@ -226,8 +224,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Quiz Logic ---
 
+    // REUSABLE FUNCTION for starting OpenTDB quizzes
     function startApiQuiz(category, count, difficulty) { 
-        currentQuizId = `api_${category}_${difficulty}`; // Create a unique-ish ID
+        currentQuizId = `api_${category}_${difficulty}`; 
         
         mainContent.style.display = 'none';
         quizAppContainer.style.display = 'block';
@@ -273,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function startCustomQuiz(quizObject, quizId) {
         questions = quizObject.questions;
-        currentQuizId = quizId; // Store the ID of the quiz being played
+        currentQuizId = quizId; 
         
         score = 0;
         currentIndex = 0;
@@ -296,8 +295,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         db.collection("quizzes").doc(quizId).get().then((doc) => {
             if (doc.exists) {
-                quizIdInput.value = ''; // Clear the input
-                startCustomQuiz(doc.data(), doc.id); // Pass the quiz data AND its ID
+                quizIdInput.value = ''; 
+                startCustomQuiz(doc.data(), doc.id); 
             } else {
                 alert("Quiz ID not found in the database.");
             }
@@ -463,7 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- LEADERBOARD & RESULTS LOGIC ---
 
     function saveQuizAttempt(username, uid, quizId, score) {
-        if (!uid || !quizId) return; // Must have user and quiz
+        if (!uid || !quizId) return; 
         
         db.collection("quiz_attempts").add({
             username: username,
@@ -475,15 +474,14 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(() => console.log("Quiz attempt saved!"))
         .catch(err => console.error("Error saving attempt: ", err));
 
-        // We also still save to the global leaderboard
         saveGlobalHighScore(username, uid, score);
     }
     
     function saveGlobalHighScore(username, uid, newScore) {
-        if (!uid) uid = 'anonymous_' + new Date().getTime(); // Fallback for safety
-        if (newScore === 0) return; // Don't save zero scores
+        if (!uid) uid = 'anonymous_' + new Date().getTime(); 
+        if (newScore === 0) return; 
 
-        const userDocRef = db.collection("leaderboard").doc(uid); // Use UID as document ID
+        const userDocRef = db.collection("leaderboard").doc(uid); 
 
         userDocRef.get().then((doc) => {
             if (doc.exists) {
@@ -497,7 +495,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }).catch((error) => console.error("Error saving high score: ", error));
     }
 
-    // This shows the global leaderboard
     function showLeaderboard() {
         leaderboardDiv.innerHTML = '<h3>Global Leaderboard</h3><p>Loading scores...</p>';
         
@@ -524,12 +521,11 @@ document.addEventListener('DOMContentLoaded', () => {
           });
     }
 
-    // Show results for a *specific* quiz
     function showQuizResults(quizId, quizTitle) {
         resultsQuizTitle.textContent = `Results for: ${quizTitle}`;
         quizResultsListContainer.innerHTML = '<p>Loading results...</p>';
-        manageContainer.style.display = 'none'; // Hide manage modal
-        resultsContainer.style.display = 'flex'; // Show results modal
+        manageContainer.style.display = 'none'; 
+        resultsContainer.style.display = 'flex'; 
 
         db.collection("quiz_attempts")
           .where("quizId", "==", quizId) 
@@ -602,7 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     saveQuizBtn.onclick = () => {
         const user = auth.currentUser;
-        if (!user) { // Safety check
+        if (!user) { 
             alert("Your session expired. Please log in again.");
             return;
         }

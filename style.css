@@ -642,7 +642,7 @@ footer {
     background: #C0392B;
 }
 
-/* *** NEW: Results Button Style *** */
+/* --- Results Button Style --- */
 .results-quiz-btn {
     background: var(--success);
     color: white;
@@ -658,7 +658,7 @@ footer {
     background: #28B463; /* Darker green */
 }
 
-/* *** NEW: Results Modal Styles *** */
+/* --- Results Modal Styles --- */
 #results-modal-content {
     max-width: 600px;
 }

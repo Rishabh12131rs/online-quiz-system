@@ -8,12 +8,12 @@ const firebaseConfig = {
   messagingSenderId: "155078169148",
   appId: "1:155078169148:web:a3dc75c8f8b4ec86556939"
 };
-
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 
-// Initialize Cloud Firestore
+// Initialize Cloud Firestore and Auth
 const db = firebase.firestore();
+const auth = firebase.auth();
 // --- END OF FIREBASE SETUP ---
 
 
@@ -29,6 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const signupTab = document.getElementById('signup-tab');
     const loginForm = document.getElementById('login-form');
     const signupForm = document.getElementById('signup-form');
+    const loginEmail = document.getElementById('login-email'); // Changed
+    const loginPassword = document.getElementById('login-password');
+    const signupUsername = document.getElementById('signup-username'); // New
+    const signupEmail = document.getElementById('signup-email'); // New
+    const signupPassword = document.getElementById('signup-password');
     const loginErr = document.getElementById('login-error');
     const signupErr = document.getElementById('signup-error');
     const userDisplay = document.getElementById('user-display');
@@ -67,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeManageBtn = document.getElementById('close-manage-btn');
     const myQuizListContainer = document.getElementById('my-quiz-list-container');
 
-    // *** NEW: Results Modal Elements ***
+    // Results Modal Elements
     const resultsContainer = document.getElementById('results-container');
     const closeResultsBtn = document.getElementById('close-results-btn');
     const resultsQuizTitle = document.getElementById('results-quiz-title');
@@ -81,21 +86,39 @@ document.addEventListener('DOMContentLoaded', () => {
     let timerInterval; 
     let timeLeft = 10; 
 
-    // --- Page/Modal Toggling ---
-    // (No 'signInBtn' click, as modal shows on load)
+    // --- *** NEW: MAIN AUTHENTICATION LISTENER *** ---
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            // User is signed in
+            mainContent.style.display = 'block'; // Show the website
+            authContainer.style.display = 'none'; // Hide the login modal
+            
+            userDisplay.style.display = 'flex';
+            welcomeUser.textContent = `Hello, ${user.displayName || 'User'}`; // Use display name
+            
+            loadSharedQuizzes(); // Load all quizzes
+        } else {
+            // User is signed out
+            mainContent.style.display = 'none'; // Hide the website
+            authContainer.style.display = 'flex'; // Show the login modal
+            userDisplay.style.display = 'none';
+            welcomeUser.textContent = '';
+        }
+    });
 
+    // --- Page/Modal Toggling ---
     playQuizBtn.onclick = () => {
         mainContent.style.display = 'none';
         quizAppContainer.style.display = 'block';
         quizControls.style.display = 'flex'; 
         quizNav.style.display = 'none'; 
         quizArea.innerHTML = "Click 'Start Quiz' to begin!"; 
-        showLeaderboard(); // Show global leaderboard
+        showLeaderboard(); 
     };
     closeQuizBtn.onclick = () => {
         mainContent.style.display = 'block';
         quizAppContainer.style.display = 'none';
-        loadSharedQuizzes(); // Refresh the main page list
+        loadSharedQuizzes(); 
     };
 
     createQuizBtn.onclick = () => {
@@ -107,33 +130,31 @@ document.addEventListener('DOMContentLoaded', () => {
         editorContainer.style.display = 'none';
         questionListContainer.innerHTML = ''; 
         quizTitleInput.value = '';
-        loadSharedQuizzes(); // Refresh the main page list
+        loadSharedQuizzes(); 
     };
     
     manageQuizzesBtn.onclick = () => {
-        const currentUser = localStorage.getItem('quizUser');
-        // This check is redundant due to forced login, but good practice
-        if (!currentUser) {
+        const user = auth.currentUser;
+        if (!user) { // Safety check
             alert("Please sign in to manage your quizzes.");
             return;
         }
         editorContainer.style.display = 'none'; 
         manageContainer.style.display = 'flex'; 
-        loadManageList(currentUser); // Load quizzes for the current user
+        loadManageList(user); // Load quizzes for the current user
     };
     closeManageBtn.onclick = () => {
         mainContent.style.display = 'block'; 
         manageContainer.style.display = 'none';
-        loadSharedQuizzes(); // Refresh main page quiz list
+        loadSharedQuizzes(); 
     };
 
-    // *** NEW: Results Modal Toggle ***
     closeResultsBtn.onclick = () => {
         manageContainer.style.display = 'flex'; // Go back to manage modal
         resultsContainer.style.display = 'none';
     };
 
-    // --- Authentication Logic ---
+    // --- *** NEW: FIREBASE AUTHENTICATION LOGIC *** ---
     loginTab.onclick = () => {
         loginTab.classList.add('active');
         signupTab.classList.remove('active');
@@ -149,59 +170,59 @@ document.addEventListener('DOMContentLoaded', () => {
         signupErr.textContent = '';
     };
 
+    // Sign up new user
     signupForm.onsubmit = e => {
         e.preventDefault();
-        const username = signupForm.querySelector('#signup-username').value.trim();
-        const password = signupForm.querySelector('#signup-password').value;
-        if (username.length < 3 || password.length < 3) {
-            signupErr.textContent = 'Minimum 3 characters required.';
+        const username = signupUsername.value.trim();
+        const email = signupEmail.value.trim();
+        const password = signupPassword.value.trim();
+
+        if (username.length < 3) {
+            signupErr.textContent = 'Username must be at least 3 characters.';
             return;
         }
-        const users = JSON.parse(localStorage.getItem('quizUsers') || '{}');
-        if (users[username]) {
-            signupErr.textContent = 'Username already exists.';
-            return;
-        }
-        users[username] = password; 
-        localStorage.setItem('quizUsers', JSON.stringify(users));
-        signupErr.textContent = 'Registered! Please login.';
-        setTimeout(() => loginTab.click(), 1000);
+
+        auth.createUserWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                // Signed in 
+                const user = userCredential.user;
+                // Add the username to their profile
+                return user.updateProfile({
+                    displayName: username
+                });
+            })
+            .then(() => {
+                // Auth listener (onAuthStateChanged) will handle showing the app
+                console.log("User signed up and profile updated!");
+            })
+            .catch((error) => {
+                signupErr.textContent = error.message;
+            });
     };
 
+    // Log in existing user
     loginForm.onsubmit = e => {
         e.preventDefault();
-        const username = loginForm.querySelector('#login-username').value.trim();
-        const password = loginForm.querySelector('#login-password').value;
-        const users = JSON.parse(localStorage.getItem('quizUsers') || '{}');
-        
-        if (users[username] && users[username] === password) {
-            loginErr.textContent = '';
-            localStorage.setItem('quizUser', username);
-            updateUserUI(username);
-            authContainer.style.display = 'none'; // Hide auth modal
-            mainContent.style.display = 'block'; // *** SHOW THE WEBSITE ***
-            loadSharedQuizzes(); // Load quizzes now that user is logged in
-        } else {
-            loginErr.textContent = 'Invalid username or password.';
-        }
+        const email = loginEmail.value.trim();
+        const password = loginPassword.value.trim();
+
+        auth.signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                // Signed in 
+                // Auth listener (onAuthStateChanged) will handle showing the app
+                console.log("User logged in!");
+                loginErr.textContent = '';
+            })
+            .catch((error) => {
+                loginErr.textContent = error.message;
+            });
     };
 
+    // Log out user
     logoutBtn.onclick = () => {
-        localStorage.removeItem('quizUser');
-        updateUserUI(null);
-        mainContent.style.display = 'none'; // *** HIDE THE WEBSITE ***
-        authContainer.style.display = 'flex'; // Show login modal
+        auth.signOut().catch(err => console.error("Sign out error", err));
     };
 
-    function updateUserUI(username) {
-        if (username) {
-            userDisplay.style.display = 'flex';
-            welcomeUser.textContent = `Hello, ${username}`;
-        } else {
-            userDisplay.style.display = 'none';
-            welcomeUser.textContent = '';
-        }
-    }
 
     // --- Quiz Logic ---
 
@@ -295,10 +316,13 @@ document.addEventListener('DOMContentLoaded', () => {
             quizControls.style.display = 'flex'; 
             timerDisplay.style.display = 'none'; 
             
-            // *** SAVE QUIZ ATTEMPT ***
-            saveQuizAttempt(localStorage.getItem('quizUser') || 'Anonymous', currentQuizId, score);
+            const user = auth.currentUser;
+            const username = user ? user.displayName : 'Anonymous';
+            const uid = user ? user.uid : null;
+
+            saveQuizAttempt(username, uid, currentQuizId, score);
             
-            showLeaderboard(); // Show the global leaderboard
+            showLeaderboard();
             return;
         }
 
@@ -438,13 +462,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- LEADERBOARD & RESULTS LOGIC ---
 
-    // *** NEW: Saves every single attempt to the database ***
-    function saveQuizAttempt(username, quizId, score) {
-        if (!username || !quizId) return; // Must have user and quiz
+    function saveQuizAttempt(username, uid, quizId, score) {
+        if (!uid || !quizId) return; // Must have user and quiz
         
-        // Create a new document in 'quiz_attempts'
         db.collection("quiz_attempts").add({
             username: username,
+            uid: uid,
             quizId: quizId,
             score: score,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -453,15 +476,14 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(err => console.error("Error saving attempt: ", err));
 
         // We also still save to the global leaderboard
-        saveGlobalHighScore(username, score);
+        saveGlobalHighScore(username, uid, score);
     }
     
-    // This is the global high score leaderboard
-    function saveGlobalHighScore(username, newScore) {
-        if (!username) username = 'Anonymous';
+    function saveGlobalHighScore(username, uid, newScore) {
+        if (!uid) uid = 'anonymous_' + new Date().getTime(); // Fallback for safety
         if (newScore === 0) return; // Don't save zero scores
 
-        const userDocRef = db.collection("leaderboard").doc(username);
+        const userDocRef = db.collection("leaderboard").doc(uid); // Use UID as document ID
 
         userDocRef.get().then((doc) => {
             if (doc.exists) {
@@ -502,7 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
           });
     }
 
-    // *** NEW: Show results for a *specific* quiz ***
+    // Show results for a *specific* quiz
     function showQuizResults(quizId, quizTitle) {
         resultsQuizTitle.textContent = `Results for: ${quizTitle}`;
         quizResultsListContainer.innerHTML = '<p>Loading results...</p>';
@@ -510,8 +532,8 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsContainer.style.display = 'flex'; // Show results modal
 
         db.collection("quiz_attempts")
-          .where("quizId", "==", quizId) // Filter by the specific quizId
-          .orderBy("score", "desc") // Show highest scores first
+          .where("quizId", "==", quizId) 
+          .orderBy("score", "desc") 
           .get()
           .then((querySnapshot) => {
             if (querySnapshot.empty) {
@@ -579,9 +601,9 @@ document.addEventListener('DOMContentLoaded', () => {
     addQuestionBtn.onclick = createNewQuestionEditor;
 
     saveQuizBtn.onclick = () => {
-        const currentUser = localStorage.getItem('quizUser');
-        if (!currentUser) {
-            alert("Please sign in to create a quiz.");
+        const user = auth.currentUser;
+        if (!user) { // Safety check
+            alert("Your session expired. Please log in again.");
             return;
         }
 
@@ -599,7 +621,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let newQuiz = {
             title: title,
-            author: currentUser, 
+            author: user.displayName || 'Anonymous', 
+            authorUID: user.uid, // *** THIS IS THE IMPORTANT SECURITY PART ***
             questions: []
         };
 
@@ -676,10 +699,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Load "Manage My Quizzes" List (from Firebase) ---
-    function loadManageList(currentUser) {
+    function loadManageList(user) {
         myQuizListContainer.innerHTML = '<p>Loading your quizzes...</p>'; 
         
-        db.collection("quizzes").where("author", "==", currentUser).get().then((querySnapshot) => {
+        // *** THIS QUERY IS NOW SECURE ***
+        db.collection("quizzes").where("authorUID", "==", user.uid).get().then((querySnapshot) => {
             myQuizListContainer.innerHTML = ''; 
 
             if (querySnapshot.empty) {
@@ -694,7 +718,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const quizCard = document.createElement('div');
                 quizCard.className = 'manage-quiz-card';
                 
-                // *** UPDATED to include Results button ***
                 quizCard.innerHTML = `
                     <h4>${quiz.title}</h4>
                     <div class="buttons-wrapper">
@@ -743,7 +766,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         db.collection("quizzes").doc(quizId).delete().then(() => {
             console.log("Quiz deleted!");
-            loadManageList(localStorage.getItem('quizUser')); // Refresh the list
+            loadManageList(auth.currentUser); // Refresh the list
         }).catch((error) => {
             console.error("Error removing quiz: ", error);
             alert("Could not delete quiz. Check console.");
@@ -752,15 +775,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Initialization ---
     function init() {
-        const currentUser = localStorage.getItem('quizUser');
-        if (currentUser) {
-            updateUserUI(currentUser);
-            mainContent.style.display = 'block'; // Show website
-            loadSharedQuizzes(); // Load quizzes
-        } else {
-            authContainer.style.display = 'flex'; // Force login
-            mainContent.style.display = 'none'; // Hide website
-        }
+        // --- NOTE: Auth listener (onAuthStateChanged) now handles all initial loading ---
         
         // Setup initial auth tab state
         loginTab.classList.add('active');

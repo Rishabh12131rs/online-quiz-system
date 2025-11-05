@@ -92,7 +92,6 @@ header {
 }
 .sign-btn:hover { background: #E07B00; }
 
-/* *** JOIN BUTTON STYLE *** */
 .join-btn {
     background: var(--primary);
     color: var(--bg-white);
@@ -106,8 +105,7 @@ header {
     cursor: pointer;
     transition: background .18s;
 }
-.join-btn:hover { background: #4a32b3; } /* Darker purple */
-/* **************************** */
+.join-btn:hover { background: #4a32b3; }
 
 
 /* --- Subject Navigation --- */
@@ -610,11 +608,10 @@ footer {
     font-size: 1.2rem;
     color: var(--text-dark);
 }
-
-/* *** SHARE BUTTON STYLE *** */
 .manage-quiz-card .buttons-wrapper {
     display: flex;
     gap: 10px;
+    align-items: center; /* Align buttons */
 }
 .share-quiz-btn {
     background: var(--primary);
@@ -630,8 +627,6 @@ footer {
 .share-quiz-btn:hover {
     background: #4a32b3; /* Darker purple */
 }
-/* ***************************** */
-
 .delete-quiz-btn {
     background: var(--error);
     color: white;
@@ -645,4 +640,50 @@ footer {
 }
 .delete-quiz-btn:hover {
     background: #C0392B;
+}
+
+/* *** NEW: Results Button Style *** */
+.results-quiz-btn {
+    background: var(--success);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.results-quiz-btn:hover {
+    background: #28B463; /* Darker green */
+}
+
+/* *** NEW: Results Modal Styles *** */
+#results-modal-content {
+    max-width: 600px;
+}
+#quiz-results-list-container {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-top: 10px;
+}
+.result-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-light);
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border-color);
+}
+.result-card-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+.result-card-score {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary);
 }

@@ -14,6 +14,8 @@ firebase.initializeApp(firebaseConfig);
 
 // Initialize Cloud Firestore
 const db = firebase.firestore();
+// --- END OF FIREBASE SETUP ---
+
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -23,8 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const quizAppContainer = document.getElementById('quiz-app-container');
 
     // Auth Elements
-    const signInBtn = document.getElementById('signInBtn');
-    const closeAuthBtn = document.getElementById('close-auth-btn');
     const loginTab = document.getElementById('login-tab');
     const signupTab = document.getElementById('signup-tab');
     const loginForm = document.getElementById('login-form');
@@ -67,16 +67,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeManageBtn = document.getElementById('close-manage-btn');
     const myQuizListContainer = document.getElementById('my-quiz-list-container');
 
+    // *** NEW: Results Modal Elements ***
+    const resultsContainer = document.getElementById('results-container');
+    const closeResultsBtn = document.getElementById('close-results-btn');
+    const resultsQuizTitle = document.getElementById('results-quiz-title');
+    const quizResultsListContainer = document.getElementById('quiz-results-list-container');
+
     // --- App State ---
-    let questions = [];
+    let questions = []; // Holds the questions for the *current* quiz
+    let currentQuizId = null; // Holds the ID of the *current* quiz
     let currentIndex = 0;
     let score = 0;
     let timerInterval; 
     let timeLeft = 10; 
 
     // --- Page/Modal Toggling ---
-    signInBtn.onclick = () => authContainer.style.display = 'flex';
-    closeAuthBtn.onclick = () => authContainer.style.display = 'none';
+    // (No 'signInBtn' click, as modal shows on load)
 
     playQuizBtn.onclick = () => {
         mainContent.style.display = 'none';
@@ -106,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     manageQuizzesBtn.onclick = () => {
         const currentUser = localStorage.getItem('quizUser');
+        // This check is redundant due to forced login, but good practice
         if (!currentUser) {
             alert("Please sign in to manage your quizzes.");
             return;
@@ -120,8 +127,13 @@ document.addEventListener('DOMContentLoaded', () => {
         loadSharedQuizzes(); // Refresh main page quiz list
     };
 
+    // *** NEW: Results Modal Toggle ***
+    closeResultsBtn.onclick = () => {
+        manageContainer.style.display = 'flex'; // Go back to manage modal
+        resultsContainer.style.display = 'none';
+    };
+
     // --- Authentication Logic ---
-    // (This still uses localStorage, which is fine for client-side auth)
     loginTab.onclick = () => {
         loginTab.classList.add('active');
         signupTab.classList.remove('active');
@@ -166,7 +178,9 @@ document.addEventListener('DOMContentLoaded', () => {
             loginErr.textContent = '';
             localStorage.setItem('quizUser', username);
             updateUserUI(username);
-            authContainer.style.display = 'none';
+            authContainer.style.display = 'none'; // Hide auth modal
+            mainContent.style.display = 'block'; // *** SHOW THE WEBSITE ***
+            loadSharedQuizzes(); // Load quizzes now that user is logged in
         } else {
             loginErr.textContent = 'Invalid username or password.';
         }
@@ -175,24 +189,25 @@ document.addEventListener('DOMContentLoaded', () => {
     logoutBtn.onclick = () => {
         localStorage.removeItem('quizUser');
         updateUserUI(null);
+        mainContent.style.display = 'none'; // *** HIDE THE WEBSITE ***
+        authContainer.style.display = 'flex'; // Show login modal
     };
 
     function updateUserUI(username) {
         if (username) {
             userDisplay.style.display = 'flex';
             welcomeUser.textContent = `Hello, ${username}`;
-            signInBtn.style.display = 'none';
         } else {
             userDisplay.style.display = 'none';
             welcomeUser.textContent = '';
-            signInBtn.style.display = 'block';
         }
     }
 
     // --- Quiz Logic ---
 
-    // REUSABLE FUNCTION for starting OpenTDB quizzes
     function startApiQuiz(category, count, difficulty) { 
+        currentQuizId = `api_${category}_${difficulty}`; // Create a unique-ish ID
+        
         mainContent.style.display = 'none';
         quizAppContainer.style.display = 'block';
 
@@ -235,8 +250,10 @@ document.addEventListener('DOMContentLoaded', () => {
         startApiQuiz(category, count, difficulty); 
     };
 
-    function startCustomQuiz(quizObject) {
-        questions = quizObject.questions; 
+    function startCustomQuiz(quizObject, quizId) {
+        questions = quizObject.questions;
+        currentQuizId = quizId; // Store the ID of the quiz being played
+        
         score = 0;
         currentIndex = 0;
         
@@ -251,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Join by ID Function (uses Firebase)
     joinQuizBtn.onclick = () => {
         const quizId = quizIdInput.value.trim();
-        if (quizId.length < 10) { // Firebase IDs are long
+        if (quizId.length < 10) { 
             alert("Please enter a valid Quiz ID.");
             return;
         }
@@ -259,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
         db.collection("quizzes").doc(quizId).get().then((doc) => {
             if (doc.exists) {
                 quizIdInput.value = ''; // Clear the input
-                startCustomQuiz(doc.data()); // Start quiz with data from Firebase
+                startCustomQuiz(doc.data(), doc.id); // Pass the quiz data AND its ID
             } else {
                 alert("Quiz ID not found in the database.");
             }
@@ -278,10 +295,10 @@ document.addEventListener('DOMContentLoaded', () => {
             quizControls.style.display = 'flex'; 
             timerDisplay.style.display = 'none'; 
             
-            // *** SAVE SCORE TO GLOBAL LEADERBOARD ***
-            saveUserScore(localStorage.getItem('quizUser') || 'Anonymous', score);
+            // *** SAVE QUIZ ATTEMPT ***
+            saveQuizAttempt(localStorage.getItem('quizUser') || 'Anonymous', currentQuizId, score);
             
-            showLeaderboard();
+            showLeaderboard(); // Show the global leaderboard
             return;
         }
 
@@ -419,58 +436,104 @@ document.addEventListener('DOMContentLoaded', () => {
         return txt.value;
     }
 
-    // --- *** NEW GLOBAL LEADERBOARD FUNCTIONS *** ---
+    // --- LEADERBOARD & RESULTS LOGIC ---
 
-    function saveUserScore(username, newScore) {
+    // *** NEW: Saves every single attempt to the database ***
+    function saveQuizAttempt(username, quizId, score) {
+        if (!username || !quizId) return; // Must have user and quiz
+        
+        // Create a new document in 'quiz_attempts'
+        db.collection("quiz_attempts").add({
+            username: username,
+            quizId: quizId,
+            score: score,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        })
+        .then(() => console.log("Quiz attempt saved!"))
+        .catch(err => console.error("Error saving attempt: ", err));
+
+        // We also still save to the global leaderboard
+        saveGlobalHighScore(username, score);
+    }
+    
+    // This is the global high score leaderboard
+    function saveGlobalHighScore(username, newScore) {
         if (!username) username = 'Anonymous';
         if (newScore === 0) return; // Don't save zero scores
 
-        // Use the username as the document ID for easy lookup
         const userDocRef = db.collection("leaderboard").doc(username);
 
         userDocRef.get().then((doc) => {
             if (doc.exists) {
-                // User exists, check if new score is higher
                 const currentScore = doc.data().score || 0;
                 if (newScore > currentScore) {
-                    // Update the score
                     userDocRef.set({ score: newScore, name: username });
                 }
             } else {
-                // New user, just set the score
                 userDocRef.set({ score: newScore, name: username });
             }
-        }).catch((error) => {
-            console.error("Error saving score: ", error);
-        });
+        }).catch((error) => console.error("Error saving high score: ", error));
     }
 
+    // This shows the global leaderboard
     function showLeaderboard() {
-        leaderboardDiv.innerHTML = '<h3>Leaderboard</h3><p>Loading scores...</p>';
+        leaderboardDiv.innerHTML = '<h3>Global Leaderboard</h3><p>Loading scores...</p>';
         
         db.collection("leaderboard")
-          .orderBy("score", "desc") // Get highest scores first
-          .limit(10) // Get only the top 10
+          .orderBy("score", "desc") 
+          .limit(10) 
           .get()
           .then((querySnapshot) => {
-            
             if (querySnapshot.empty) {
-                leaderboardDiv.innerHTML = '<h3>Leaderboard</h3><p>No scores yet. Play a quiz!</p>';
+                leaderboardDiv.innerHTML = '<h3>Global Leaderboard</h3><p>No scores yet. Play a quiz!</p>';
                 return;
             }
-
-            let html = '<h3>Leaderboard</h3><ol>';
+            let html = '<h3>Global Leaderboard</h3><ol>';
             querySnapshot.forEach((doc) => {
-                const user = doc.data().name || doc.id; // Use saved name or doc ID
+                const user = doc.data().name || doc.id;
                 const score = doc.data().score;
                 html += `<li>${user}: ${score}</li>`;
             });
             html += '</ol>';
             leaderboardDiv.innerHTML = html;
-
           }).catch((error) => {
             console.error("Error getting leaderboard: ", error);
-            leaderboardDiv.innerHTML = '<h3>Leaderboard</h3><p>Could not load scores.</p>';
+            leaderboardDiv.innerHTML = '<h3>Global Leaderboard</h3><p>Could not load scores.</p>';
+          });
+    }
+
+    // *** NEW: Show results for a *specific* quiz ***
+    function showQuizResults(quizId, quizTitle) {
+        resultsQuizTitle.textContent = `Results for: ${quizTitle}`;
+        quizResultsListContainer.innerHTML = '<p>Loading results...</p>';
+        manageContainer.style.display = 'none'; // Hide manage modal
+        resultsContainer.style.display = 'flex'; // Show results modal
+
+        db.collection("quiz_attempts")
+          .where("quizId", "==", quizId) // Filter by the specific quizId
+          .orderBy("score", "desc") // Show highest scores first
+          .get()
+          .then((querySnapshot) => {
+            if (querySnapshot.empty) {
+                quizResultsListContainer.innerHTML = '<p>No one has played this quiz yet.</p>';
+                return;
+            }
+            
+            let html = '';
+            querySnapshot.forEach((doc) => {
+                const attempt = doc.data();
+                html += `
+                    <div class="result-card">
+                        <span class="result-card-name">${attempt.username}</span>
+                        <span class="result-card-score">${attempt.score}</span>
+                    </div>
+                `;
+            });
+            quizResultsListContainer.innerHTML = html;
+
+          }).catch(err => {
+            console.error("Error getting results: ", err);
+            quizResultsListContainer.innerHTML = '<p>Could not load results.</p>';
           });
     }
 
@@ -536,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let newQuiz = {
             title: title,
-            author: currentUser, // Save who made the quiz
+            author: currentUser, 
             questions: []
         };
 
@@ -584,7 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
         quizList.innerHTML = '<p>Loading quizzes...</p>';
 
         db.collection("quizzes").get().then((querySnapshot) => {
-            quizList.innerHTML = ''; // Clear loading message
+            quizList.innerHTML = ''; 
             
             if (querySnapshot.empty) {
                 quizList.innerHTML = '<p>No shared quizzes found. Be the first to create one!</p>';
@@ -593,7 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             querySnapshot.forEach((doc) => {
                 const quiz = doc.data();
-                const quizId = doc.id; // Get the unique Firebase ID
+                const quizId = doc.id;
                 
                 const quizCard = document.createElement('div');
                 quizCard.className = 'quiz-card';
@@ -601,7 +664,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 quizCard.dataset.quizId = quizId; 
 
                 quizCard.onclick = () => {
-                    startCustomQuiz(quiz); 
+                    startCustomQuiz(quiz, quizId); // Pass ID
                 };
 
                 quizList.appendChild(quizCard);
@@ -616,7 +679,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadManageList(currentUser) {
         myQuizListContainer.innerHTML = '<p>Loading your quizzes...</p>'; 
         
-        // Query Firebase for quizzes created by the current user
         db.collection("quizzes").where("author", "==", currentUser).get().then((querySnapshot) => {
             myQuizListContainer.innerHTML = ''; 
 
@@ -627,18 +689,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
             querySnapshot.forEach((doc) => {
                 const quiz = doc.data();
-                const quizId = doc.id; // The unique Firebase document ID
+                const quizId = doc.id; 
 
                 const quizCard = document.createElement('div');
                 quizCard.className = 'manage-quiz-card';
                 
+                // *** UPDATED to include Results button ***
                 quizCard.innerHTML = `
                     <h4>${quiz.title}</h4>
                     <div class="buttons-wrapper">
+                        <button class="results-quiz-btn" data-id="${quizId}" data-title="${quiz.title}">Results</button>
                         <button class="share-quiz-btn" data-id="${quizId}">Share</button>
                         <button class="delete-quiz-btn" data-id="${quizId}">Delete</button>
                     </div>
                 `;
+
+                // Add results functionality
+                quizCard.querySelector('.results-quiz-btn').onclick = (e) => {
+                    const id = e.target.dataset.id;
+                    const title = e.target.dataset.title;
+                    showQuizResults(id, title);
+                };
 
                 // Add share functionality
                 quizCard.querySelector('.share-quiz-btn').onclick = (e) => {
@@ -682,9 +753,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Initialization ---
     function init() {
         const currentUser = localStorage.getItem('quizUser');
-        updateUserUI(currentUser);
-        loadSharedQuizzes(); // Load all shared quizzes on page load
+        if (currentUser) {
+            updateUserUI(currentUser);
+            mainContent.style.display = 'block'; // Show website
+            loadSharedQuizzes(); // Load quizzes
+        } else {
+            authContainer.style.display = 'flex'; // Force login
+            mainContent.style.display = 'none'; // Hide website
+        }
         
+        // Setup initial auth tab state
         loginTab.classList.add('active');
         signupTab.classList.remove('active');
         loginForm.style.display = 'flex';
@@ -703,6 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         manageContainer.style.display = 'none';
                         editorContainer.style.display = 'none';
                         quizAppContainer.style.display = 'none';
+                        resultsContainer.style.display = 'none';
                         mainContent.style.display = 'block'; 
                         loadSharedQuizzes();
                     }
@@ -713,5 +792,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    init();
+    init(); // Run the initialization
 });

@@ -9,7 +9,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
-    </head>
+</head>
 <body>
 
     <header>
@@ -22,7 +22,6 @@
             <input type="text" class="pin-input" id="quiz-id-input" placeholder="Quiz ID" maxlength="20">
             <button class="join-btn" id="join-quiz-btn">Join</button>
             
-            <button class="sign-btn" id="signInBtn">Sign in</button>
             <div id="user-display" style="display: none;">
                 <span id="welcome-user"></span>
                 <button class="sign-btn" id="logout-btn">Logout</button>
@@ -30,19 +29,7 @@
         </div>
     </header>
 
-    <nav class="subject-nav">
-        <a href="#" data-category="home"><span class="nav-icon">🏠</span><div>Start</div></a>
-        <a href="#" data-category="25"><span class="nav-icon">🎨</span><div>Art</div></a>
-        <a href="#" data-category="11"><span class="nav-icon">⭐</span><div>Entertainment</div></a>
-        <a href="#" data-category="22"><span class="nav-icon">🌍</span><div>Geography</div></a>
-        <a href="#" data-category="23"><span class="nav-icon">🏛️</span><div>History</div></a>
-        <a href="#" data-category="9"><span class="nav-icon">💬</span><div>Languages</div></a> 
-        <a href="#" data-category="17"><span class="nav-icon">🧬</span><div>Science</div></a>
-        <a href="#" data-category="21"><span class="nav-icon">🏀</span><div>Sports</div></a>
-        <a href="#" data-category="9"><span class="nav-icon">❓</span><div>Trivia</div></a> 
-    </nav>
-
-    <main id="main-content">
+    <main id="main-content" style="display: none;">
 
         <section class="hero-section">
             <h1 class="hero-heading">Welcome to QuizHub</h1>
@@ -64,6 +51,18 @@
         <h3 class="section-title">Shared Quizzes</h3>
         <div class="quiz-list">
             </div>
+
+        <nav class="subject-nav">
+            <a href="#" data-category="home"><span class="nav-icon">🏠</span><div>Start</div></a>
+            <a href="#" data-category="25"><span class="nav-icon">🎨</span><div>Art</div></a>
+            <a href="#" data-category="11"><span class="nav-icon">⭐</span><div>Entertainment</div></a>
+            <a href="#" data-category="22"><span class="nav-icon">🌍</span><div>Geography</div></a>
+            <a href="#" data-category="23"><span class="nav-icon">🏛️</span><div>History</div></a>
+            <a href="#" data-category="9"><span class="nav-icon">💬</span><div>Languages</div></a> 
+            <a href="#" data-category="17"><span class="nav-icon">🧬</span><div>Science</div></a>
+            <a href="#" data-category="21"><span class="nav-icon">🏀</span><div>Sports</div></a>
+            <a href="#" data-category="9"><span class="nav-icon">❓</span><div>Trivia</div></a> 
+        </nav>
     </main>
 
     <div id="auth-container" class="modal-overlay" style="display: none;">
@@ -84,8 +83,7 @@
                 <button type="submit">Sign Up</button>
                 <p id="signup-error" class="error-msg"></p>
             </form>
-            <button id="close-auth-btn" class="close-btn">X</button>
-        </div>
+            </div>
     </div>
 
     <div id="quiz-app-container" style="display: none;">
@@ -154,6 +152,16 @@
             <h2>Manage My Quizzes</h2>
             
             <div id="my-quiz-list-container">
+                </div>
+        </div>
+    </div>
+
+    <div id="results-container" class="modal-overlay" style="display: none;">
+        <div class="modal-content" id="results-modal-content">
+            <button id="close-results-btn" class="close-btn">X</button>
+            <h2 id="results-quiz-title">Quiz Results</h2>
+            
+            <div id="quiz-results-list-container">
                 </div>
         </div>
     </div>

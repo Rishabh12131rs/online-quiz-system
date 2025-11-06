@@ -11,7 +11,6 @@ const firebaseConfig = {
 // *** NEW: PASTE YOUR GIPHY API KEY HERE ***
 const GIPHY_API_KEY = "gJ7xwNUraSP6midiKKewgrHIbdMJcsVx";
 // --- END OF GIPHY KEY ---
-
 // --- 2. INITIALIZE FIREBASE ---
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -25,6 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainContent = document.getElementById('main-content');
     const authContainer = document.getElementById('auth-container');
     const quizAppContainer = document.getElementById('quiz-app-container');
+
+    // *** NEW: Header Back Button ***
+    const headerBackBtn = document.getElementById('header-back-btn');
 
     // Auth Elements
     const loginTab = document.getElementById('login-tab');
@@ -155,84 +157,84 @@ document.addEventListener('DOMContentLoaded', () => {
         errorElement.textContent = message;
     }
 
+    // --- *** NEW: Page Navigation System *** ---
+    const allPages = [mainContent, authContainer, quizAppContainer, editorContainer, manageContainer, resultsContainer, myResultsContainer, giphyContainer, forgotPasswordContainer];
+
+    function showPage(pageToShow) {
+        // Hide all pages
+        allPages.forEach(page => page.style.display = 'none');
+        
+        // Show the one we want
+        pageToShow.style.display = 'flex'; // Use flex for all modals/containers
+        
+        // Special case for mainContent
+        if (pageToShow === mainContent) {
+            mainContent.style.display = 'block';
+            headerBackBtn.style.display = 'none'; // Hide back button on main page
+        } else {
+            headerBackBtn.style.display = 'block'; // Show back button on all other pages
+        }
+    }
+
+    function goHome() {
+        showPage(mainContent);
+        loadSharedQuizzes(searchBar.value);
+    }
+    // --- End of Page Navigation System ---
+
+
     // --- MAIN AUTHENTICATION LISTENER ---
     auth.onAuthStateChanged(user => {
         if (user) {
-            mainContent.style.display = 'block'; 
-            authContainer.style.display = 'none'; 
             userDisplay.style.display = 'flex';
-            myResultsBtn.style.display = 'block'; // Show "My Results"
+            myResultsBtn.style.display = 'block'; 
             welcomeUser.textContent = `Hello, ${user.displayName || 'User'}`; 
-            loadSharedQuizzes(); // Load quizzes
+            goHome(); // Show the main page
         } else {
-            mainContent.style.display = 'none'; 
-            authContainer.style.display = 'flex'; 
+            showPage(authContainer); // Show the login modal
             userDisplay.style.display = 'none';
-            myResultsBtn.style.display = 'none'; // Hide "My Results"
+            myResultsBtn.style.display = 'none'; 
             welcomeUser.textContent = '';
         }
     });
 
     // --- Page/Modal Toggling ---
     playQuizBtn.onclick = () => {
-        mainContent.style.display = 'none';
-        quizAppContainer.style.display = 'block';
+        showPage(quizAppContainer);
         quizControls.style.display = 'flex'; 
         quizNav.style.display = 'none'; 
         quizArea.innerHTML = "Click 'Start Quiz' to begin!"; 
         showLeaderboard(); 
     };
-    closeQuizBtn.onclick = () => {
-        mainContent.style.display = 'block';
-        quizAppContainer.style.display = 'none';
-        loadSharedQuizzes(searchBar.value); 
-    };
+    closeQuizBtn.onclick = goHome;
 
-    createQuizBtn.onclick = () => {
-        mainContent.style.display = 'none';
-        editorContainer.style.display = 'flex';
-    };
-    closeEditorBtn.onclick = () => {
-        mainContent.style.display = 'block';
-        editorContainer.style.display = 'none';
-        questionListContainer.innerHTML = ''; 
-        quizTitleInput.value = '';
-        loadSharedQuizzes(searchBar.value);
-    };
+    createQuizBtn.onclick = () => showPage(editorContainer);
+    closeEditorBtn.onclick = goHome;
     
     manageQuizzesBtn.onclick = () => {
         const user = auth.currentUser;
         if (!user) return; 
-        
-        editorContainer.style.display = 'none'; 
-        manageContainer.style.display = 'flex'; 
+        showPage(manageContainer);
         loadManageList(user); 
     };
-    closeManageBtn.onclick = () => {
-        mainContent.style.display = 'block'; 
-        manageContainer.style.display = 'none';
-        loadSharedQuizzes(searchBar.value); 
-    };
+    closeManageBtn.onclick = goHome; 
 
     closeResultsBtn.onclick = () => {
-        manageContainer.style.display = 'flex'; 
-        resultsContainer.style.display = 'none';
+        showPage(manageContainer); // Go back to manage modal
     };
 
     myResultsBtn.onclick = () => {
-        mainContent.style.display = 'none';
-        myResultsContainer.style.display = 'flex';
+        showPage(myResultsContainer);
         loadMyResults();
     };
-    closeMyResultsBtn.onclick = () => {
-        mainContent.style.display = 'block';
-        myResultsContainer.style.display = 'none';
-    };
+    closeMyResultsBtn.onclick = goHome;
     
     closeGiphyBtn.onclick = () => {
-        giphyContainer.style.display = 'none';
-        editorContainer.style.display = 'flex'; // Show editor again
+        showPage(editorContainer); // Go back to editor
     };
+
+    // *** NEW: Header Back Button Click ***
+    headerBackBtn.onclick = goHome;
 
     // --- FIREBASE AUTHENTICATION LOGIC ---
     loginTab.onclick = () => {
@@ -306,13 +308,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Forgot Password Logic
-    forgotPasswordLink.onclick = () => {
-        authContainer.style.display = 'none';
-        forgotPasswordContainer.style.display = 'flex';
+    forgotPasswordLink.onclick = (e) => {
+        e.preventDefault();
+        showPage(forgotPasswordContainer);
     };
-    backToLoginLink.onclick = () => {
-        authContainer.style.display = 'flex';
-        forgotPasswordContainer.style.display = 'none';
+    backToLoginLink.onclick = (e) => {
+        e.preventDefault();
+        showPage(authContainer);
     };
     forgotPasswordForm.onsubmit = (e) => {
         e.preventDefault();
@@ -321,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
         auth.sendPasswordResetEmail(email)
             .then(() => {
                 showToast("Password reset email sent!", "success");
-                backToLoginLink.click(); 
+                showPage(authContainer); // Go back to login
             })
             .catch((error) => {
                 showFriendlyError(error, forgotError); 
@@ -333,8 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function startApiQuiz(category, count, difficulty) { 
         currentQuizId = `api_${category}_${difficulty}`; 
         
-        mainContent.style.display = 'none';
-        quizAppContainer.style.display = 'block';
+        showPage(quizAppContainer); // Show the quiz page
 
         quizControls.style.display = 'none';
         quizArea.innerHTML = '<div class="loader"></div>'; 
@@ -355,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 questions = data.results;
                 if (questions.length > 0) {
                     showQuestion();
-                    quizNav.style.display = 'flex';
+                    quizNav.style.display = 'grid'; // Use grid
                 } else {
                     quizArea.innerHTML = 'Could not load questions. Try a different category/difficulty.';
                     quizControls.style.display = 'flex';
@@ -382,10 +383,9 @@ document.addEventListener('DOMContentLoaded', () => {
         score = 0;
         currentIndex = 0;
         
-        mainContent.style.display = 'none';
-        quizAppContainer.style.display = 'block';
+        showPage(quizAppContainer); // Show the quiz page
         quizControls.style.display = 'none'; 
-        quizNav.style.display = 'flex'; 
+        quizNav.style.display = 'grid'; // Use grid
         
         showQuestion(); 
     }
@@ -442,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
             questionText = q.question;
             options = [...q.options]; 
             correctAnswer = q.options[q.correct_answer_index];
-            imageUrl = q.imageUrl; // Get image URL (works for GIPHY)
+            imageUrl = q.imageUrl; 
         }
 
         let imageHtml = '';
@@ -625,9 +625,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function showQuizResults(quizId, quizTitle) {
         resultsQuizTitle.textContent = `Results for: ${quizTitle}`;
         quizResultsListContainer.innerHTML = '<div class="loader"></div>';
-        manageContainer.style.display = 'none'; 
-        resultsContainer.style.display = 'flex'; 
-
+        showPage(resultsContainer); // Show results modal
+    
         db.collection("quiz_attempts")
           .where("quizId", "==", quizId) 
           .orderBy("score", "desc") 
@@ -675,28 +674,30 @@ document.addEventListener('DOMContentLoaded', () => {
               }
               
               let html = '';
-              // Create a list of promises to fetch quiz titles
-              const titlePromises = [];
-              const attempts = [];
+              const titleCache = {}; // Cache to avoid re-fetching same title
 
-              querySnapshot.forEach((doc) => {
+              // Use For...Of loop to allow async/await inside
+              for (const doc of querySnapshot.docs) {
                   const attempt = doc.data();
-                  attempts.push(attempt);
-                  // Only fetch title if it's a custom quiz
-                  if (!attempt.quizId.startsWith('api_')) {
-                      titlePromises.push(db.collection('quizzes').doc(attempt.quizId).get());
-                  } else {
-                      titlePromises.push(Promise.resolve(null)); // Placeholder
-                  }
-              });
-
-              const titleDocs = await Promise.all(titlePromises);
-              
-              attempts.forEach((attempt, index) => {
                   let quizTitle = "API Quiz"; // Default for API quizzes
-                  const titleDoc = titleDocs[index];
-                  if (titleDoc && titleDoc.exists) {
-                      quizTitle = titleDoc.data().title;
+                  
+                  if (!attempt.quizId.startsWith('api_')) {
+                      if (titleCache[attempt.quizId]) {
+                          quizTitle = titleCache[attempt.quizId];
+                      } else {
+                          try {
+                              const quizDoc = await db.collection('quizzes').doc(attempt.quizId).get();
+                              if (quizDoc.exists) {
+                                  quizTitle = quizDoc.data().title;
+                                  titleCache[attempt.quizId] = quizTitle; // Save to cache
+                              } else {
+                                  quizTitle = "Deleted Quiz";
+                              }
+                          } catch (err) {
+                              console.error("Error fetching quiz title: ", err);
+                              quizTitle = "Quiz Title Error";
+                          }
+                      }
                   }
 
                   html += `
@@ -708,8 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
                           <span class="my-result-card-score">${attempt.score}</span>
                       </div>
                   `;
-              });
-
+              }
               myResultsListContainer.innerHTML = html;
               
           }).catch(err => {
@@ -755,8 +755,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         questionCard.querySelector('.add-gif-btn').onclick = () => {
             activeGiphyQuestionCard = questionCard; 
-            editorContainer.style.display = 'none';
-            giphyContainer.style.display = 'flex';
+            showPage(giphyContainer);
             giphyResultsGrid.innerHTML = '';
             giphySearchBar.value = '';
         };
@@ -786,7 +785,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 img.dataset.fullUrl = gif.images.original.url; // Save the full URL
                 img.className = 'giphy-item';
                 
-                // When user clicks a GIF
                 img.onclick = () => {
                     if (activeGiphyQuestionCard) {
                         const preview = activeGiphyQuestionCard.querySelector('.question-gif-preview');
@@ -794,7 +792,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         preview.style.display = 'block';
                         activeGiphyQuestionCard.dataset.imageUrl = img.dataset.fullUrl; // Store the URL
                     }
-                    closeGiphyBtn.click();
+                    showPage(editorContainer); // Go back to editor
                 };
                 
                 giphyResultsGrid.appendChild(img);
@@ -812,7 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addQuestionBtn.onclick = createNewQuestionEditor;
 
-    saveQuizBtn.onclick = () => { // No longer async
+    saveQuizBtn.onclick = () => { 
         const user = auth.currentUser;
         if (!user) { 
             showToast("Your session expired. Please log in again.", "error");
@@ -849,7 +847,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const questionText = card.querySelector('textarea').value.trim();
             const optionInputs = card.querySelectorAll('.option-input-group input[type="text"]');
             const correctInput = card.querySelector('.option-input-group input[type="radio"]:checked');
-            const imageUrl = card.dataset.imageUrl || null; // Get the stored GIF URL
+            const imageUrl = card.dataset.imageUrl || null; 
 
             const options = [];
             optionInputs.forEach(input => options.push(input.value.trim()));
@@ -864,7 +862,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 question: questionText,
                 options: options,
                 correct_answer_index: correctAnswerIndex,
-                imageUrl: imageUrl // Save the GIF URL
+                imageUrl: imageUrl 
             });
         });
 
@@ -875,11 +873,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // --- Save to Firebase ---
         db.collection("quizzes").add(newQuiz).then((docRef) => {
             showToast(`Quiz "${title}" saved successfully!`, "success");
             console.log("Quiz saved with ID: ", docRef.id);
-            closeEditorBtn.click(); 
+            goHome(); // Go back to the main page
         }).catch((error) => {
             console.error("Error adding document: ", error);
             showToast("Error saving quiz. Check the console.", "error");
@@ -895,6 +892,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let query = db.collection("quizzes").orderBy("likeCount", "desc");
         
+        // This is a basic "starts-with" search
         if (searchTerm) {
             query = query.where("title", ">=", searchTerm)
                          .where("title", "<=", searchTerm + '\uf8ff');
@@ -970,7 +968,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = doc.data();
                 const likedBy = data.likedBy || [];
                 let newLikeCount = data.likeCount || 0;
-                let didLike = false; // Will this user "like" or "unlike"?
+                let didLike = false; 
 
                 const userIndex = likedBy.indexOf(user.uid);
                 
@@ -986,21 +984,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     didLike = true;
                 }
 
-                if (newLikeCount < 0) newLikeCount = 0; // Safety check
+                if (newLikeCount < 0) newLikeCount = 0; 
 
                 transaction.update(quizRef, { 
                     likeCount: newLikeCount,
                     likedBy: likedBy 
                 });
                 
-                return { newLikeCount, didLike }; // Return the new state
+                return { newLikeCount, didLike }; 
             });
         }).then((result) => {
             if (result !== undefined) {
                 console.log("Like count updated to", result.newLikeCount);
                 buttonElement.textContent = `❤️ ${result.newLikeCount}`;
                 
-                // Toggle the 'liked' class
                 if (result.didLike) {
                     buttonElement.classList.add('liked');
                     showToast("Quiz liked!", "success");
@@ -1088,7 +1085,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Now delete the quiz itself
             return db.collection("quizzes").doc(quizId).delete();
         }).then(() => {
-            showToast("Quiz and all its results deleted!", "success");
+            showToast("Quiz deleted!", "success");
             loadManageList(auth.currentUser); // Refresh the list
         }).catch((error) => {
             console.error("Error removing quiz: ", error);
@@ -1140,15 +1137,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const category = link.dataset.category;
                 
                 if (category === 'home') {
-                    if (mainContent.style.display === 'none') {
-                        manageContainer.style.display = 'none';
-                        editorContainer.style.display = 'none';
-                        quizAppContainer.style.display = 'none';
-                        resultsContainer.style.display = 'none';
-                        myResultsContainer.style.display = 'none'; // Close new modal
-                        mainContent.style.display = 'block'; 
-                        loadSharedQuizzes(searchBar.value);
-                    }
+                    goHome();
                 } else if (category) {
                     startApiQuiz(category, 10, 'any'); 
                 }

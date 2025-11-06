@@ -17,6 +17,7 @@
         <div class="logo-nav">
             <img src="https://i.imgur.com/4M34hi2.png" class="quizhub-logo">
             <span class="site-title">QuizHub</span>
+            <button class="header-back-btn" id="header-back-btn" style="display: none;">&larr; Back</button>
         </div>
         <div class="pin-auth">
             <span class="pin-label">Join Game? ID:</span>
@@ -62,7 +63,7 @@
             </div>
 
         <nav class="subject-nav">
-            <a href="#" data-category="home"><span class="nav-icon">🏠</span><div>Start</div></a>
+            <a href="#" data-category="home"><span class="nav-icon">🏠</span><div>HOME</div></a>
             <a href="#" data-category="25"><span class="nav-icon">🎨</span><div>Art</div></a>
             <a href="#" data-category="11"><span class="nav-icon">⭐</span><div>Entertainment</div></a>
             <a href="#" data-category="22"><span class="nav-icon">🌍</span><div>Geography</div></a>
@@ -116,44 +117,46 @@
         </div>
     </div>
 
-    <div id="quiz-app-container" style="display: none;">
-        <button id="close-quiz-btn" class="close-btn">X Back to Home</button>
-        <div id="quiz-controls">
-            <select id="quiz-category">
-                <option value="9">General Knowledge</option>
-                <option value="11">Film</option>
-                <option value="12">Music</option>
-                <option value="17">Science & Nature</option>
-                <option value="21">Sports</option>
-                <option value="23">History</option>
-            </select>
-            
-            <select id="quiz-difficulty">
-                <option value="any">Any Difficulty</option>
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-            </select>
+    <div id="quiz-app-container" class="modal-overlay" style="display: none;">
+        <div class="modal-content" id="quiz-modal-content">
+            <button id="close-quiz-btn" class="close-btn">X</button>
+            <div id="quiz-controls">
+                <select id="quiz-category">
+                    <option value="9">General Knowledge</option>
+                    <option value="11">Film</option>
+                    <option value="12">Music</option>
+                    <option value="17">Science & Nature</option>
+                    <option value="21">Sports</option>
+                    <option value="23">History</option>
+                </select>
+                
+                <select id="quiz-difficulty">
+                    <option value="any">Any Difficulty</option>
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
 
-            <select id="quiz-count">
-                <option value="5">5 Questions</option>
-                <option value="10">10 Questions</option>
-                <option value="15">15 Questions</option>
-            </select>
-            <button id="startQuizBtn">Start Quiz</button>
+                <select id="quiz-count">
+                    <option value="5">5 Questions</option>
+                    <option value="10">10 Questions</option>
+                    <option value="15">15 Questions</option>
+                </select>
+                <button id="startQuizBtn">Start Quiz</button>
+            </div>
+
+            <div id="quiz-area">Click 'Start Quiz' to begin!</div>
+
+            <div id="timer-display" style="display: none;">10</div>
+
+            <div id="quiz-navigation" style="display: none;">
+                <span></span> <span id="questionNum">Q1</span>
+                <button id="nextBtn">Next</button>
+                <span id="scoreLabel">Score: 0</span>
+            </div>
+
+            <div id="leaderboard"></div>
         </div>
-
-        <div id="quiz-area">Click 'Start Quiz' to begin!</div>
-
-        <div id="timer-display" style="display: none;">10</div>
-
-        <div id="quiz-navigation" style="display: none;">
-            <span></span> <span id="questionNum">Q1</span>
-            <button id="nextBtn">Next</button>
-            <span id="scoreLabel">Score: 0</span>
-        </div>
-
-        <div id="leaderboard"></div>
     </div>
 
     <div id="editor-container" class="modal-overlay" style="display: none;">

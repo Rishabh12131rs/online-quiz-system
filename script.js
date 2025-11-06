@@ -1,4 +1,3 @@
-
 // --- NEW: FIREBASE SETUP ---
 // *** PASTE YOUR FIREBASE CONFIG KEYS HERE ***
 const firebaseConfig = {
@@ -26,7 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const authContainer = document.getElementById('auth-container');
     const quizAppContainer = document.getElementById('quiz-app-container');
 
-    // Header Back Button REMOVED
+    // *** NEW: Header Back Button ***
+    const headerBackBtn = document.getElementById('header-back-btn');
 
     // Auth Elements
     const loginTab = document.getElementById('login-tab');
@@ -41,7 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginErr = document.getElementById('login-error');
     const signupErr = document.getElementById('signup-error');
     const userDisplay = document.getElementById('user-display');
-    const welcomeUserTooltip = document.getElementById('welcome-user-tooltip'); // *** Updated ***
+    // *** UPDATED: Reference to the new tooltip ID ***
+    const welcomeUserTooltip = document.getElementById('welcome-user-tooltip'); 
     const logoutBtn = document.getElementById('logout-btn');
     const googleSignInBtn = document.getElementById('google-signin-btn');
 
@@ -157,83 +158,91 @@ document.addEventListener('DOMContentLoaded', () => {
         errorElement.textContent = message;
     }
 
+    // --- *** UPDATED: Page Navigation System *** ---
+    const allPages = [mainContent, authContainer, quizAppContainer, editorContainer, manageContainer, resultsContainer, myResultsContainer, giphyContainer, forgotPasswordContainer];
+
+    function showPage(pageToShow) {
+        // Hide all pages
+        allPages.forEach(page => page.style.display = 'none');
+        
+        // Show the one we want
+        // Use 'flex' for all modal-like containers, 'block' for main content
+        if (pageToShow === mainContent) {
+            mainContent.style.display = 'block';
+            headerBackBtn.style.display = 'none'; // Hide back button on main page
+        } else {
+            pageToShow.style.display = 'flex'; // All other pages are overlays/modals
+            headerBackBtn.style.display = 'block'; // Show back button
+        }
+        
+        // Special rule for auth pages (no back button)
+        if (pageToShow === authContainer || pageToShow === forgotPasswordContainer) {
+            headerBackBtn.style.display = 'none';
+        }
+    }
+
+    function goHome() {
+        showPage(mainContent);
+        loadSharedQuizzes(searchBar.value);
+    }
+    // --- End of Page Navigation System ---
+
+
     // --- MAIN AUTHENTICATION LISTENER ---
     auth.onAuthStateChanged(user => {
         if (user) {
-            mainContent.style.display = 'block'; 
-            authContainer.style.display = 'none'; 
             userDisplay.style.display = 'flex';
             myResultsBtn.style.display = 'block'; 
-            welcomeUserTooltip.textContent = user.displayName || 'User'; // Set tooltip text
-            loadSharedQuizzes(); 
+            welcomeUserTooltip.textContent = user.displayName || 'User'; // *** SETS TOOLTIP ***
+            goHome(); // Show the main page
         } else {
-            mainContent.style.display = 'none'; 
-            authContainer.style.display = 'flex'; 
+            showPage(authContainer); // Show the login modal
             userDisplay.style.display = 'none';
             myResultsBtn.style.display = 'none'; 
-            welcomeUserTooltip.textContent = ''; 
+            welcomeUserTooltip.textContent = ''; // *** Clear tooltip ***
         }
     });
 
-    // --- Page/Modal Toggling (Reverted to simple toggles) ---
+    // --- Page/Modal Toggling (Now uses showPage) ---
     playQuizBtn.onclick = () => {
-        mainContent.style.display = 'none';
-        quizAppContainer.style.display = 'flex'; // Use flex for overlay
+        showPage(quizAppContainer);
         quizControls.style.display = 'flex'; 
         quizNav.style.display = 'none'; 
         quizArea.innerHTML = "Click 'Start Quiz' to begin!"; 
         showLeaderboard(); 
     };
-    closeQuizBtn.onclick = () => {
-        mainContent.style.display = 'block';
-        quizAppContainer.style.display = 'none';
-        loadSharedQuizzes(searchBar.value); 
-    };
+    closeQuizBtn.onclick = goHome;
 
-    createQuizBtn.onclick = () => {
-        mainContent.style.display = 'none';
-        editorContainer.style.display = 'flex';
-    };
-    closeEditorBtn.onclick = () => {
-        mainContent.style.display = 'block';
-        editorContainer.style.display = 'none';
-        questionListContainer.innerHTML = ''; 
-        quizTitleInput.value = '';
-        loadSharedQuizzes(searchBar.value);
-    };
+    createQuizBtn.onclick = () => showPage(editorContainer);
+    closeEditorBtn.onclick = goHome;
     
     manageQuizzesBtn.onclick = () => {
         const user = auth.currentUser;
         if (!user) return; 
         
-        editorContainer.style.display = 'none'; 
-        manageContainer.style.display = 'flex'; 
+        showPage(manageContainer);
         loadManageList(user); 
     };
     closeManageBtn.onclick = () => {
-        editorContainer.style.display = 'flex'; // Go back to editor
-        manageContainer.style.display = 'none';
+        showPage(editorContainer); // Go back to editor
     };
 
     closeResultsBtn.onclick = () => {
-        manageContainer.style.display = 'flex'; 
-        resultsContainer.style.display = 'none';
+        showPage(manageContainer); // Go back to manage modal
     };
 
     myResultsBtn.onclick = () => {
-        mainContent.style.display = 'none';
-        myResultsContainer.style.display = 'flex';
+        showPage(myResultsContainer);
         loadMyResults();
     };
-    closeMyResultsBtn.onclick = () => {
-        mainContent.style.display = 'block';
-        myResultsContainer.style.display = 'none';
-    };
+    closeMyResultsBtn.onclick = goHome;
     
     closeGiphyBtn.onclick = () => {
-        giphyContainer.style.display = 'none';
-        editorContainer.style.display = 'flex'; // Show editor again
+        showPage(editorContainer); // Go back to editor
     };
+
+    // *** NEW: Header Back Button Click ***
+    headerBackBtn.onclick = goHome;
 
     // --- FIREBASE AUTHENTICATION LOGIC ---
     loginTab.onclick = () => {
@@ -309,13 +318,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Forgot Password Logic
     forgotPasswordLink.onclick = (e) => {
         e.preventDefault();
-        authContainer.style.display = 'none';
-        forgotPasswordContainer.style.display = 'flex';
+        showPage(forgotPasswordContainer);
     };
     backToLoginLink.onclick = (e) => {
         e.preventDefault();
-        authContainer.style.display = 'flex';
-        forgotPasswordContainer.style.display = 'none';
+        showPage(authContainer);
     };
     forgotPasswordForm.onsubmit = (e) => {
         e.preventDefault();
@@ -324,8 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
         auth.sendPasswordResetEmail(email)
             .then(() => {
                 showToast("Password reset email sent!", "success");
-                authContainer.style.display = 'flex'; // Go back to login
-                forgotPasswordContainer.style.display = 'none';
+                showPage(authContainer); // Go back to login
             })
             .catch((error) => {
                 showFriendlyError(error, forgotError); 
@@ -337,8 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function startApiQuiz(category, count, difficulty) { 
         currentQuizId = `api_${category}_${difficulty}`; 
         
-        mainContent.style.display = 'none';
-        quizAppContainer.style.display = 'flex'; // Use flex for overlay
+        showPage(quizAppContainer); 
 
         quizControls.style.display = 'none';
         quizArea.innerHTML = '<div class="loader"></div>'; 
@@ -386,8 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
         score = 0;
         currentIndex = 0;
         
-        mainContent.style.display = 'none';
-        quizAppContainer.style.display = 'flex'; // Use flex for overlay
+        showPage(quizAppContainer);
         quizControls.style.display = 'none'; 
         quizNav.style.display = 'grid'; // Use grid
         
@@ -544,6 +548,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateControls() {
+        // prevBtn removed
         nextBtn.disabled = currentIndex >= questions.length; 
         questionNum.textContent = `Q${currentIndex + 1}/${questions.length}`;
         scoreLabel.textContent = 'Score: ' + score;
@@ -555,6 +560,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showQuestion();
         }
     };
+    // prevBtn.onclick removed
 
     function decodeHTML(html) {
         const txt = document.createElement('textarea');
@@ -627,9 +633,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function showQuizResults(quizId, quizTitle) {
         resultsQuizTitle.textContent = `Results for: ${quizTitle}`;
         quizResultsListContainer.innerHTML = '<div class="loader"></div>';
-        manageContainer.style.display = 'none'; 
-        resultsContainer.style.display = 'flex'; 
-
+        showPage(resultsContainer); // Show results modal
+    
         db.collection("quiz_attempts")
           .where("quizId", "==", quizId) 
           .orderBy("score", "desc") 
@@ -762,8 +767,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         questionCard.querySelector('.add-gif-btn').onclick = () => {
             activeGiphyQuestionCard = questionCard; 
-            editorContainer.style.display = 'none';
-            giphyContainer.style.display = 'flex';
+            showPage(giphyContainer);
             giphyResultsGrid.innerHTML = '';
             giphySearchBar.value = '';
         };
@@ -800,8 +804,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         preview.style.display = 'block';
                         activeGiphyQuestionCard.dataset.imageUrl = img.dataset.fullUrl; // Store the URL
                     }
-                    editorContainer.style.display = 'flex'; // Go back to editor
-                    giphyContainer.style.display = 'none';
+                    showPage(editorContainer); // Go back to editor
                 };
                 
                 giphyResultsGrid.appendChild(img);

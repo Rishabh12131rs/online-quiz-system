@@ -7,9 +7,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600&family=Montserrat:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css" />
 
-   <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-storage-compat.js"></script>
 </head>
 <body>
 
@@ -49,6 +50,10 @@
             </div>
         </section>
 
+        <div class="search-container">
+            <input type="search" id="search-bar" placeholder="Search for quizzes by title...">
+        </div>
+        
         <h3 class="section-title">Shared Quizzes</h3>
         <div class="quiz-list">
             </div>
@@ -85,7 +90,7 @@
                 <button type="submit">Sign Up</button>
                 <p id="signup-error" class="error-msg"></p>
             </form>
-            </div>
+        </div>
     </div>
 
     <div id="quiz-app-container" style="display: none;">
@@ -167,6 +172,11 @@
                 </div>
         </div>
     </div>
+
+    <div id="toast-notification"></div>
+
+    <audio id="correct-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3" preload="auto"></audio>
+    <audio id="wrong-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-game-show-wrong-answer-buzz-950.mp3" preload="auto"></audio>
 
     <footer>
         &copy; 2025 QuizHub

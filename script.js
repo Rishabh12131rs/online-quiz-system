@@ -12,6 +12,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
+const storage = firebase.storage(); // *** NEW: Initialize Storage ***
 // --- END OF FIREBASE SETUP ---
 
 
@@ -27,10 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const signupTab = document.getElementById('signup-tab');
     const loginForm = document.getElementById('login-form');
     const signupForm = document.getElementById('signup-form');
-    const loginEmail = document.getElementById('login-email'); // Changed
+    const loginEmail = document.getElementById('login-email');
     const loginPassword = document.getElementById('login-password');
-    const signupUsername = document.getElementById('signup-username'); // New
-    const signupEmail = document.getElementById('signup-email'); // New
+    const signupUsername = document.getElementById('signup-username');
+    const signupEmail = document.getElementById('signup-email');
     const signupPassword = document.getElementById('signup-password');
     const loginErr = document.getElementById('login-error');
     const signupErr = document.getElementById('signup-error');
@@ -55,7 +56,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const questionNum = document.getElementById('questionNum');
     const scoreLabel = document.getElementById('scoreLabel');
     const timerDisplay = document.getElementById('timer-display');
+    
+    // Main Page Elements
     const quizList = document.querySelector('.quiz-list'); 
+    const searchBar = document.getElementById('search-bar'); // *** NEW ***
 
     // Editor Elements
     const createQuizBtn = document.getElementById('create-quiz-btn');
@@ -75,6 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeResultsBtn = document.getElementById('close-results-btn');
     const resultsQuizTitle = document.getElementById('results-quiz-title');
     const quizResultsListContainer = document.getElementById('quiz-results-list-container');
+    
+    // *** NEW: Toast & Sound Elements ***
+    const toast = document.getElementById('toast-notification');
+    const correctSound = document.getElementById('correct-sound');
+    const wrongSound = document.getElementById('wrong-sound');
 
     // --- App State ---
     let questions = []; 
@@ -84,21 +93,30 @@ document.addEventListener('DOMContentLoaded', () => {
     let timerInterval; 
     let timeLeft = 10; 
 
+    // --- *** NEW: Toast Notification Function *** ---
+    function showToast(message, type = '') {
+        toast.textContent = message;
+        toast.className = ''; // Reset classes
+        if (type) {
+            toast.classList.add(type); // 'success' or 'error'
+        }
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000); // Hide after 3 seconds
+    }
+    
     // --- *** MAIN AUTHENTICATION LISTENER *** ---
     auth.onAuthStateChanged(user => {
         if (user) {
-            // User is signed in
-            mainContent.style.display = 'block'; // Show the website
-            authContainer.style.display = 'none'; // Hide the login modal
-            
+            mainContent.style.display = 'block'; 
+            authContainer.style.display = 'none'; 
             userDisplay.style.display = 'flex';
-            welcomeUser.textContent = `Hello, ${user.displayName || 'User'}`; // Use display name
-            
-            loadSharedQuizzes(); // Load all quizzes
+            welcomeUser.textContent = `Hello, ${user.displayName || 'User'}`; 
+            loadSharedQuizzes(); // Load quizzes
         } else {
-            // User is signed out
-            mainContent.style.display = 'none'; // Hide the website
-            authContainer.style.display = 'flex'; // Show the login modal
+            mainContent.style.display = 'none'; 
+            authContainer.style.display = 'flex'; 
             userDisplay.style.display = 'none';
             welcomeUser.textContent = '';
         }
@@ -116,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
     closeQuizBtn.onclick = () => {
         mainContent.style.display = 'block';
         quizAppContainer.style.display = 'none';
-        loadSharedQuizzes(); 
+        loadSharedQuizzes(searchBar.value); // Refresh list with search term
     };
 
     createQuizBtn.onclick = () => {
@@ -128,27 +146,25 @@ document.addEventListener('DOMContentLoaded', () => {
         editorContainer.style.display = 'none';
         questionListContainer.innerHTML = ''; 
         quizTitleInput.value = '';
-        loadSharedQuizzes(); 
+        loadSharedQuizzes(searchBar.value);
     };
     
     manageQuizzesBtn.onclick = () => {
         const user = auth.currentUser;
-        if (!user) { // Safety check
-            alert("Please sign in to manage your quizzes.");
-            return;
-        }
+        if (!user) return; // Should be impossible
+        
         editorContainer.style.display = 'none'; 
         manageContainer.style.display = 'flex'; 
-        loadManageList(user); // Load quizzes for the current user
+        loadManageList(user); 
     };
     closeManageBtn.onclick = () => {
         mainContent.style.display = 'block'; 
         manageContainer.style.display = 'none';
-        loadSharedQuizzes(); 
+        loadSharedQuizzes(searchBar.value); 
     };
 
     closeResultsBtn.onclick = () => {
-        manageContainer.style.display = 'flex'; // Go back to manage modal
+        manageContainer.style.display = 'flex'; 
         resultsContainer.style.display = 'none';
     };
 
@@ -168,7 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
         signupErr.textContent = '';
     };
 
-    // Sign up new user
     signupForm.onsubmit = e => {
         e.preventDefault();
         const username = signupUsername.value.trim();
@@ -182,23 +197,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         auth.createUserWithEmailAndPassword(email, password)
             .then((userCredential) => {
-                // Signed in 
                 const user = userCredential.user;
-                // Add the username to their profile
                 return user.updateProfile({
                     displayName: username
                 });
             })
             .then(() => {
-                // Auth listener (onAuthStateChanged) will handle showing the app
-                console.log("User signed up and profile updated!");
+                console.log("User signed up!");
+                // Auth listener will handle the rest
             })
             .catch((error) => {
                 signupErr.textContent = error.message;
             });
     };
 
-    // Log in existing user
     loginForm.onsubmit = e => {
         e.preventDefault();
         const email = loginEmail.value.trim();
@@ -206,17 +218,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         auth.signInWithEmailAndPassword(email, password)
             .then((userCredential) => {
-                // Signed in 
-                // Auth listener (onAuthStateChanged) will handle showing the app
                 console.log("User logged in!");
                 loginErr.textContent = '';
+                // Auth listener will handle the rest
             })
             .catch((error) => {
                 loginErr.textContent = error.message;
             });
     };
 
-    // Log out user
     logoutBtn.onclick = () => {
         auth.signOut().catch(err => console.error("Sign out error", err));
     };
@@ -224,7 +234,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Quiz Logic ---
 
-    // REUSABLE FUNCTION for starting OpenTDB quizzes
     function startApiQuiz(category, count, difficulty) { 
         currentQuizId = `api_${category}_${difficulty}`; 
         
@@ -285,11 +294,10 @@ document.addEventListener('DOMContentLoaded', () => {
         showQuestion(); 
     }
 
-    // Join by ID Function (uses Firebase)
     joinQuizBtn.onclick = () => {
         const quizId = quizIdInput.value.trim();
         if (quizId.length < 10) { 
-            alert("Please enter a valid Quiz ID.");
+            showToast("Please enter a valid Quiz ID.", "error");
             return;
         }
 
@@ -298,11 +306,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 quizIdInput.value = ''; 
                 startCustomQuiz(doc.data(), doc.id); 
             } else {
-                alert("Quiz ID not found in the database.");
+                showToast("Quiz ID not found in the database.", "error");
             }
         }).catch((error) => {
             console.error("Error getting quiz:", error);
-            alert("Error finding quiz. Check the console.");
+            showToast("Error finding quiz.", "error");
         });
     };
     
@@ -327,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const q = questions[currentIndex];
         
-        let questionText, options, correctAnswer;
+        let questionText, options, correctAnswer, imageUrl;
         
         if (q.incorrect_answers) { 
             questionText = q.question;
@@ -338,9 +346,16 @@ document.addEventListener('DOMContentLoaded', () => {
             questionText = q.question;
             options = [...q.options]; 
             correctAnswer = q.options[q.correct_answer_index];
+            imageUrl = q.imageUrl; // *** NEW: Get image URL ***
         }
 
-        let html = `<div class="question-block"><h4>Q${currentIndex + 1}: ${decodeHTML(questionText)}</h4>`;
+        // *** NEW: Add image if it exists ***
+        let imageHtml = '';
+        if (imageUrl) {
+            imageHtml = `<img src="${imageUrl}" alt="Quiz Image" class="quiz-question-image">`;
+        }
+
+        let html = `<div class="question-block">${imageHtml}<h4>Q${currentIndex + 1}: ${decodeHTML(questionText)}</h4>`;
         options.forEach((opt) => {
             const isCorrect = decodeHTML(opt) === decodeHTML(correctAnswer);
             html += `<button class="option-btn" data-correct="${isCorrect}">${decodeHTML(opt)}</button>`;
@@ -401,6 +416,7 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedButton.classList.add('correct'); 
             feedbackDiv.innerHTML = `<span style="color:green;">Correct!</span>`;
             score++;
+            correctSound.play(); // *** NEW: Play sound ***
         } else {
             selectedButton.classList.add('incorrect'); 
             
@@ -413,6 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             feedbackDiv.innerHTML = `<span style="color:red;">Wrong! Correct was: ${decodeHTML(correctAnswerText)}</span>`;
+            wrongSound.play(); // *** NEW: Play sound ***
             
             const correctButton = document.querySelector(`.option-btn[data-correct="true"]`);
             if (correctButton) {
@@ -564,8 +581,11 @@ document.addEventListener('DOMContentLoaded', () => {
         questionCard.className = 'question-editor-card';
         questionCard.dataset.id = questionId;
         
+        // *** NEW: Added file input and image preview ***
         questionCard.innerHTML = `
             <textarea placeholder="Enter your question here..."></textarea>
+            <input type="file" class="question-image-upload" accept="image/png, image/jpeg">
+            <img classimg="question-image-preview" src="" alt="Image Preview" style="display: none; max-width: 100%; margin-top: 10px;">
             <div class="options-editor">
                 <div class="option-input-group">
                     <input type="radio" name="correct-answer-${questionId}" value="0" checked>
@@ -587,47 +607,94 @@ document.addEventListener('DOMContentLoaded', () => {
             <button class="delete-question-btn">Delete Question</button>
         `;
 
+        // *** NEW: Logic for image preview ***
+        const fileInput = questionCard.querySelector('.question-image-upload');
+        const imagePreview = questionCard.querySelector('.question-image-preview');
+        
+        fileInput.onchange = () => {
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.src = '';
+                imagePreview.style.display = 'none';
+            }
+        };
+
         questionCard.querySelector('.delete-question-btn').onclick = () => {
             questionCard.remove();
         };
 
         questionListContainer.appendChild(questionCard);
     }
+    
+    // *** NEW: Helper function to upload an image ***
+    async function uploadImage(file, uid) {
+        if (!file) return null; // No file, return null
+
+        const filePath = `quiz_images/${uid}/${Date.now()}_${file.name}`;
+        const fileRef = storage.ref().child(filePath);
+        
+        try {
+            const snapshot = await fileRef.put(file);
+            const url = await snapshot.ref.getDownloadURL();
+            return url;
+        } catch (error) {
+            console.error("Error uploading image: ", error);
+            showToast("Error uploading an image.", "error");
+            return null;
+        }
+    }
 
     addQuestionBtn.onclick = createNewQuestionEditor;
 
-    saveQuizBtn.onclick = () => {
+    // *** UPDATED: Save Quiz Function (now handles images) ***
+    saveQuizBtn.onclick = async () => { // Function is now async
         const user = auth.currentUser;
         if (!user) { 
-            alert("Your session expired. Please log in again.");
+            showToast("Your session expired. Please log in again.", "error");
             return;
         }
 
         const title = quizTitleInput.value.trim();
         if (title.length < 3) {
-            alert("Please enter a quiz title (at least 3 characters).");
+            showToast("Please enter a quiz title (at least 3 characters).", "error");
             return;
         }
 
         const questionCards = questionListContainer.querySelectorAll('.question-editor-card');
         if (questionCards.length === 0) {
-            alert("Please add at least one question.");
+            showToast("Please add at least one question.", "error");
             return;
         }
+        
+        saveQuizBtn.disabled = true; // Prevent double click
+        saveQuizBtn.textContent = "Saving...";
 
         let newQuiz = {
             title: title,
             author: user.displayName || 'Anonymous', 
-            authorUID: user.uid, // *** THIS IS THE IMPORTANT SECURITY PART ***
+            authorUID: user.uid, 
+            likeCount: 0, // *** NEW: Add likeCount ***
             questions: []
         };
 
         let allValid = true;
-        
+        const uploadPromises = []; // To store all image upload tasks
+
         questionCards.forEach(card => {
             const questionText = card.querySelector('textarea').value.trim();
             const optionInputs = card.querySelectorAll('.option-input-group input[type="text"]');
             const correctInput = card.querySelector('.option-input-group input[type="radio"]:checked');
+            const fileInput = card.querySelector('.question-image-upload');
+            
+            const file = fileInput.files[0];
+            uploadPromises.push(uploadImage(file, user.uid)); // Add upload task
 
             const options = [];
             optionInputs.forEach(input => options.push(input.value.trim()));
@@ -641,35 +708,62 @@ document.addEventListener('DOMContentLoaded', () => {
             newQuiz.questions.push({
                 question: questionText,
                 options: options,
-                correct_answer_index: correctAnswerIndex 
+                correct_answer_index: correctAnswerIndex,
+                imageUrl: null // Placeholder, will be filled in later
             });
         });
 
         if (!allValid) {
-            alert("Please make sure all questions and answers are filled in and a correct answer is selected.");
+            showToast("Please fill in all questions and answers.", "error");
+            saveQuizBtn.disabled = false;
+            saveQuizBtn.textContent = "Save Quiz";
             return;
         }
+        
+        try {
+            // *** NEW: Wait for all images to upload ***
+            const imageUrls = await Promise.all(uploadPromises);
+            
+            // Add the returned image URLs to the quiz object
+            newQuiz.questions.forEach((q, index) => {
+                q.imageUrl = imageUrls[index];
+            });
 
-        // --- Save to Firebase ---
-        db.collection("quizzes").add(newQuiz).then((docRef) => {
-            alert(`Quiz "${title}" saved successfully!`);
-            console.log("Quiz saved with ID: ", docRef.id);
+            // --- Save to Firebase ---
+            await db.collection("quizzes").add(newQuiz);
+            showToast(`Quiz "${title}" saved successfully!`, "success");
             closeEditorBtn.click(); 
-        }).catch((error) => {
-            console.error("Error adding document: ", error);
-            alert("Error saving quiz. Check the console.");
-        });
+
+        } catch (error) {
+            console.error("Error saving quiz: ", error);
+            showToast("Error saving quiz. Check the console.", "error");
+        } finally {
+            saveQuizBtn.disabled = false;
+            saveQuizBtn.textContent = "Save Quiz";
+        }
     };
 
     // --- Load and Display "Shared Quizzes" (from Firebase) ---
-    function loadSharedQuizzes() {
+    function loadSharedQuizzes(searchTerm = "") {
         quizList.innerHTML = '<p>Loading quizzes...</p>';
 
-        db.collection("quizzes").get().then((querySnapshot) => {
+        let query = db.collection("quizzes").orderBy("likeCount", "desc");
+        
+        // *** NEW: Basic "starts with" search ***
+        if (searchTerm) {
+            query = query.where("title", ">=", searchTerm)
+                         .where("title", "<=", searchTerm + '\uf8ff');
+        }
+
+        query.get().then((querySnapshot) => {
             quizList.innerHTML = ''; 
             
             if (querySnapshot.empty) {
-                quizList.innerHTML = '<p>No shared quizzes found. Be the first to create one!</p>';
+                if (searchTerm) {
+                    quizList.innerHTML = `<p>No quizzes found matching "${searchTerm}".</p>`;
+                } else {
+                    quizList.innerHTML = '<p>No shared quizzes found. Be the first to create one!</p>';
+                }
                 return;
             }
 
@@ -679,11 +773,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const quizCard = document.createElement('div');
                 quizCard.className = 'quiz-card';
-                quizCard.textContent = quiz.title;
-                quizCard.dataset.quizId = quizId; 
+                
+                // *** NEW: Updated card HTML with like button ***
+                quizCard.innerHTML = `
+                    <div class="quiz-card-title">${quiz.title}</div>
+                    <div class="quiz-card-footer">
+                        <span class="quiz-card-author">by ${quiz.author}</span>
+                        <button class="like-btn" data-id="${quizId}">❤️ ${quiz.likeCount || 0}</button>
+                    </div>
+                `;
 
-                quizCard.onclick = () => {
+                // Add click to play
+                quizCard.querySelector('.quiz-card-title').onclick = () => {
                     startCustomQuiz(quiz, quizId); // Pass ID
+                };
+
+                // *** NEW: Add like button functionality ***
+                quizCard.querySelector('.like-btn').onclick = (e) => {
+                    e.stopPropagation(); // Stop it from triggering the play click
+                    likeQuiz(quizId, e.target);
                 };
 
                 quizList.appendChild(quizCard);
@@ -693,12 +801,42 @@ document.addEventListener('DOMContentLoaded', () => {
             quizList.innerHTML = '<p>Could not load quizzes. Check console.</p>';
         });
     }
+    
+    // *** NEW: Like Quiz Function ***
+    function likeQuiz(quizId, buttonElement) {
+        const user = auth.currentUser;
+        if (!user) {
+            showToast("You must be logged in to like a quiz.", "error");
+            return;
+        }
+        
+        // Use a transaction to safely update the like count
+        const quizRef = db.collection("quizzes").doc(quizId);
+        
+        db.runTransaction((transaction) => {
+            return transaction.get(quizRef).then((doc) => {
+                if (!doc.exists) {
+                    throw "Quiz not found!";
+                }
+                
+                // Increment the like count
+                const newLikeCount = (doc.data().likeCount || 0) + 1;
+                transaction.update(quizRef, { likeCount: newLikeCount });
+                return newLikeCount;
+            });
+        }).then((newLikeCount) => {
+            console.log("Like count updated to", newLikeCount);
+            buttonElement.textContent = `❤️ ${newLikeCount}`;
+        }).catch((error) => {
+            console.error("Error updating likes: ", error);
+            showToast("Error liking quiz.", "error");
+        });
+    }
 
     // --- Load "Manage My Quizzes" List (from Firebase) ---
     function loadManageList(user) {
         myQuizListContainer.innerHTML = '<p>Loading your quizzes...</p>'; 
         
-        // *** THIS QUERY IS NOW SECURE ***
         db.collection("quizzes").where("authorUID", "==", user.uid).get().then((querySnapshot) => {
             myQuizListContainer.innerHTML = ''; 
 
@@ -723,24 +861,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
 
-                // Add results functionality
                 quizCard.querySelector('.results-quiz-btn').onclick = (e) => {
                     const id = e.target.dataset.id;
                     const title = e.target.dataset.title;
                     showQuizResults(id, title);
                 };
 
-                // Add share functionality
                 quizCard.querySelector('.share-quiz-btn').onclick = (e) => {
                     const idToShare = e.target.dataset.id;
                     navigator.clipboard.writeText(idToShare).then(() => {
-                        alert(`Quiz ID "${idToShare}" copied to clipboard!`);
+                        showToast(`Quiz ID copied to clipboard!`, "success");
                     }, () => {
-                        alert("Failed to copy Quiz ID.");
+                        showToast("Failed to copy Quiz ID.", "error");
                     });
                 };
 
-                // Add delete functionality
                 quizCard.querySelector('.delete-quiz-btn').onclick = (e) => {
                     const idToDelete = e.target.dataset.id;
                     deleteQuiz(idToDelete);
@@ -761,23 +896,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         db.collection("quizzes").doc(quizId).delete().then(() => {
-            console.log("Quiz deleted!");
+            showToast("Quiz deleted!", "success");
             loadManageList(auth.currentUser); // Refresh the list
         }).catch((error) => {
             console.error("Error removing quiz: ", error);
-            alert("Could not delete quiz. Check console.");
+            showToast("Could not delete quiz. Check console.", "error");
         });
     }
 
     // --- Initialization ---
     function init() {
-        // --- NOTE: Auth listener (onAuthStateChanged) now handles all initial loading ---
+        // Auth listener (onAuthStateChanged) handles all initial loading
         
         // Setup initial auth tab state
         loginTab.classList.add('active');
         signupTab.classList.remove('active');
         loginForm.style.display = 'flex';
         signupForm.style.display = 'none';
+        
+        // *** NEW: Search Bar Event Listener ***
+        searchBar.addEventListener('keyup', () => {
+            loadSharedQuizzes(searchBar.value.trim());
+        });
 
         // Add event listeners for the nav links
         document.querySelectorAll('.subject-nav a').forEach(link => {
@@ -786,15 +926,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const category = link.dataset.category;
                 
                 if (category === 'home') {
-                    // If we're in a modal, close it.
                     if (mainContent.style.display === 'none') {
-                        // Use a way to close all modals safely
                         manageContainer.style.display = 'none';
                         editorContainer.style.display = 'none';
                         quizAppContainer.style.display = 'none';
                         resultsContainer.style.display = 'none';
                         mainContent.style.display = 'block'; 
-                        loadSharedQuizzes();
+                        loadSharedQuizzes(searchBar.value);
                     }
                 } else if (category) {
                     startApiQuiz(category, 10, 'any'); 

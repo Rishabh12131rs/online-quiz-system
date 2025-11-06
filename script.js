@@ -12,7 +12,6 @@ const firebaseConfig = {
 const GIPHY_API_KEY = "gJ7xwNUraSP6midiKKewgrHIbdMJcsVx";
 // --- END OF GIPHY KEY ---
 
-
 // --- 2. INITIALIZE FIREBASE ---
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -117,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let score = 0;
     let timerInterval; 
     let timeLeft = 10; 
-    let activeGiphyQuestionCard = null; // Track which question card is adding a GIF
+    let activeGiphyQuestionCard = null; 
 
     // --- Toast Notification Function ---
     function showToast(message, type = '') {
@@ -292,13 +291,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     };
     
-    // *** NEW: Google Sign-In Logic ***
     googleSignInBtn.onclick = () => {
         const provider = new firebase.auth.GoogleAuthProvider();
         auth.signInWithPopup(provider)
             .then((result) => {
                 console.log("User signed in with Google!");
-                // Auth listener will handle the rest
             }).catch((error) => {
                 showFriendlyError(error, loginErr);
             });
@@ -543,7 +540,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateControls() {
-        // prevBtn logic removed
+        // prevBtn removed
         nextBtn.disabled = currentIndex >= questions.length; 
         questionNum.textContent = `Q${currentIndex + 1}/${questions.length}`;
         scoreLabel.textContent = 'Score: ' + score;
@@ -658,18 +655,18 @@ document.addEventListener('DOMContentLoaded', () => {
             quizResultsListContainer.innerHTML = '<p>Could not load results.</p>';
           });
     }
-    
-    // --- *** NEW: "My Results" Modal Logic *** ---
+
+    // --- "My Results" Modal Logic ---
     function loadMyResults() {
         const user = auth.currentUser;
-        if (!user) return; // Should not happen
+        if (!user) return; 
         
         myResultsListContainer.innerHTML = '<div class="loader"></div>';
         
         db.collection("quiz_attempts")
           .where("uid", "==", user.uid)
           .orderBy("timestamp", "desc")
-          .limit(20) // Show last 20 attempts
+          .limit(20) 
           .get()
           .then(async (querySnapshot) => {
               if (querySnapshot.empty) {
@@ -678,21 +675,41 @@ document.addEventListener('DOMContentLoaded', () => {
               }
               
               let html = '';
-              // We need to fetch quiz titles, which is tricky
-              // For simplicity, we'll just show the score for now
-              // A more advanced query would be needed to get quiz titles efficiently
+              // Create a list of promises to fetch quiz titles
+              const titlePromises = [];
+              const attempts = [];
+
               querySnapshot.forEach((doc) => {
                   const attempt = doc.data();
+                  attempts.push(attempt);
+                  // Only fetch title if it's a custom quiz
+                  if (!attempt.quizId.startsWith('api_')) {
+                      titlePromises.push(db.collection('quizzes').doc(attempt.quizId).get());
+                  } else {
+                      titlePromises.push(Promise.resolve(null)); // Placeholder
+                  }
+              });
+
+              const titleDocs = await Promise.all(titlePromises);
+              
+              attempts.forEach((attempt, index) => {
+                  let quizTitle = "API Quiz"; // Default for API quizzes
+                  const titleDoc = titleDocs[index];
+                  if (titleDoc && titleDoc.exists) {
+                      quizTitle = titleDoc.data().title;
+                  }
+
                   html += `
                       <div class="my-result-card">
                           <div>
-                              <div class="my-result-card-name">Quiz ID: ${attempt.quizId}</div>
+                              <div class="my-result-card-name">${quizTitle}</div>
                               <div class="my-result-card-title">${new Date(attempt.timestamp.toDate()).toLocaleDateString()}</div>
                           </div>
                           <span class="my-result-card-score">${attempt.score}</span>
                       </div>
                   `;
               });
+
               myResultsListContainer.innerHTML = html;
               
           }).catch(err => {
@@ -736,9 +753,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <button class="delete-question-btn">Delete Question</button>
         `;
         
-        // --- NEW: GIPHY Button Logic ---
         questionCard.querySelector('.add-gif-btn').onclick = () => {
-            activeGiphyQuestionCard = questionCard; // Remember which card this is
+            activeGiphyQuestionCard = questionCard; 
             editorContainer.style.display = 'none';
             giphyContainer.style.display = 'flex';
             giphyResultsGrid.innerHTML = '';
@@ -752,7 +768,7 @@ document.addEventListener('DOMContentLoaded', () => {
         questionListContainer.appendChild(questionCard);
     }
     
-    // --- NEW: GIPHY Search Functions ---
+    // --- GIPHY Search Functions ---
     async function searchGiphy() {
         const searchTerm = giphySearchBar.value.trim();
         if (searchTerm.length < 2) return;
@@ -880,9 +896,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let query = db.collection("quizzes").orderBy("likeCount", "desc");
         
         if (searchTerm) {
-            const lowerSearchTerm = searchTerm.toLowerCase();
-            // Simple search: Note: Firestore is case-sensitive. This is a basic filter.
-            // For a real-world app, you'd use a third-party search like Algolia.
             query = query.where("title", ">=", searchTerm)
                          .where("title", "<=", searchTerm + '\uf8ff');
         }
@@ -1065,9 +1078,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirm("Are you sure you want to delete this quiz? This cannot be undone.")) {
             return; 
         }
-
-        db.collection("quizzes").doc(quizId).delete().then(() => {
-            showToast("Quiz deleted!", "success");
+        
+        // Also delete all attempts associated with this quiz
+        db.collection("quiz_attempts").where("quizId", "==", quizId).get().then((snapshot) => {
+            const batch = db.batch();
+            snapshot.docs.forEach(doc => batch.delete(doc.ref));
+            return batch.commit();
+        }).then(() => {
+            // Now delete the quiz itself
+            return db.collection("quizzes").doc(quizId).delete();
+        }).then(() => {
+            showToast("Quiz and all its results deleted!", "success");
             loadManageList(auth.currentUser); // Refresh the list
         }).catch((error) => {
             console.error("Error removing quiz: ", error);

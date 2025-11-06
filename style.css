@@ -476,6 +476,23 @@ footer {
     text-align: center;
     font-size: 15px;
 }
+/* *** NEW: Form Link Styles *** */
+.form-link {
+    color: var(--primary);
+    text-align: center;
+    cursor: pointer;
+    font-weight: 700;
+    margin-top: 10px;
+}
+.form-link:hover {
+    text-decoration: underline;
+}
+.modal-text {
+    color: var(--text-light);
+    text-align: center;
+    margin-bottom: 20px;
+}
+
 
 /* --- Quiz App Styles --- */
 #quiz-app-container {
@@ -514,7 +531,6 @@ footer {
     border-radius: 10px;
     min-height: 100px;
 }
-/* Removed .quiz-question-image */
 .question-block h4 {
     font-size: 1.5rem;
     font-weight: 700;
@@ -656,7 +672,6 @@ footer {
     background: var(--bg-white);
     color: var(--text-dark);
 }
-/* Removed image upload/preview styles */
 .question-editor-card .options-editor {
     display: grid;
     grid-template-columns: 1fr 1fr;

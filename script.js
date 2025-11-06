@@ -12,7 +12,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
-// *** Storage removed ***
+// const storage = firebase.storage(); // <-- REMOVED
 // --- END OF FIREBASE SETUP ---
 
 
@@ -38,6 +38,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const userDisplay = document.getElementById('user-display');
     const welcomeUser = document.getElementById('welcome-user');
     const logoutBtn = document.getElementById('logout-btn');
+
+    // *** NEW: Forgot Password Elements ***
+    const forgotPasswordLink = document.getElementById('forgot-password-link');
+    const forgotPasswordContainer = document.getElementById('forgot-password-container');
+    const forgotPasswordForm = document.getElementById('forgot-password-form');
+    const forgotEmail = document.getElementById('forgot-email');
+    const forgotError = document.getElementById('forgot-error');
+    const backToLoginLink = document.getElementById('back-to-login-link');
 
     // Join by ID Elements
     const joinQuizBtn = document.getElementById('join-quiz-btn');
@@ -228,6 +236,28 @@ document.addEventListener('DOMContentLoaded', () => {
         auth.signOut().catch(err => console.error("Sign out error", err));
     };
 
+    // *** NEW: Forgot Password Logic ***
+    forgotPasswordLink.onclick = () => {
+        authContainer.style.display = 'none';
+        forgotPasswordContainer.style.display = 'flex';
+    };
+    backToLoginLink.onclick = () => {
+        authContainer.style.display = 'flex';
+        forgotPasswordContainer.style.display = 'none';
+    };
+    forgotPasswordForm.onsubmit = (e) => {
+        e.preventDefault();
+        const email = forgotEmail.value.trim();
+        
+        auth.sendPasswordResetEmail(email)
+            .then(() => {
+                showToast("Password reset email sent!", "success");
+                backToLoginLink.click(); // Go back to login
+            })
+            .catch((error) => {
+                forgotError.textContent = error.message;
+            });
+    };
 
     // --- Quiz Logic ---
 
@@ -332,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const q = questions[currentIndex];
         
-        let questionText, options, correctAnswer;
+        let questionText, options, correctAnswer, imageUrl;
         
         if (q.incorrect_answers) { 
             questionText = q.question;
@@ -343,11 +373,15 @@ document.addEventListener('DOMContentLoaded', () => {
             questionText = q.question;
             options = [...q.options]; 
             correctAnswer = q.options[q.correct_answer_index];
-            // Image logic removed
+            imageUrl = q.imageUrl; // Image logic (harmless, will be null)
         }
 
-        // Image HTML removed
-        let html = `<div class="question-block"><h4>Q${currentIndex + 1}: ${decodeHTML(questionText)}</h4>`;
+        let imageHtml = '';
+        if (imageUrl) {
+            imageHtml = `<img src="${imageUrl}" alt="Quiz Image" class="quiz-question-image">`;
+        }
+
+        let html = `<div class="question-block">${imageHtml}<h4>Q${currentIndex + 1}: ${decodeHTML(questionText)}</h4>`;
         options.forEach((opt) => {
             const isCorrect = decodeHTML(opt) === decodeHTML(correctAnswer);
             html += `<button class="option-btn" data-correct="${isCorrect}">${decodeHTML(opt)}</button>`;
@@ -747,7 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // *** UPDATED: Secure "Like Quiz" Function ***
+    // *** UPDATED: Secure "Like/Unlike" Quiz Function ***
     function likeQuiz(quizId, buttonElement) {
         const user = auth.currentUser;
         if (!user) {
@@ -766,35 +800,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = doc.data();
                 const likedBy = data.likedBy || [];
                 let newLikeCount = data.likeCount || 0;
+                let didLike = false; // Will this user "like" or "unlike"?
+
+                const userIndex = likedBy.indexOf(user.uid);
                 
-                if (likedBy.includes(user.uid)) {
+                if (userIndex > -1) {
                     // *** User has already liked, so UNLIKE ***
-                    showToast("You unliked this quiz.", "");
                     newLikeCount--;
-                    const userIndex = likedBy.indexOf(user.uid);
                     likedBy.splice(userIndex, 1);
+                    didLike = false;
                 } else {
                     // *** User has not liked, so LIKE ***
                     newLikeCount++;
                     likedBy.push(user.uid); 
+                    didLike = true;
                 }
+
+                if (newLikeCount < 0) newLikeCount = 0; // Safety check
 
                 transaction.update(quizRef, { 
                     likeCount: newLikeCount,
                     likedBy: likedBy 
                 });
                 
-                return {newLikeCount, didLike: !likedBy.includes(user.uid)}; // Return new state
+                return { newLikeCount, didLike }; // Return the new state
             });
         }).then((result) => {
             if (result !== undefined) {
                 console.log("Like count updated to", result.newLikeCount);
                 buttonElement.textContent = `❤️ ${result.newLikeCount}`;
+                
                 // Toggle the 'liked' class
                 if (result.didLike) {
-                    buttonElement.classList.remove('liked');
-                } else {
                     buttonElement.classList.add('liked');
+                    showToast("Quiz liked!", "success");
+                } else {
+                    buttonElement.classList.remove('liked');
+                    showToast("Quiz unliked.", "");
                 }
             }
         }).catch((error) => {

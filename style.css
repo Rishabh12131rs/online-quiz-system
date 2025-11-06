@@ -15,6 +15,8 @@
     --error-light: #FADBD8;
     
     --bg-gradient: linear-gradient(180deg, var(--primary-light) 0%, var(--bg-white) 70%);
+
+    /* *** NEW: Static color for dark text on light backgrounds *** */
     --text-dark-static: #1A1A1A; 
 }
 
@@ -73,23 +75,6 @@ header {
     font-family: 'Baloo 2', 'Montserrat', Arial;
     letter-spacing: 1px;
 }
-.header-back-btn {
-    background: var(--bg-light);
-    border: 2px solid var(--border-color);
-    color: var(--text-dark);
-    font-size: 1rem;
-    font-weight: 700;
-    padding: 10px 20px;
-    border-radius: 24px;
-    cursor: pointer;
-    margin-left: 20px;
-    transition: all 0.2s;
-}
-.header-back-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-}
-
 .pin-auth {
     display: flex;
     align-items: center;
@@ -172,44 +157,6 @@ header {
     border-color: var(--primary);
     color: var(--primary);
 }
-
-/* --- *** NEW: Profile Icon & Tooltip *** --- */
-.profile-icon {
-    position: relative; /* Anchor for the tooltip */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    background: var(--bg-light);
-    border: 2px solid var(--border-color);
-    border-radius: 50%;
-    font-size: 1.5rem;
-    color: var(--text-dark);
-}
-
-.profile-tooltip {
-    display: none; /* Hidden by default */
-    position: absolute;
-    bottom: -45px; /* Position it below the icon */
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--text-dark);
-    color: var(--bg-white);
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    white-space: nowrap; /* Prevent username from wrapping */
-    z-index: 10;
-    pointer-events: none; /* So it doesn't block hover */
-}
-
-/* Show tooltip on hover */
-.profile-icon:hover .profile-tooltip {
-    display: block;
-}
-/* --- End of Profile Icon --- */
 
 
 /* --- Subject Navigation --- */
@@ -587,17 +534,13 @@ footer {
 
 
 /* --- Quiz App Styles --- */
-#quiz-modal-content {
-    max-width: 800px;
-}
-
 #quiz-app-container {
-    padding: 0;
-    background: none;
+    padding: 30px;
+    background: var(--bg-white);
     max-width: 800px;
     margin: 30px auto;
     border-radius: 15px;
-    box-shadow: none;
+    box-shadow: 0 8px 34px rgba(0,0,0,0.08);
 }
 #quiz-controls {
     display: flex;
@@ -670,7 +613,7 @@ footer {
 }
 #quiz-navigation {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr; /* Changed from 4 columns */
     justify-content: space-between;
     align-items: center;
     margin-top: 25px;
@@ -679,6 +622,7 @@ footer {
     text-align: center;
     font-weight: 700;
 }
+/* *** NEW: Style for nav buttons *** */
 #quiz-navigation button {
     background: var(--bg-light);
     border: 2px solid var(--border-color);
@@ -742,13 +686,13 @@ footer {
 .option-btn.correct {
     background: var(--success-light);
     border-color: var(--success);
-    color: var(--text-dark-static); /* FIX: Use static dark text */
+    color: var(--text-dark-static); /* *** FIX: Use static dark text *** */
     font-weight: 700;
 }
 .option-btn.incorrect {
     background: var(--error-light);
     border-color: var(--error);
-    color: var(--text-dark-static); /* FIX: Use static dark text */
+    color: var(--text-dark-static); /* *** FIX: Use static dark text *** */
     opacity: 0.9;
 }
 

@@ -1,18 +1,19 @@
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// --- NEW: FIREBASE SETUP ---
+// *** PASTE YOUR FIREBASE CONFIG KEYS HERE ***
 const firebaseConfig = {
   apiKey: "AIzaSyCOSeITzHa3Ck7bq3DlK6-Rb6J1iocYHvE",
   authDomain: "quizhub-project-4b20b.firebaseapp.com",
   projectId: "quizhub-project-4b20b",
   storageBucket: "quizhub-project-4b20b.firebasestorage.app",
   messagingSenderId: "155078169148",
-  appId: "1:155078169148:web:a3dc75c8f8b4ec86556939",
-  measurementId: "G-5LH5BWX15G"
+  appId: "1:155078169148:web:a3dc75c8f8b4ec86556939"
 };
+
 // --- 2. INITIALIZE FIREBASE ---
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
-const storage = firebase.storage(); 
+const storage = firebase.storage(); // *** NEW: Initialize Storage ***
 // --- END OF FIREBASE SETUP ---
 
 
@@ -59,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Main Page Elements
     const quizList = document.querySelector('.quiz-list'); 
-    const searchBar = document.getElementById('search-bar'); 
+    const searchBar = document.getElementById('search-bar'); // *** NEW ***
 
     // Editor Elements
     const createQuizBtn = document.getElementById('create-quiz-btn');
@@ -80,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsQuizTitle = document.getElementById('results-quiz-title');
     const quizResultsListContainer = document.getElementById('quiz-results-list-container');
     
-    // Toast & Sound Elements
+    // *** NEW: Toast & Sound Elements ***
     const toast = document.getElementById('toast-notification');
     const correctSound = document.getElementById('correct-sound');
     const wrongSound = document.getElementById('wrong-sound');
@@ -93,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let timerInterval; 
     let timeLeft = 10; 
 
-    // --- Toast Notification Function ---
+    // --- *** NEW: Toast Notification Function *** ---
     function showToast(message, type = '') {
         toast.textContent = message;
         toast.className = ''; // Reset classes
@@ -106,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000); // Hide after 3 seconds
     }
     
-    // --- MAIN AUTHENTICATION LISTENER ---
+    // --- *** MAIN AUTHENTICATION LISTENER *** ---
     auth.onAuthStateChanged(user => {
         if (user) {
             mainContent.style.display = 'block'; 
@@ -168,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsContainer.style.display = 'none';
     };
 
-    // --- FIREBASE AUTHENTICATION LOGIC ---
+    // --- *** FIREBASE AUTHENTICATION LOGIC *** ---
     loginTab.onclick = () => {
         loginTab.classList.add('active');
         signupTab.classList.remove('active');
@@ -204,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(() => {
                 console.log("User signed up!");
+                // Auth listener will handle the rest
             })
             .catch((error) => {
                 signupErr.textContent = error.message;
@@ -219,6 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then((userCredential) => {
                 console.log("User logged in!");
                 loginErr.textContent = '';
+                // Auth listener will handle the rest
             })
             .catch((error) => {
                 loginErr.textContent = error.message;
@@ -344,9 +347,10 @@ document.addEventListener('DOMContentLoaded', () => {
             questionText = q.question;
             options = [...q.options]; 
             correctAnswer = q.options[q.correct_answer_index];
-            imageUrl = q.imageUrl; 
+            imageUrl = q.imageUrl; // *** Get image URL ***
         }
 
+        // *** Add image if it exists ***
         let imageHtml = '';
         if (imageUrl) {
             imageHtml = `<img src="${imageUrl}" alt="Quiz Image" class="quiz-question-image">`;
@@ -413,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedButton.classList.add('correct'); 
             feedbackDiv.innerHTML = `<span style="color:green;">Correct!</span>`;
             score++;
-            correctSound.play(); // Play sound
+            correctSound.play(); // *** Play sound ***
         } else {
             selectedButton.classList.add('incorrect'); 
             
@@ -426,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             feedbackDiv.innerHTML = `<span style="color:red;">Wrong! Correct was: ${decodeHTML(correctAnswerText)}</span>`;
-            wrongSound.play(); // Play sound
+            wrongSound.play(); // *** Play sound ***
             
             const correctButton = document.querySelector(`.option-btn[data-correct="true"]`);
             if (correctButton) {
@@ -720,7 +724,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 q.imageUrl = imageUrls[index];
             });
 
-            // --- Save to Firebase ---
             await db.collection("quizzes").add(newQuiz);
             showToast(`Quiz "${title}" saved successfully!`, "success");
             closeEditorBtn.click(); 
@@ -741,6 +744,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let query = db.collection("quizzes").orderBy("likeCount", "desc");
         
         if (searchTerm) {
+            // This is a basic "starts-with" search
             query = query.where("title", ">=", searchTerm)
                          .where("title", "<=", searchTerm + '\uf8ff');
         }
@@ -898,7 +902,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loginForm.style.display = 'flex';
         signupForm.style.display = 'none';
         
-        // *** NEW: Search Bar Event Listener ***
+        // Search Bar Event Listener
         searchBar.addEventListener('keyup', () => {
             loadSharedQuizzes(searchBar.value.trim());
         });
@@ -909,6 +913,8 @@ document.addEventListener('DOMContentLoaded', () => {
         function primeAudio() {
             correctSound.load();
             wrongSound.load();
+            // Once loaded, we don't need this listener anymore
+            document.body.removeEventListener('click', primeAudio);
         }
         document.body.addEventListener('click', primeAudio, { once: true });
 

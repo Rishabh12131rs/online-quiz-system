@@ -8,12 +8,11 @@ const firebaseConfig = {
   messagingSenderId: "155078169148",
   appId: "1:155078169148:web:a3dc75c8f8b4ec86556939"
 };
-
 // --- 2. INITIALIZE FIREBASE ---
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
-const storage = firebase.storage(); // *** NEW: Initialize Storage ***
+const storage = firebase.storage(); 
 // --- END OF FIREBASE SETUP ---
 
 
@@ -60,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Main Page Elements
     const quizList = document.querySelector('.quiz-list'); 
-    const searchBar = document.getElementById('search-bar'); // *** NEW ***
+    const searchBar = document.getElementById('search-bar'); 
 
     // Editor Elements
     const createQuizBtn = document.getElementById('create-quiz-btn');
@@ -81,10 +80,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsQuizTitle = document.getElementById('results-quiz-title');
     const quizResultsListContainer = document.getElementById('quiz-results-list-container');
     
-    // *** NEW: Toast & Sound Elements ***
+    // Toast & Dark Mode Elements
     const toast = document.getElementById('toast-notification');
-    const correctSound = document.getElementById('correct-sound');
-    const wrongSound = document.getElementById('wrong-sound');
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
 
     // --- App State ---
     let questions = []; 
@@ -94,20 +92,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let timerInterval; 
     let timeLeft = 10; 
 
-    // --- *** NEW: Toast Notification Function *** ---
+    // --- Toast Notification Function ---
     function showToast(message, type = '') {
         toast.textContent = message;
-        toast.className = ''; // Reset classes
+        toast.className = ''; 
         if (type) {
-            toast.classList.add(type); // 'success' or 'error'
+            toast.classList.add(type); 
         }
         toast.classList.add('show');
         setTimeout(() => {
             toast.classList.remove('show');
-        }, 3000); // Hide after 3 seconds
+        }, 3000); 
     }
     
-    // --- *** MAIN AUTHENTICATION LISTENER *** ---
+    // --- MAIN AUTHENTICATION LISTENER ---
     auth.onAuthStateChanged(user => {
         if (user) {
             mainContent.style.display = 'block'; 
@@ -135,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
     closeQuizBtn.onclick = () => {
         mainContent.style.display = 'block';
         quizAppContainer.style.display = 'none';
-        loadSharedQuizzes(searchBar.value); // Refresh list with search term
+        loadSharedQuizzes(searchBar.value); 
     };
 
     createQuizBtn.onclick = () => {
@@ -169,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsContainer.style.display = 'none';
     };
 
-    // --- *** FIREBASE AUTHENTICATION LOGIC *** ---
+    // --- FIREBASE AUTHENTICATION LOGIC ---
     loginTab.onclick = () => {
         loginTab.classList.add('active');
         signupTab.classList.remove('active');
@@ -205,7 +203,6 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(() => {
                 console.log("User signed up!");
-                // Auth listener will handle the rest
             })
             .catch((error) => {
                 signupErr.textContent = error.message;
@@ -221,7 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .then((userCredential) => {
                 console.log("User logged in!");
                 loginErr.textContent = '';
-                // Auth listener will handle the rest
             })
             .catch((error) => {
                 loginErr.textContent = error.message;
@@ -347,10 +343,9 @@ document.addEventListener('DOMContentLoaded', () => {
             questionText = q.question;
             options = [...q.options]; 
             correctAnswer = q.options[q.correct_answer_index];
-            imageUrl = q.imageUrl; // *** Get image URL ***
+            imageUrl = q.imageUrl; 
         }
 
-        // *** Add image if it exists ***
         let imageHtml = '';
         if (imageUrl) {
             imageHtml = `<img src="${imageUrl}" alt="Quiz Image" class="quiz-question-image">`;
@@ -417,7 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedButton.classList.add('correct'); 
             feedbackDiv.innerHTML = `<span style="color:green;">Correct!</span>`;
             score++;
-            correctSound.play(); // *** Play sound ***
+            // correctSound.play(); // Sound removed
         } else {
             selectedButton.classList.add('incorrect'); 
             
@@ -430,7 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             feedbackDiv.innerHTML = `<span style="color:red;">Wrong! Correct was: ${decodeHTML(correctAnswerText)}</span>`;
-            wrongSound.play(); // *** Play sound ***
+            // wrongSound.play(); // Sound removed
             
             const correctButton = document.querySelector(`.option-btn[data-correct="true"]`);
             if (correctButton) {
@@ -678,6 +673,7 @@ document.addEventListener('DOMContentLoaded', () => {
             author: user.displayName || 'Anonymous', 
             authorUID: user.uid, 
             likeCount: 0, 
+            likedBy: [], // *** NEW: Add list to track likes ***
             questions: []
         };
 
@@ -744,7 +740,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let query = db.collection("quizzes").orderBy("likeCount", "desc");
         
         if (searchTerm) {
-            // This is a basic "starts-with" search
             query = query.where("title", ">=", searchTerm)
                          .where("title", "<=", searchTerm + '\uf8ff');
         }
@@ -760,6 +755,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 return;
             }
+            
+            const user = auth.currentUser;
+            const uid = user ? user.uid : null;
 
             querySnapshot.forEach((doc) => {
                 const quiz = doc.data();
@@ -775,6 +773,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="like-btn" data-id="${quizId}">❤️ ${quiz.likeCount || 0}</button>
                     </div>
                 `;
+
+                // *** NEW: Check if user has already liked this quiz ***
+                if (uid && quiz.likedBy && quiz.likedBy.includes(uid)) {
+                    quizCard.querySelector('.like-btn').classList.add('liked');
+                }
 
                 quizCard.querySelector('.quiz-card-title').onclick = () => {
                     startCustomQuiz(quiz, quizId); 
@@ -793,6 +796,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    // *** UPDATED: Secure "Like Quiz" Function ***
     function likeQuiz(quizId, buttonElement) {
         const user = auth.currentUser;
         if (!user) {
@@ -808,16 +812,37 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw "Quiz not found!";
                 }
                 
-                const newLikeCount = (doc.data().likeCount || 0) + 1;
-                transaction.update(quizRef, { likeCount: newLikeCount });
+                const data = doc.data();
+                const likedBy = data.likedBy || [];
+                
+                // *** NEW: Check if user already liked ***
+                if (likedBy.includes(user.uid)) {
+                    showToast("You have already liked this quiz.", "error");
+                    return; // Stop the transaction
+                }
+
+                // User has not liked, so update
+                const newLikeCount = (data.likeCount || 0) + 1;
+                likedBy.push(user.uid); // Add user to the list
+                
+                transaction.update(quizRef, { 
+                    likeCount: newLikeCount,
+                    likedBy: likedBy 
+                });
+                
                 return newLikeCount;
             });
         }).then((newLikeCount) => {
-            console.log("Like count updated to", newLikeCount);
-            buttonElement.textContent = `❤️ ${newLikeCount}`;
+            if (newLikeCount !== undefined) {
+                console.log("Like count updated to", newLikeCount);
+                buttonElement.textContent = `❤️ ${newLikeCount}`;
+                buttonElement.classList.add('liked'); // Make it show as "liked"
+            }
         }).catch((error) => {
             console.error("Error updating likes: ", error);
-            showToast("Error liking quiz.", "error");
+            if (error !== "Quiz not found!") {
+                showToast("Error liking quiz.", "error");
+            }
         });
     }
 
@@ -894,6 +919,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Initialization ---
     function init() {
+        // --- *** NEW: Dark Mode Logic *** ---
+        const theme = localStorage.getItem('theme');
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+            darkModeToggle.textContent = '☀️';
+        } else {
+            document.body.classList.remove('dark-mode');
+            darkModeToggle.textContent = '🌙';
+        }
+
+        darkModeToggle.onclick = () => {
+            if (document.body.classList.contains('dark-mode')) {
+                document.body.classList.remove('dark-mode');
+                localStorage.setItem('theme', 'light');
+                darkModeToggle.textContent = '🌙';
+            } else {
+                document.body.classList.add('dark-mode');
+                localStorage.setItem('theme', 'dark');
+                darkModeToggle.textContent = '☀️';
+            }
+        };
+
         // Auth listener (onAuthStateChanged) handles all initial loading
         
         // Setup initial auth tab state
@@ -906,18 +953,6 @@ document.addEventListener('DOMContentLoaded', () => {
         searchBar.addEventListener('keyup', () => {
             loadSharedQuizzes(searchBar.value.trim());
         });
-
-        // *** NEW: Audio priming to fix autoplay policy ***
-        // This runs on the *first* click anywhere on the page
-        // to get permission to play audio.
-        function primeAudio() {
-            correctSound.load();
-            wrongSound.load();
-            // Once loaded, we don't need this listener anymore
-            document.body.removeEventListener('click', primeAudio);
-        }
-        document.body.addEventListener('click', primeAudio, { once: true });
-
 
         // Add event listeners for the nav links
         document.querySelectorAll('.subject-nav a').forEach(link => {

@@ -41,8 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginErr = document.getElementById('login-error');
     const signupErr = document.getElementById('signup-error');
     const userDisplay = document.getElementById('user-display');
-    // *** UPDATED: Reference to the new tooltip ID ***
-    const welcomeUserTooltip = document.getElementById('welcome-user-tooltip'); 
+    const welcomeUserTooltip = document.getElementById('welcome-user-tooltip'); // *** Updated ***
     const logoutBtn = document.getElementById('logout-btn');
     const googleSignInBtn = document.getElementById('google-signin-btn');
 
@@ -158,26 +157,22 @@ document.addEventListener('DOMContentLoaded', () => {
         errorElement.textContent = message;
     }
 
-    // --- *** UPDATED: Page Navigation System *** ---
+    // --- *** NEW: Page Navigation System *** ---
     const allPages = [mainContent, authContainer, quizAppContainer, editorContainer, manageContainer, resultsContainer, myResultsContainer, giphyContainer, forgotPasswordContainer];
 
     function showPage(pageToShow) {
-        // Hide all pages
         allPages.forEach(page => page.style.display = 'none');
         
-        // Show the one we want
-        // Use 'flex' for all modal-like containers, 'block' for main content
+        pageToShow.style.display = 'flex'; // Use flex for all modals/containers
+        
         if (pageToShow === mainContent) {
             mainContent.style.display = 'block';
-            headerBackBtn.style.display = 'none'; // Hide back button on main page
-        } else {
-            pageToShow.style.display = 'flex'; // All other pages are overlays/modals
-            headerBackBtn.style.display = 'block'; // Show back button
+            headerBackBtn.style.display = 'none'; // Hide back button
+        } else if (pageToShow === authContainer || pageToShow === forgotPasswordContainer) {
+            headerBackBtn.style.display = 'none'; // Hide back button
         }
-        
-        // Special rule for auth pages (no back button)
-        if (pageToShow === authContainer || pageToShow === forgotPasswordContainer) {
-            headerBackBtn.style.display = 'none';
+        else {
+            headerBackBtn.style.display = 'block'; // Show back button
         }
     }
 
@@ -185,8 +180,6 @@ document.addEventListener('DOMContentLoaded', () => {
         showPage(mainContent);
         loadSharedQuizzes(searchBar.value);
     }
-    // --- End of Page Navigation System ---
-
 
     // --- MAIN AUTHENTICATION LISTENER ---
     auth.onAuthStateChanged(user => {
@@ -203,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Page/Modal Toggling (Now uses showPage) ---
+    // --- Page/Modal Toggling ---
     playQuizBtn.onclick = () => {
         showPage(quizAppContainer);
         quizControls.style.display = 'flex'; 
@@ -223,9 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showPage(manageContainer);
         loadManageList(user); 
     };
-    closeManageBtn.onclick = () => {
-        showPage(editorContainer); // Go back to editor
-    };
+    closeManageBtn.onclick = goHome; 
 
     closeResultsBtn.onclick = () => {
         showPage(manageContainer); // Go back to manage modal
@@ -450,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
             questionText = q.question;
             options = [...q.options]; 
             correctAnswer = q.options[q.correct_answer_index];
-            imageUrl = q.imageUrl; 
+            imageUrl = q.imageUrl; // Get image URL (works for GIPHY)
         }
 
         let imageHtml = '';
@@ -888,7 +879,7 @@ document.addEventListener('DOMContentLoaded', () => {
         db.collection("quizzes").add(newQuiz).then((docRef) => {
             showToast(`Quiz "${title}" saved successfully!`, "success");
             console.log("Quiz saved with ID: ", docRef.id);
-            goHome(); // Go back to home
+            goHome(); 
         }).catch((error) => {
             console.error("Error adding document: ", error);
             showToast("Error saving quiz. Check the console.", "error");

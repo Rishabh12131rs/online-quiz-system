@@ -12,7 +12,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
-const storage = firebase.storage(); 
+// *** Storage removed ***
 // --- END OF FIREBASE SETUP ---
 
 
@@ -332,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const q = questions[currentIndex];
         
-        let questionText, options, correctAnswer, imageUrl;
+        let questionText, options, correctAnswer;
         
         if (q.incorrect_answers) { 
             questionText = q.question;
@@ -343,15 +343,11 @@ document.addEventListener('DOMContentLoaded', () => {
             questionText = q.question;
             options = [...q.options]; 
             correctAnswer = q.options[q.correct_answer_index];
-            imageUrl = q.imageUrl; 
+            // Image logic removed
         }
 
-        let imageHtml = '';
-        if (imageUrl) {
-            imageHtml = `<img src="${imageUrl}" alt="Quiz Image" class="quiz-question-image">`;
-        }
-
-        let html = `<div class="question-block">${imageHtml}<h4>Q${currentIndex + 1}: ${decodeHTML(questionText)}</h4>`;
+        // Image HTML removed
+        let html = `<div class="question-block"><h4>Q${currentIndex + 1}: ${decodeHTML(questionText)}</h4>`;
         options.forEach((opt) => {
             const isCorrect = decodeHTML(opt) === decodeHTML(correctAnswer);
             html += `<button class="option-btn" data-correct="${isCorrect}">${decodeHTML(opt)}</button>`;
@@ -577,10 +573,9 @@ document.addEventListener('DOMContentLoaded', () => {
         questionCard.className = 'question-editor-card';
         questionCard.dataset.id = questionId;
         
+        // *** REMOVED file input and image preview ***
         questionCard.innerHTML = `
             <textarea placeholder="Enter your question here..."></textarea>
-            <input type="file" class="question-image-upload" accept="image/png, image/jpeg">
-            <img class="question-image-preview" src="" alt="Image Preview" style="display: none; max-width: 100%; margin-top: 10px;">
             <div class="options-editor">
                 <div class="option-input-group">
                     <input type="radio" name="correct-answer-${questionId}" value="0" checked>
@@ -602,24 +597,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <button class="delete-question-btn">Delete Question</button>
         `;
 
-        const fileInput = questionCard.querySelector('.question-image-upload');
-        const imagePreview = questionCard.querySelector('.question-image-preview');
-        
-        fileInput.onchange = () => {
-            const file = fileInput.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    imagePreview.src = e.target.result;
-                    imagePreview.style.display = 'block';
-                }
-                reader.readAsDataURL(file);
-            } else {
-                imagePreview.src = '';
-                imagePreview.style.display = 'none';
-            }
-        };
-
         questionCard.querySelector('.delete-question-btn').onclick = () => {
             questionCard.remove();
         };
@@ -627,26 +604,12 @@ document.addEventListener('DOMContentLoaded', () => {
         questionListContainer.appendChild(questionCard);
     }
     
-    async function uploadImage(file, uid) {
-        if (!file) return null; 
-
-        const filePath = `quiz_images/${uid}/${Date.now()}_${file.name}`;
-        const fileRef = storage.ref().child(filePath);
-        
-        try {
-            const snapshot = await fileRef.put(file);
-            const url = await snapshot.ref.getDownloadURL();
-            return url;
-        } catch (error) {
-            console.error("Error uploading image: ", error);
-            showToast("Error uploading an image.", "error");
-            return null;
-        }
-    }
+    // *** REMOVED uploadImage function ***
 
     addQuestionBtn.onclick = createNewQuestionEditor;
 
-    saveQuizBtn.onclick = async () => { 
+    // *** UPDATED: Save Quiz Function (image logic removed) ***
+    saveQuizBtn.onclick = () => { // No longer async
         const user = auth.currentUser;
         if (!user) { 
             showToast("Your session expired. Please log in again.", "error");
@@ -673,21 +636,16 @@ document.addEventListener('DOMContentLoaded', () => {
             author: user.displayName || 'Anonymous', 
             authorUID: user.uid, 
             likeCount: 0, 
-            likedBy: [], // *** NEW: Add list to track likes ***
+            likedBy: [], // For the like system
             questions: []
         };
 
         let allValid = true;
-        const uploadPromises = []; 
-
+        
         questionCards.forEach(card => {
             const questionText = card.querySelector('textarea').value.trim();
             const optionInputs = card.querySelectorAll('.option-input-group input[type="text"]');
             const correctInput = card.querySelector('.option-input-group input[type="radio"]:checked');
-            const fileInput = card.querySelector('.question-image-upload');
-            
-            const file = fileInput.files[0];
-            uploadPromises.push(uploadImage(file, user.uid)); 
 
             const options = [];
             optionInputs.forEach(input => options.push(input.value.trim()));
@@ -701,8 +659,8 @@ document.addEventListener('DOMContentLoaded', () => {
             newQuiz.questions.push({
                 question: questionText,
                 options: options,
-                correct_answer_index: correctAnswerIndex,
-                imageUrl: null 
+                correct_answer_index: correctAnswerIndex
+                // imageUrl property removed
             });
         });
 
@@ -713,24 +671,18 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        try {
-            const imageUrls = await Promise.all(uploadPromises);
-            
-            newQuiz.questions.forEach((q, index) => {
-                q.imageUrl = imageUrls[index];
-            });
-
-            await db.collection("quizzes").add(newQuiz);
+        // --- Save to Firebase (now much simpler) ---
+        db.collection("quizzes").add(newQuiz).then((docRef) => {
             showToast(`Quiz "${title}" saved successfully!`, "success");
+            console.log("Quiz saved with ID: ", docRef.id);
             closeEditorBtn.click(); 
-
-        } catch (error) {
-            console.error("Error saving quiz: ", error);
+        }).catch((error) => {
+            console.error("Error adding document: ", error);
             showToast("Error saving quiz. Check the console.", "error");
-        } finally {
+        }).finally(() => {
             saveQuizBtn.disabled = false;
             saveQuizBtn.textContent = "Save Quiz";
-        }
+        });
     };
 
     // --- Load and Display "Shared Quizzes" (from Firebase) ---
@@ -774,7 +726,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
 
-                // *** NEW: Check if user has already liked this quiz ***
                 if (uid && quiz.likedBy && quiz.likedBy.includes(uid)) {
                     quizCard.querySelector('.like-btn').classList.add('liked');
                 }
@@ -814,29 +765,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const data = doc.data();
                 const likedBy = data.likedBy || [];
+                let newLikeCount = data.likeCount || 0;
                 
-                // *** NEW: Check if user already liked ***
                 if (likedBy.includes(user.uid)) {
-                    showToast("You have already liked this quiz.", "error");
-                    return; // Stop the transaction
+                    // *** User has already liked, so UNLIKE ***
+                    showToast("You unliked this quiz.", "");
+                    newLikeCount--;
+                    const userIndex = likedBy.indexOf(user.uid);
+                    likedBy.splice(userIndex, 1);
+                } else {
+                    // *** User has not liked, so LIKE ***
+                    newLikeCount++;
+                    likedBy.push(user.uid); 
                 }
 
-                // User has not liked, so update
-                const newLikeCount = (data.likeCount || 0) + 1;
-                likedBy.push(user.uid); // Add user to the list
-                
                 transaction.update(quizRef, { 
                     likeCount: newLikeCount,
                     likedBy: likedBy 
                 });
                 
-                return newLikeCount;
+                return {newLikeCount, didLike: !likedBy.includes(user.uid)}; // Return new state
             });
-        }).then((newLikeCount) => {
-            if (newLikeCount !== undefined) {
-                console.log("Like count updated to", newLikeCount);
-                buttonElement.textContent = `❤️ ${newLikeCount}`;
-                buttonElement.classList.add('liked'); // Make it show as "liked"
+        }).then((result) => {
+            if (result !== undefined) {
+                console.log("Like count updated to", result.newLikeCount);
+                buttonElement.textContent = `❤️ ${result.newLikeCount}`;
+                // Toggle the 'liked' class
+                if (result.didLike) {
+                    buttonElement.classList.remove('liked');
+                } else {
+                    buttonElement.classList.add('liked');
+                }
             }
         }).catch((error) => {
             console.error("Error updating likes: ", error);

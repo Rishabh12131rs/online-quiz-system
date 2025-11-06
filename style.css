@@ -131,7 +131,7 @@ header {
     color: var(--bg-white);
 }
 
-/* *** NEW: Dark Mode Toggle Button *** */
+/* --- Dark Mode Toggle Button --- */
 #dark-mode-toggle {
     background: var(--bg-light);
     border: 2px solid var(--border-color);
@@ -354,7 +354,6 @@ header {
     color: var(--primary);
     border-color: var(--primary-light);
 }
-/* *** NEW: Liked Button State *** */
 .like-btn.liked {
     background: var(--primary);
     color: var(--bg-white);
@@ -515,13 +514,7 @@ footer {
     border-radius: 10px;
     min-height: 100px;
 }
-.quiz-question-image {
-    width: 100%;
-    max-height: 300px;
-    object-fit: cover;
-    border-radius: 10px;
-    margin-bottom: 20px;
-}
+/* Removed .quiz-question-image */
 .question-block h4 {
     font-size: 1.5rem;
     font-weight: 700;
@@ -663,17 +656,7 @@ footer {
     background: var(--bg-white);
     color: var(--text-dark);
 }
-.question-image-upload {
-    font-size: 1rem;
-    margin-top: 10px;
-    color: var(--text-dark);
-}
-.question-image-preview {
-    max-width: 100%;
-    height: auto;
-    border-radius: 5px;
-    margin-top: 10px;
-}
+/* Removed image upload/preview styles */
 .question-editor-card .options-editor {
     display: grid;
     grid-template-columns: 1fr 1fr;

@@ -26,8 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const authContainer = document.getElementById('auth-container');
     const quizAppContainer = document.getElementById('quiz-app-container');
 
-    // *** NEW: Header Back Button ***
-    const headerBackBtn = document.getElementById('header-back-btn');
+    // Header Back Button REMOVED
 
     // Auth Elements
     const loginTab = document.getElementById('login-tab');
@@ -158,83 +157,83 @@ document.addEventListener('DOMContentLoaded', () => {
         errorElement.textContent = message;
     }
 
-    // --- *** NEW: Page Navigation System *** ---
-    const allPages = [mainContent, authContainer, quizAppContainer, editorContainer, manageContainer, resultsContainer, myResultsContainer, giphyContainer, forgotPasswordContainer];
-
-    function showPage(pageToShow) {
-        allPages.forEach(page => page.style.display = 'none');
-        
-        pageToShow.style.display = 'flex'; // Use flex for all modals/containers
-        
-        if (pageToShow === mainContent) {
-            mainContent.style.display = 'block';
-            headerBackBtn.style.display = 'none'; // Hide back button
-        } else if (pageToShow === authContainer || pageToShow === forgotPasswordContainer) {
-            headerBackBtn.style.display = 'none'; // Hide back button
-        }
-        else {
-            headerBackBtn.style.display = 'block'; // Show back button
-        }
-    }
-
-    function goHome() {
-        showPage(mainContent);
-        loadSharedQuizzes(searchBar.value);
-    }
-
     // --- MAIN AUTHENTICATION LISTENER ---
     auth.onAuthStateChanged(user => {
         if (user) {
+            mainContent.style.display = 'block'; 
+            authContainer.style.display = 'none'; 
             userDisplay.style.display = 'flex';
             myResultsBtn.style.display = 'block'; 
-            welcomeUserTooltip.textContent = user.displayName || 'User'; // *** SETS TOOLTIP ***
-            goHome(); // Show the main page
+            welcomeUserTooltip.textContent = user.displayName || 'User'; // Set tooltip text
+            loadSharedQuizzes(); 
         } else {
-            showPage(authContainer); // Show the login modal
+            mainContent.style.display = 'none'; 
+            authContainer.style.display = 'flex'; 
             userDisplay.style.display = 'none';
             myResultsBtn.style.display = 'none'; 
-            welcomeUserTooltip.textContent = ''; // *** Clear tooltip ***
+            welcomeUserTooltip.textContent = ''; 
         }
     });
 
-    // --- Page/Modal Toggling ---
+    // --- Page/Modal Toggling (Reverted to simple toggles) ---
     playQuizBtn.onclick = () => {
-        showPage(quizAppContainer);
+        mainContent.style.display = 'none';
+        quizAppContainer.style.display = 'flex'; // Use flex for overlay
         quizControls.style.display = 'flex'; 
         quizNav.style.display = 'none'; 
         quizArea.innerHTML = "Click 'Start Quiz' to begin!"; 
         showLeaderboard(); 
     };
-    closeQuizBtn.onclick = goHome;
+    closeQuizBtn.onclick = () => {
+        mainContent.style.display = 'block';
+        quizAppContainer.style.display = 'none';
+        loadSharedQuizzes(searchBar.value); 
+    };
 
-    createQuizBtn.onclick = () => showPage(editorContainer);
-    closeEditorBtn.onclick = goHome;
+    createQuizBtn.onclick = () => {
+        mainContent.style.display = 'none';
+        editorContainer.style.display = 'flex';
+    };
+    closeEditorBtn.onclick = () => {
+        mainContent.style.display = 'block';
+        editorContainer.style.display = 'none';
+        questionListContainer.innerHTML = ''; 
+        quizTitleInput.value = '';
+        loadSharedQuizzes(searchBar.value);
+    };
     
     manageQuizzesBtn.onclick = () => {
         const user = auth.currentUser;
         if (!user) return; 
         
-        showPage(manageContainer);
+        editorContainer.style.display = 'none'; 
+        manageContainer.style.display = 'flex'; 
         loadManageList(user); 
     };
-    closeManageBtn.onclick = goHome; 
+    closeManageBtn.onclick = () => {
+        editorContainer.style.display = 'flex'; // Go back to editor
+        manageContainer.style.display = 'none';
+    };
 
     closeResultsBtn.onclick = () => {
-        showPage(manageContainer); // Go back to manage modal
+        manageContainer.style.display = 'flex'; 
+        resultsContainer.style.display = 'none';
     };
 
     myResultsBtn.onclick = () => {
-        showPage(myResultsContainer);
+        mainContent.style.display = 'none';
+        myResultsContainer.style.display = 'flex';
         loadMyResults();
     };
-    closeMyResultsBtn.onclick = goHome;
+    closeMyResultsBtn.onclick = () => {
+        mainContent.style.display = 'block';
+        myResultsContainer.style.display = 'none';
+    };
     
     closeGiphyBtn.onclick = () => {
-        showPage(editorContainer); // Go back to editor
+        giphyContainer.style.display = 'none';
+        editorContainer.style.display = 'flex'; // Show editor again
     };
-
-    // *** NEW: Header Back Button Click ***
-    headerBackBtn.onclick = goHome;
 
     // --- FIREBASE AUTHENTICATION LOGIC ---
     loginTab.onclick = () => {
@@ -310,11 +309,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Forgot Password Logic
     forgotPasswordLink.onclick = (e) => {
         e.preventDefault();
-        showPage(forgotPasswordContainer);
+        authContainer.style.display = 'none';
+        forgotPasswordContainer.style.display = 'flex';
     };
     backToLoginLink.onclick = (e) => {
         e.preventDefault();
-        showPage(authContainer);
+        authContainer.style.display = 'flex';
+        forgotPasswordContainer.style.display = 'none';
     };
     forgotPasswordForm.onsubmit = (e) => {
         e.preventDefault();
@@ -323,7 +324,8 @@ document.addEventListener('DOMContentLoaded', () => {
         auth.sendPasswordResetEmail(email)
             .then(() => {
                 showToast("Password reset email sent!", "success");
-                showPage(authContainer); // Go back to login
+                authContainer.style.display = 'flex'; // Go back to login
+                forgotPasswordContainer.style.display = 'none';
             })
             .catch((error) => {
                 showFriendlyError(error, forgotError); 
@@ -335,7 +337,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function startApiQuiz(category, count, difficulty) { 
         currentQuizId = `api_${category}_${difficulty}`; 
         
-        showPage(quizAppContainer); 
+        mainContent.style.display = 'none';
+        quizAppContainer.style.display = 'flex'; // Use flex for overlay
 
         quizControls.style.display = 'none';
         quizArea.innerHTML = '<div class="loader"></div>'; 
@@ -383,7 +386,8 @@ document.addEventListener('DOMContentLoaded', () => {
         score = 0;
         currentIndex = 0;
         
-        showPage(quizAppContainer);
+        mainContent.style.display = 'none';
+        quizAppContainer.style.display = 'flex'; // Use flex for overlay
         quizControls.style.display = 'none'; 
         quizNav.style.display = 'grid'; // Use grid
         
@@ -442,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
             questionText = q.question;
             options = [...q.options]; 
             correctAnswer = q.options[q.correct_answer_index];
-            imageUrl = q.imageUrl; // Get image URL (works for GIPHY)
+            imageUrl = q.imageUrl; 
         }
 
         let imageHtml = '';
@@ -540,7 +544,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateControls() {
-        // prevBtn removed
         nextBtn.disabled = currentIndex >= questions.length; 
         questionNum.textContent = `Q${currentIndex + 1}/${questions.length}`;
         scoreLabel.textContent = 'Score: ' + score;
@@ -552,7 +555,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showQuestion();
         }
     };
-    // prevBtn.onclick removed
 
     function decodeHTML(html) {
         const txt = document.createElement('textarea');
@@ -625,8 +627,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function showQuizResults(quizId, quizTitle) {
         resultsQuizTitle.textContent = `Results for: ${quizTitle}`;
         quizResultsListContainer.innerHTML = '<div class="loader"></div>';
-        showPage(resultsContainer); // Show results modal
-    
+        manageContainer.style.display = 'none'; 
+        resultsContainer.style.display = 'flex'; 
+
         db.collection("quiz_attempts")
           .where("quizId", "==", quizId) 
           .orderBy("score", "desc") 
@@ -759,7 +762,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         questionCard.querySelector('.add-gif-btn').onclick = () => {
             activeGiphyQuestionCard = questionCard; 
-            showPage(giphyContainer);
+            editorContainer.style.display = 'none';
+            giphyContainer.style.display = 'flex';
             giphyResultsGrid.innerHTML = '';
             giphySearchBar.value = '';
         };
@@ -796,7 +800,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         preview.style.display = 'block';
                         activeGiphyQuestionCard.dataset.imageUrl = img.dataset.fullUrl; // Store the URL
                     }
-                    showPage(editorContainer); // Go back to editor
+                    editorContainer.style.display = 'flex'; // Go back to editor
+                    giphyContainer.style.display = 'none';
                 };
                 
                 giphyResultsGrid.appendChild(img);
@@ -880,7 +885,7 @@ document.addEventListener('DOMContentLoaded', () => {
         db.collection("quizzes").add(newQuiz).then((docRef) => {
             showToast(`Quiz "${title}" saved successfully!`, "success");
             console.log("Quiz saved with ID: ", docRef.id);
-            goHome(); 
+            goHome(); // Go back to home
         }).catch((error) => {
             console.error("Error adding document: ", error);
             showToast("Error saving quiz. Check the console.", "error");

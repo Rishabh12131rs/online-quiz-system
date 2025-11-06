@@ -25,6 +25,8 @@
             
             <button id="dark-mode-toggle">🌙</button>
 
+            <button class="my-results-btn" id="my-results-btn" style="display: none;">My Results</button>
+
             <div id="user-display" style="display: none;">
                 <span id="welcome-user"></span>
                 <button class="sign-btn" id="logout-btn">Logout</button>
@@ -92,6 +94,12 @@
                 <button type="submit">Sign Up</button>
                 <p id="signup-error" class="error-msg"></p>
             </form>
+
+            <div class="auth-divider">or</div>
+            <button id="google-signin-btn" class="google-btn">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                Sign in with Google
+            </button>
         </div>
     </div>
 
@@ -140,8 +148,7 @@
         <div id="timer-display" style="display: none;">10</div>
 
         <div id="quiz-navigation" style="display: none;">
-            <button id="prevBtn">Previous</button>
-            <span id="questionNum">Q1</span>
+            <span></span> <span id="questionNum">Q1</span>
             <button id="nextBtn">Next</button>
             <span id="scoreLabel">Score: 0</span>
         </div>
@@ -184,6 +191,29 @@
             <h2 id="results-quiz-title">Quiz Results</h2>
             
             <div id="quiz-results-list-container">
+                </div>
+        </div>
+    </div>
+
+    <div id="my-results-container" class="modal-overlay" style="display: none;">
+        <div class="modal-content" id="my-results-modal-content">
+            <button id="close-my-results-btn" class="close-btn">X</button>
+            <h2>My Past Results</h2>
+            
+            <div id="my-results-list-container">
+                </div>
+        </div>
+    </div>
+
+    <div id="giphy-container" class="modal-overlay" style="display: none;">
+        <div class="modal-content" id="giphy-modal-content">
+            <button id="close-giphy-btn" class="close-btn">X</button>
+            <h2>Search for a GIF</h2>
+            <div class="giphy-search-box">
+                <input type="search" id="giphy-search-bar" placeholder="e.g., cats, space, funny">
+                <button id="giphy-search-btn">Search</button>
+            </div>
+            <div id="giphy-results-grid">
                 </div>
         </div>
     </div>

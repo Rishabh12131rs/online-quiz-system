@@ -8,11 +8,15 @@ const firebaseConfig = {
   messagingSenderId: "155078169148",
   appId: "1:155078169148:web:a3dc75c8f8b4ec86556939"
 };
+// *** NEW: PASTE YOUR GIPHY API KEY HERE ***
+const GIPHY_API_KEY = "gJ7xwNUraSP6midiKKewgrHIbdMJcsVx";
+// --- END OF GIPHY KEY ---
+
+
 // --- 2. INITIALIZE FIREBASE ---
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
-// Storage removed
 // --- END OF FIREBASE SETUP ---
 
 
@@ -38,8 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const userDisplay = document.getElementById('user-display');
     const welcomeUser = document.getElementById('welcome-user');
     const logoutBtn = document.getElementById('logout-btn');
+    const googleSignInBtn = document.getElementById('google-signin-btn');
 
-    // *** NEW: Forgot Password Elements ***
+    // Forgot Password Elements
     const forgotPasswordLink = document.getElementById('forgot-password-link');
     const forgotPasswordContainer = document.getElementById('forgot-password-container');
     const forgotPasswordForm = document.getElementById('forgot-password-form');
@@ -59,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const quizControls = document.getElementById('quiz-controls');
     const quizNav = document.getElementById('quiz-navigation');
     const leaderboardDiv = document.getElementById('leaderboard');
-    const prevBtn = document.getElementById('prevBtn');
+    // prevBtn removed
     const nextBtn = document.getElementById('nextBtn');
     const questionNum = document.getElementById('questionNum');
     const scoreLabel = document.getElementById('scoreLabel');
@@ -68,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Main Page Elements
     const quizList = document.querySelector('.quiz-list'); 
     const searchBar = document.getElementById('search-bar'); 
+    const myResultsBtn = document.getElementById('my-results-btn');
 
     // Editor Elements
     const createQuizBtn = document.getElementById('create-quiz-btn');
@@ -88,6 +94,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsQuizTitle = document.getElementById('results-quiz-title');
     const quizResultsListContainer = document.getElementById('quiz-results-list-container');
     
+    // My Results Modal Elements
+    const myResultsContainer = document.getElementById('my-results-container');
+    const closeMyResultsBtn = document.getElementById('close-my-results-btn');
+    const myResultsListContainer = document.getElementById('my-results-list-container');
+    
+    // GIPHY Modal Elements
+    const giphyContainer = document.getElementById('giphy-container');
+    const closeGiphyBtn = document.getElementById('close-giphy-btn');
+    const giphySearchBar = document.getElementById('giphy-search-bar');
+    const giphySearchBtn = document.getElementById('giphy-search-btn');
+    const giphyResultsGrid = document.getElementById('giphy-results-grid');
+    
     // Toast & Dark Mode Elements
     const toast = document.getElementById('toast-notification');
     const darkModeToggle = document.getElementById('dark-mode-toggle');
@@ -99,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let score = 0;
     let timerInterval; 
     let timeLeft = 10; 
+    let activeGiphyQuestionCard = null; // Track which question card is adding a GIF
 
     // --- Toast Notification Function ---
     function showToast(message, type = '') {
@@ -113,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000); 
     }
     
-    // --- *** NEW: Friendly Error Function *** ---
+    // --- Friendly Error Function ---
     function showFriendlyError(error, errorElement) {
         let message = "An unknown error occurred.";
         switch (error.code) {
@@ -130,6 +149,9 @@ document.addEventListener('DOMContentLoaded', () => {
             case "auth/weak-password":
                 message = "Password should be at least 6 characters.";
                 break;
+            case "auth/popup-closed-by-user":
+                message = "Sign-in popup closed. Please try again.";
+                break;
         }
         errorElement.textContent = message;
     }
@@ -140,12 +162,14 @@ document.addEventListener('DOMContentLoaded', () => {
             mainContent.style.display = 'block'; 
             authContainer.style.display = 'none'; 
             userDisplay.style.display = 'flex';
+            myResultsBtn.style.display = 'block'; // Show "My Results"
             welcomeUser.textContent = `Hello, ${user.displayName || 'User'}`; 
             loadSharedQuizzes(); // Load quizzes
         } else {
             mainContent.style.display = 'none'; 
             authContainer.style.display = 'flex'; 
             userDisplay.style.display = 'none';
+            myResultsBtn.style.display = 'none'; // Hide "My Results"
             welcomeUser.textContent = '';
         }
     });
@@ -196,6 +220,21 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsContainer.style.display = 'none';
     };
 
+    myResultsBtn.onclick = () => {
+        mainContent.style.display = 'none';
+        myResultsContainer.style.display = 'flex';
+        loadMyResults();
+    };
+    closeMyResultsBtn.onclick = () => {
+        mainContent.style.display = 'block';
+        myResultsContainer.style.display = 'none';
+    };
+    
+    closeGiphyBtn.onclick = () => {
+        giphyContainer.style.display = 'none';
+        editorContainer.style.display = 'flex'; // Show editor again
+    };
+
     // --- FIREBASE AUTHENTICATION LOGIC ---
     loginTab.onclick = () => {
         loginTab.classList.add('active');
@@ -234,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("User signed up!");
             })
             .catch((error) => {
-                showFriendlyError(error, signupErr); // *** Use new function ***
+                showFriendlyError(error, signupErr); 
             });
     };
 
@@ -249,7 +288,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 loginErr.textContent = '';
             })
             .catch((error) => {
-                showFriendlyError(error, loginErr); // *** Use new function ***
+                showFriendlyError(error, loginErr); 
+            });
+    };
+    
+    // *** NEW: Google Sign-In Logic ***
+    googleSignInBtn.onclick = () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider)
+            .then((result) => {
+                console.log("User signed in with Google!");
+                // Auth listener will handle the rest
+            }).catch((error) => {
+                showFriendlyError(error, loginErr);
             });
     };
 
@@ -257,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
         auth.signOut().catch(err => console.error("Sign out error", err));
     };
 
-    // *** NEW: Forgot Password Logic ***
+    // Forgot Password Logic
     forgotPasswordLink.onclick = () => {
         authContainer.style.display = 'none';
         forgotPasswordContainer.style.display = 'flex';
@@ -273,10 +324,10 @@ document.addEventListener('DOMContentLoaded', () => {
         auth.sendPasswordResetEmail(email)
             .then(() => {
                 showToast("Password reset email sent!", "success");
-                backToLoginLink.click(); // Go back to login
+                backToLoginLink.click(); 
             })
             .catch((error) => {
-                showFriendlyError(error, forgotError); // *** Use new function ***
+                showFriendlyError(error, forgotError); 
             });
     };
 
@@ -289,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
         quizAppContainer.style.display = 'block';
 
         quizControls.style.display = 'none';
-        quizArea.innerHTML = '<div class="loader"></div>'; // *** Use new spinner ***
+        quizArea.innerHTML = '<div class="loader"></div>'; 
         quizNav.style.display = 'none';
         timerDisplay.style.display = 'none';
         
@@ -383,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const q = questions[currentIndex];
         
-        let questionText, options, correctAnswer;
+        let questionText, options, correctAnswer, imageUrl;
         
         if (q.incorrect_answers) { 
             questionText = q.question;
@@ -394,9 +445,15 @@ document.addEventListener('DOMContentLoaded', () => {
             questionText = q.question;
             options = [...q.options]; 
             correctAnswer = q.options[q.correct_answer_index];
+            imageUrl = q.imageUrl; // Get image URL (works for GIPHY)
         }
 
-        let html = `<div class="question-block"><h4>Q${currentIndex + 1}: ${decodeHTML(questionText)}</h4>`;
+        let imageHtml = '';
+        if (imageUrl) {
+            imageHtml = `<img src="${imageUrl}" alt="Quiz Image" class="quiz-question-image">`;
+        }
+
+        let html = `<div class="question-block">${imageHtml}<h4>Q${currentIndex + 1}: ${decodeHTML(questionText)}</h4>`;
         options.forEach((opt) => {
             const isCorrect = decodeHTML(opt) === decodeHTML(correctAnswer);
             html += `<button class="option-btn" data-correct="${isCorrect}">${decodeHTML(opt)}</button>`;
@@ -457,7 +514,6 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedButton.classList.add('correct'); 
             feedbackDiv.innerHTML = `<span style="color:green;">Correct!</span>`;
             score++;
-            // Sound removed
         } else {
             selectedButton.classList.add('incorrect'); 
             
@@ -470,7 +526,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             feedbackDiv.innerHTML = `<span style="color:red;">Wrong! Correct was: ${decodeHTML(correctAnswerText)}</span>`;
-            // Sound removed
             
             const correctButton = document.querySelector(`.option-btn[data-correct="true"]`);
             if (correctButton) {
@@ -488,7 +543,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateControls() {
-        prevBtn.disabled = currentIndex === 0;
+        // prevBtn logic removed
         nextBtn.disabled = currentIndex >= questions.length; 
         questionNum.textContent = `Q${currentIndex + 1}/${questions.length}`;
         scoreLabel.textContent = 'Score: ' + score;
@@ -500,16 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showQuestion();
         }
     };
-    prevBtn.onclick = function () {
-        if (currentIndex > 0) {
-            currentIndex--;
-            showQuestion();
-            disableOptions(); 
-            document.getElementById('feedback').innerHTML = "You've already answered this.";
-            clearInterval(timerInterval); 
-            timerDisplay.style.display = 'none'; 
-        }
-    };
+    // prevBtn.onclick removed
 
     function decodeHTML(html) {
         const txt = document.createElement('textarea');
@@ -554,7 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showLeaderboard() {
-        leaderboardDiv.innerHTML = '<h3>Global Leaderboard</h3><div class="loader"></div>'; // *** Use new spinner ***
+        leaderboardDiv.innerHTML = '<h3>Global Leaderboard</h3><div class="loader"></div>';
         
         db.collection("leaderboard")
           .orderBy("score", "desc") 
@@ -581,7 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showQuizResults(quizId, quizTitle) {
         resultsQuizTitle.textContent = `Results for: ${quizTitle}`;
-        quizResultsListContainer.innerHTML = '<div class="loader"></div>'; // *** Use new spinner ***
+        quizResultsListContainer.innerHTML = '<div class="loader"></div>';
         manageContainer.style.display = 'none'; 
         resultsContainer.style.display = 'flex'; 
 
@@ -612,6 +658,48 @@ document.addEventListener('DOMContentLoaded', () => {
             quizResultsListContainer.innerHTML = '<p>Could not load results.</p>';
           });
     }
+    
+    // --- *** NEW: "My Results" Modal Logic *** ---
+    function loadMyResults() {
+        const user = auth.currentUser;
+        if (!user) return; // Should not happen
+        
+        myResultsListContainer.innerHTML = '<div class="loader"></div>';
+        
+        db.collection("quiz_attempts")
+          .where("uid", "==", user.uid)
+          .orderBy("timestamp", "desc")
+          .limit(20) // Show last 20 attempts
+          .get()
+          .then(async (querySnapshot) => {
+              if (querySnapshot.empty) {
+                  myResultsListContainer.innerHTML = '<p>You haven\'t played any quizzes yet.</p>';
+                  return;
+              }
+              
+              let html = '';
+              // We need to fetch quiz titles, which is tricky
+              // For simplicity, we'll just show the score for now
+              // A more advanced query would be needed to get quiz titles efficiently
+              querySnapshot.forEach((doc) => {
+                  const attempt = doc.data();
+                  html += `
+                      <div class="my-result-card">
+                          <div>
+                              <div class="my-result-card-name">Quiz ID: ${attempt.quizId}</div>
+                              <div class="my-result-card-title">${new Date(attempt.timestamp.toDate()).toLocaleDateString()}</div>
+                          </div>
+                          <span class="my-result-card-score">${attempt.score}</span>
+                      </div>
+                  `;
+              });
+              myResultsListContainer.innerHTML = html;
+              
+          }).catch(err => {
+              console.error("Error getting my results: ", err);
+              myResultsListContainer.innerHTML = '<p>Could not load your results.</p>';
+          });
+    }
 
     // --- Quiz Editor Logic (Uses Firebase) ---
     let questionEditorId = 0; 
@@ -621,10 +709,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const questionCard = document.createElement('div');
         questionCard.className = 'question-editor-card';
         questionCard.dataset.id = questionId;
+        questionCard.dataset.imageUrl = ""; // Store GIF URL here
         
-        // *** REMOVED file input and image preview ***
         questionCard.innerHTML = `
             <textarea placeholder="Enter your question here..."></textarea>
+            <img class="question-gif-preview" src="" alt="GIF Preview" style="display: none;">
+            <button class="add-gif-btn">Add GIF</button>
             <div class="options-editor">
                 <div class="option-input-group">
                     <input type="radio" name="correct-answer-${questionId}" value="0" checked>
@@ -645,6 +735,15 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <button class="delete-question-btn">Delete Question</button>
         `;
+        
+        // --- NEW: GIPHY Button Logic ---
+        questionCard.querySelector('.add-gif-btn').onclick = () => {
+            activeGiphyQuestionCard = questionCard; // Remember which card this is
+            editorContainer.style.display = 'none';
+            giphyContainer.style.display = 'flex';
+            giphyResultsGrid.innerHTML = '';
+            giphySearchBar.value = '';
+        };
 
         questionCard.querySelector('.delete-question-btn').onclick = () => {
             questionCard.remove();
@@ -653,11 +752,50 @@ document.addEventListener('DOMContentLoaded', () => {
         questionListContainer.appendChild(questionCard);
     }
     
-    // *** REMOVED uploadImage function ***
+    // --- NEW: GIPHY Search Functions ---
+    async function searchGiphy() {
+        const searchTerm = giphySearchBar.value.trim();
+        if (searchTerm.length < 2) return;
+        
+        giphyResultsGrid.innerHTML = '<div class="loader"></div>';
+        
+        try {
+            const response = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${searchTerm}&limit=12&rating=g`);
+            const data = await response.json();
+            
+            giphyResultsGrid.innerHTML = '';
+            data.data.forEach(gif => {
+                const img = document.createElement('img');
+                img.src = gif.images.fixed_height.url;
+                img.dataset.fullUrl = gif.images.original.url; // Save the full URL
+                img.className = 'giphy-item';
+                
+                // When user clicks a GIF
+                img.onclick = () => {
+                    if (activeGiphyQuestionCard) {
+                        const preview = activeGiphyQuestionCard.querySelector('.question-gif-preview');
+                        preview.src = img.src;
+                        preview.style.display = 'block';
+                        activeGiphyQuestionCard.dataset.imageUrl = img.dataset.fullUrl; // Store the URL
+                    }
+                    closeGiphyBtn.click();
+                };
+                
+                giphyResultsGrid.appendChild(img);
+            });
+            
+        } catch (error) {
+            console.error("GIPHY Error:", error);
+            giphyResultsGrid.innerHTML = '<p>Could not load GIFs.</p>';
+        }
+    }
+    giphySearchBtn.onclick = searchGiphy;
+    giphySearchBar.onkeyup = (e) => {
+        if (e.key === 'Enter') searchGiphy();
+    };
 
     addQuestionBtn.onclick = createNewQuestionEditor;
 
-    // *** UPDATED: Save Quiz Function (image logic removed) ***
     saveQuizBtn.onclick = () => { // No longer async
         const user = auth.currentUser;
         if (!user) { 
@@ -685,7 +823,7 @@ document.addEventListener('DOMContentLoaded', () => {
             author: user.displayName || 'Anonymous', 
             authorUID: user.uid, 
             likeCount: 0, 
-            likedBy: [], // For the like system
+            likedBy: [], 
             questions: []
         };
 
@@ -695,6 +833,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const questionText = card.querySelector('textarea').value.trim();
             const optionInputs = card.querySelectorAll('.option-input-group input[type="text"]');
             const correctInput = card.querySelector('.option-input-group input[type="radio"]:checked');
+            const imageUrl = card.dataset.imageUrl || null; // Get the stored GIF URL
 
             const options = [];
             optionInputs.forEach(input => options.push(input.value.trim()));
@@ -708,8 +847,8 @@ document.addEventListener('DOMContentLoaded', () => {
             newQuiz.questions.push({
                 question: questionText,
                 options: options,
-                correct_answer_index: correctAnswerIndex
-                // imageUrl property removed
+                correct_answer_index: correctAnswerIndex,
+                imageUrl: imageUrl // Save the GIF URL
             });
         });
 
@@ -720,7 +859,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // --- Save to Firebase (now much simpler) ---
+        // --- Save to Firebase ---
         db.collection("quizzes").add(newQuiz).then((docRef) => {
             showToast(`Quiz "${title}" saved successfully!`, "success");
             console.log("Quiz saved with ID: ", docRef.id);
@@ -736,12 +875,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Load and Display "Shared Quizzes" (from Firebase) ---
     function loadSharedQuizzes(searchTerm = "") {
-        quizList.innerHTML = '<div class="loader"></div>'; // *** Use new spinner ***
+        quizList.innerHTML = '<div class="loader"></div>';
 
         let query = db.collection("quizzes").orderBy("likeCount", "desc");
         
         if (searchTerm) {
-            // This is a basic "starts-with" search
+            const lowerSearchTerm = searchTerm.toLowerCase();
+            // Simple search: Note: Firestore is case-sensitive. This is a basic filter.
+            // For a real-world app, you'd use a third-party search like Algolia.
             query = query.where("title", ">=", searchTerm)
                          .where("title", "<=", searchTerm + '\uf8ff');
         }
@@ -857,7 +998,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }).catch((error) => {
             console.error("Error updating likes: ", error);
-            if (error !== "Quiz not found!") {
+            if (error.message !== "Quiz not found!") {
                 showToast("Error liking quiz.", "error");
             }
         });
@@ -865,7 +1006,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Load "Manage My Quizzes" List (from Firebase) ---
     function loadManageList(user) {
-        myQuizListContainer.innerHTML = '<div class="loader"></div>'; // *** Use new spinner ***
+        myQuizListContainer.innerHTML = '<div class="loader"></div>'; 
         
         db.collection("quizzes").where("authorUID", "==", user.uid).get().then((querySnapshot) => {
             myQuizListContainer.innerHTML = ''; 
@@ -983,6 +1124,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         editorContainer.style.display = 'none';
                         quizAppContainer.style.display = 'none';
                         resultsContainer.style.display = 'none';
+                        myResultsContainer.style.display = 'none'; // Close new modal
                         mainContent.style.display = 'block'; 
                         loadSharedQuizzes(searchBar.value);
                     }

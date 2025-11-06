@@ -12,7 +12,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
-const storage = firebase.storage(); // *** NEW: Initialize Storage ***
+const storage = firebase.storage(); 
 // --- END OF FIREBASE SETUP ---
 
 
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Main Page Elements
     const quizList = document.querySelector('.quiz-list'); 
-    const searchBar = document.getElementById('search-bar'); // *** NEW ***
+    const searchBar = document.getElementById('search-bar'); 
 
     // Editor Elements
     const createQuizBtn = document.getElementById('create-quiz-btn');
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsQuizTitle = document.getElementById('results-quiz-title');
     const quizResultsListContainer = document.getElementById('quiz-results-list-container');
     
-    // *** NEW: Toast & Sound Elements ***
+    // Toast & Sound Elements
     const toast = document.getElementById('toast-notification');
     const correctSound = document.getElementById('correct-sound');
     const wrongSound = document.getElementById('wrong-sound');
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let timerInterval; 
     let timeLeft = 10; 
 
-    // --- *** NEW: Toast Notification Function *** ---
+    // --- Toast Notification Function ---
     function showToast(message, type = '') {
         toast.textContent = message;
         toast.className = ''; // Reset classes
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000); // Hide after 3 seconds
     }
     
-    // --- *** MAIN AUTHENTICATION LISTENER *** ---
+    // --- MAIN AUTHENTICATION LISTENER ---
     auth.onAuthStateChanged(user => {
         if (user) {
             mainContent.style.display = 'block'; 
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     manageQuizzesBtn.onclick = () => {
         const user = auth.currentUser;
-        if (!user) return; // Should be impossible
+        if (!user) return; 
         
         editorContainer.style.display = 'none'; 
         manageContainer.style.display = 'flex'; 
@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsContainer.style.display = 'none';
     };
 
-    // --- *** FIREBASE AUTHENTICATION LOGIC *** ---
+    // --- FIREBASE AUTHENTICATION LOGIC ---
     loginTab.onclick = () => {
         loginTab.classList.add('active');
         signupTab.classList.remove('active');
@@ -204,7 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(() => {
                 console.log("User signed up!");
-                // Auth listener will handle the rest
             })
             .catch((error) => {
                 signupErr.textContent = error.message;
@@ -220,7 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .then((userCredential) => {
                 console.log("User logged in!");
                 loginErr.textContent = '';
-                // Auth listener will handle the rest
             })
             .catch((error) => {
                 loginErr.textContent = error.message;
@@ -346,10 +344,9 @@ document.addEventListener('DOMContentLoaded', () => {
             questionText = q.question;
             options = [...q.options]; 
             correctAnswer = q.options[q.correct_answer_index];
-            imageUrl = q.imageUrl; // *** NEW: Get image URL ***
+            imageUrl = q.imageUrl; 
         }
 
-        // *** NEW: Add image if it exists ***
         let imageHtml = '';
         if (imageUrl) {
             imageHtml = `<img src="${imageUrl}" alt="Quiz Image" class="quiz-question-image">`;
@@ -416,7 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedButton.classList.add('correct'); 
             feedbackDiv.innerHTML = `<span style="color:green;">Correct!</span>`;
             score++;
-            correctSound.play(); // *** NEW: Play sound ***
+            correctSound.play(); // Play sound
         } else {
             selectedButton.classList.add('incorrect'); 
             
@@ -429,7 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             feedbackDiv.innerHTML = `<span style="color:red;">Wrong! Correct was: ${decodeHTML(correctAnswerText)}</span>`;
-            wrongSound.play(); // *** NEW: Play sound ***
+            wrongSound.play(); // Play sound
             
             const correctButton = document.querySelector(`.option-btn[data-correct="true"]`);
             if (correctButton) {
@@ -581,11 +578,10 @@ document.addEventListener('DOMContentLoaded', () => {
         questionCard.className = 'question-editor-card';
         questionCard.dataset.id = questionId;
         
-        // *** NEW: Added file input and image preview ***
         questionCard.innerHTML = `
             <textarea placeholder="Enter your question here..."></textarea>
             <input type="file" class="question-image-upload" accept="image/png, image/jpeg">
-            <img classimg="question-image-preview" src="" alt="Image Preview" style="display: none; max-width: 100%; margin-top: 10px;">
+            <img class="question-image-preview" src="" alt="Image Preview" style="display: none; max-width: 100%; margin-top: 10px;">
             <div class="options-editor">
                 <div class="option-input-group">
                     <input type="radio" name="correct-answer-${questionId}" value="0" checked>
@@ -607,7 +603,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <button class="delete-question-btn">Delete Question</button>
         `;
 
-        // *** NEW: Logic for image preview ***
         const fileInput = questionCard.querySelector('.question-image-upload');
         const imagePreview = questionCard.querySelector('.question-image-preview');
         
@@ -633,9 +628,8 @@ document.addEventListener('DOMContentLoaded', () => {
         questionListContainer.appendChild(questionCard);
     }
     
-    // *** NEW: Helper function to upload an image ***
     async function uploadImage(file, uid) {
-        if (!file) return null; // No file, return null
+        if (!file) return null; 
 
         const filePath = `quiz_images/${uid}/${Date.now()}_${file.name}`;
         const fileRef = storage.ref().child(filePath);
@@ -653,8 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     addQuestionBtn.onclick = createNewQuestionEditor;
 
-    // *** UPDATED: Save Quiz Function (now handles images) ***
-    saveQuizBtn.onclick = async () => { // Function is now async
+    saveQuizBtn.onclick = async () => { 
         const user = auth.currentUser;
         if (!user) { 
             showToast("Your session expired. Please log in again.", "error");
@@ -673,19 +666,19 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        saveQuizBtn.disabled = true; // Prevent double click
+        saveQuizBtn.disabled = true; 
         saveQuizBtn.textContent = "Saving...";
 
         let newQuiz = {
             title: title,
             author: user.displayName || 'Anonymous', 
             authorUID: user.uid, 
-            likeCount: 0, // *** NEW: Add likeCount ***
+            likeCount: 0, 
             questions: []
         };
 
         let allValid = true;
-        const uploadPromises = []; // To store all image upload tasks
+        const uploadPromises = []; 
 
         questionCards.forEach(card => {
             const questionText = card.querySelector('textarea').value.trim();
@@ -694,7 +687,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const fileInput = card.querySelector('.question-image-upload');
             
             const file = fileInput.files[0];
-            uploadPromises.push(uploadImage(file, user.uid)); // Add upload task
+            uploadPromises.push(uploadImage(file, user.uid)); 
 
             const options = [];
             optionInputs.forEach(input => options.push(input.value.trim()));
@@ -709,7 +702,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 question: questionText,
                 options: options,
                 correct_answer_index: correctAnswerIndex,
-                imageUrl: null // Placeholder, will be filled in later
+                imageUrl: null 
             });
         });
 
@@ -721,10 +714,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         try {
-            // *** NEW: Wait for all images to upload ***
             const imageUrls = await Promise.all(uploadPromises);
             
-            // Add the returned image URLs to the quiz object
             newQuiz.questions.forEach((q, index) => {
                 q.imageUrl = imageUrls[index];
             });
@@ -749,7 +740,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let query = db.collection("quizzes").orderBy("likeCount", "desc");
         
-        // *** NEW: Basic "starts with" search ***
         if (searchTerm) {
             query = query.where("title", ">=", searchTerm)
                          .where("title", "<=", searchTerm + '\uf8ff');
@@ -774,7 +764,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const quizCard = document.createElement('div');
                 quizCard.className = 'quiz-card';
                 
-                // *** NEW: Updated card HTML with like button ***
                 quizCard.innerHTML = `
                     <div class="quiz-card-title">${quiz.title}</div>
                     <div class="quiz-card-footer">
@@ -783,14 +772,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
 
-                // Add click to play
                 quizCard.querySelector('.quiz-card-title').onclick = () => {
-                    startCustomQuiz(quiz, quizId); // Pass ID
+                    startCustomQuiz(quiz, quizId); 
                 };
 
-                // *** NEW: Add like button functionality ***
                 quizCard.querySelector('.like-btn').onclick = (e) => {
-                    e.stopPropagation(); // Stop it from triggering the play click
+                    e.stopPropagation(); 
                     likeQuiz(quizId, e.target);
                 };
 
@@ -802,7 +789,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // *** NEW: Like Quiz Function ***
     function likeQuiz(quizId, buttonElement) {
         const user = auth.currentUser;
         if (!user) {
@@ -810,7 +796,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // Use a transaction to safely update the like count
         const quizRef = db.collection("quizzes").doc(quizId);
         
         db.runTransaction((transaction) => {
@@ -819,7 +804,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw "Quiz not found!";
                 }
                 
-                // Increment the like count
                 const newLikeCount = (doc.data().likeCount || 0) + 1;
                 transaction.update(quizRef, { likeCount: newLikeCount });
                 return newLikeCount;
@@ -918,6 +902,16 @@ document.addEventListener('DOMContentLoaded', () => {
         searchBar.addEventListener('keyup', () => {
             loadSharedQuizzes(searchBar.value.trim());
         });
+
+        // *** NEW: Audio priming to fix autoplay policy ***
+        // This runs on the *first* click anywhere on the page
+        // to get permission to play audio.
+        function primeAudio() {
+            correctSound.load();
+            wrongSound.load();
+        }
+        document.body.addEventListener('click', primeAudio, { once: true });
+
 
         // Add event listeners for the nav links
         document.querySelectorAll('.subject-nav a').forEach(link => {

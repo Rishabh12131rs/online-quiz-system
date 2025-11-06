@@ -12,7 +12,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
-// const storage = firebase.storage(); // <-- REMOVED
+// Storage removed
 // --- END OF FIREBASE SETUP ---
 
 
@@ -113,6 +113,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000); 
     }
     
+    // --- *** NEW: Friendly Error Function *** ---
+    function showFriendlyError(error, errorElement) {
+        let message = "An unknown error occurred.";
+        switch (error.code) {
+            case "auth/wrong-password":
+                message = "Wrong password. Please try again.";
+                break;
+            case "auth/user-not-found":
+            case "auth/invalid-email":
+                message = "No account found with this email.";
+                break;
+            case "auth/email-already-in-use":
+                message = "An account already exists with this email.";
+                break;
+            case "auth/weak-password":
+                message = "Password should be at least 6 characters.";
+                break;
+        }
+        errorElement.textContent = message;
+    }
+
     // --- MAIN AUTHENTICATION LISTENER ---
     auth.onAuthStateChanged(user => {
         if (user) {
@@ -213,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("User signed up!");
             })
             .catch((error) => {
-                signupErr.textContent = error.message;
+                showFriendlyError(error, signupErr); // *** Use new function ***
             });
     };
 
@@ -228,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 loginErr.textContent = '';
             })
             .catch((error) => {
-                loginErr.textContent = error.message;
+                showFriendlyError(error, loginErr); // *** Use new function ***
             });
     };
 
@@ -255,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 backToLoginLink.click(); // Go back to login
             })
             .catch((error) => {
-                forgotError.textContent = error.message;
+                showFriendlyError(error, forgotError); // *** Use new function ***
             });
     };
 
@@ -268,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
         quizAppContainer.style.display = 'block';
 
         quizControls.style.display = 'none';
-        quizArea.innerHTML = 'Loading questions...';
+        quizArea.innerHTML = '<div class="loader"></div>'; // *** Use new spinner ***
         quizNav.style.display = 'none';
         timerDisplay.style.display = 'none';
         
@@ -362,7 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const q = questions[currentIndex];
         
-        let questionText, options, correctAnswer, imageUrl;
+        let questionText, options, correctAnswer;
         
         if (q.incorrect_answers) { 
             questionText = q.question;
@@ -373,15 +394,9 @@ document.addEventListener('DOMContentLoaded', () => {
             questionText = q.question;
             options = [...q.options]; 
             correctAnswer = q.options[q.correct_answer_index];
-            imageUrl = q.imageUrl; // Image logic (harmless, will be null)
         }
 
-        let imageHtml = '';
-        if (imageUrl) {
-            imageHtml = `<img src="${imageUrl}" alt="Quiz Image" class="quiz-question-image">`;
-        }
-
-        let html = `<div class="question-block">${imageHtml}<h4>Q${currentIndex + 1}: ${decodeHTML(questionText)}</h4>`;
+        let html = `<div class="question-block"><h4>Q${currentIndex + 1}: ${decodeHTML(questionText)}</h4>`;
         options.forEach((opt) => {
             const isCorrect = decodeHTML(opt) === decodeHTML(correctAnswer);
             html += `<button class="option-btn" data-correct="${isCorrect}">${decodeHTML(opt)}</button>`;
@@ -442,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedButton.classList.add('correct'); 
             feedbackDiv.innerHTML = `<span style="color:green;">Correct!</span>`;
             score++;
-            // correctSound.play(); // Sound removed
+            // Sound removed
         } else {
             selectedButton.classList.add('incorrect'); 
             
@@ -455,7 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             feedbackDiv.innerHTML = `<span style="color:red;">Wrong! Correct was: ${decodeHTML(correctAnswerText)}</span>`;
-            // wrongSound.play(); // Sound removed
+            // Sound removed
             
             const correctButton = document.querySelector(`.option-btn[data-correct="true"]`);
             if (correctButton) {
@@ -539,7 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showLeaderboard() {
-        leaderboardDiv.innerHTML = '<h3>Global Leaderboard</h3><p>Loading scores...</p>';
+        leaderboardDiv.innerHTML = '<h3>Global Leaderboard</h3><div class="loader"></div>'; // *** Use new spinner ***
         
         db.collection("leaderboard")
           .orderBy("score", "desc") 
@@ -566,7 +581,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showQuizResults(quizId, quizTitle) {
         resultsQuizTitle.textContent = `Results for: ${quizTitle}`;
-        quizResultsListContainer.innerHTML = '<p>Loading results...</p>';
+        quizResultsListContainer.innerHTML = '<div class="loader"></div>'; // *** Use new spinner ***
         manageContainer.style.display = 'none'; 
         resultsContainer.style.display = 'flex'; 
 
@@ -721,11 +736,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Load and Display "Shared Quizzes" (from Firebase) ---
     function loadSharedQuizzes(searchTerm = "") {
-        quizList.innerHTML = '<p>Loading quizzes...</p>';
+        quizList.innerHTML = '<div class="loader"></div>'; // *** Use new spinner ***
 
         let query = db.collection("quizzes").orderBy("likeCount", "desc");
         
         if (searchTerm) {
+            // This is a basic "starts-with" search
             query = query.where("title", ">=", searchTerm)
                          .where("title", "<=", searchTerm + '\uf8ff');
         }
@@ -849,7 +865,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Load "Manage My Quizzes" List (from Firebase) ---
     function loadManageList(user) {
-        myQuizListContainer.innerHTML = '<p>Loading your quizzes...</p>'; 
+        myQuizListContainer.innerHTML = '<div class="loader"></div>'; // *** Use new spinner ***
         
         db.collection("quizzes").where("authorUID", "==", user.uid).get().then((querySnapshot) => {
             myQuizListContainer.innerHTML = ''; 
@@ -920,7 +936,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Initialization ---
     function init() {
-        // --- *** NEW: Dark Mode Logic *** ---
+        // --- Dark Mode Logic ---
         const theme = localStorage.getItem('theme');
         if (theme === 'dark') {
             document.body.classList.add('dark-mode');

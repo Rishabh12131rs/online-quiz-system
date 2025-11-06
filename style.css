@@ -24,7 +24,7 @@ body.dark-mode {
     --primary-light: #2A2359;    /* Dark Purple */
     --accent: #FF9D2E;          /* Lighter Orange */
     --accent-light: #332617;    /* Dark Orange */
-    --text-dark: #F0F0F0;       /* Almost White */
+    --text-dark: #F0F0E0;       /* Almost White */
     --text-light: #AAAAAA;      /* Light Gray */
     --bg-light: #2A2A2A;        /* Dark Gray */
     --bg-white: #1E1E1E;        /* Almost Black */
@@ -483,6 +483,7 @@ footer {
     cursor: pointer;
     font-weight: 700;
     margin-top: 10px;
+    text-decoration: none;
 }
 .form-link:hover {
     text-decoration: underline;
@@ -491,6 +492,7 @@ footer {
     color: var(--text-light);
     text-align: center;
     margin-bottom: 20px;
+    line-height: 1.5;
 }
 
 
@@ -853,4 +855,19 @@ footer {
 }
 #toast-notification.error {
     background-color: var(--error);
+}
+
+/* --- *** NEW: Loading Spinner *** --- */
+.loader {
+    border: 8px solid var(--bg-light); 
+    border-top: 8px solid var(--primary); 
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }

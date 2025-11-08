@@ -1179,48 +1179,31 @@ document.addEventListener('DOMContentLoaded', () => {
     async function hostNewGame(quizId) {
         const user = auth.currentUser;
         if (!user) return;
-
-        // 1. Get the quiz data from Firestore
         const quizDoc = await db.collection("quizzes").doc(quizId).get();
         if (!quizDoc.exists) {
             showToast("Quiz not found.", "error");
             return;
         }
         hostQuizData = quizDoc.data(); 
-        
-        // --- Filter for only MC questions ---
         hostQuizData.questions = hostQuizData.questions.filter(q => q.questionType === 'mc');
         if (hostQuizData.questions.length === 0) {
             showToast("This quiz has no multiple-choice questions and cannot be hosted.", "error");
             return;
         }
-        
-        // 2. Generate a unique 4-digit PIN
         const pin = Math.floor(1000 + Math.random() * 9000).toString();
         currentGamePin = pin;
-        
-        // 3. Create the game in Realtime Database
         currentGameRef = rtdb.ref(`games/${pin}`);
         await currentGameRef.set({
             host: { uid: user.uid, name: user.displayName },
             quizId: quizId,
             quizTitle: hostQuizData.title,
-            gameState: "lobby", // lobby, question, results, final
+            gameState: "lobby", 
             currentQuestion: -1, 
             players: {},
             scores: {}
         });
-        
-        // 4. Add the host as the first player (optional, but good for testing)
-        await currentGameRef.child(`players/${user.uid}`).set({
-            name: user.displayName
-        });
-        await currentGameRef.child(`scores/${user.uid}`).set({
-            name: user.displayName,
-            score: 0
-        });
-
-        // 5. Go to host lobby and listen for changes
+        await currentGameRef.child(`players/${user.uid}`).set({ name: user.displayName });
+        await currentGameRef.child(`scores/${user.uid}`).set({ name: user.displayName, score: 0 });
         initHostLobby(pin, hostQuizData.title);
     }
 
@@ -1229,10 +1212,8 @@ document.addEventListener('DOMContentLoaded', () => {
         showView('host-lobby');
         hostLobbyTitle.textContent = `Hosting Quiz: ${title}`;
         hostLobbyPin.textContent = pin;
-        
-        // Listen for new players joining
         const playersRef = rtdb.ref(`games/${pin}/players`);
-        currentGameRef = playersRef.on('value', (snapshot) => { // Assign to currentGameRef to detach later
+        currentGameRef = playersRef.on('value', (snapshot) => { 
             const players = snapshot.val() || {};
             hostLobbyPlayers.innerHTML = '';
             Object.values(players).forEach(player => {
@@ -1242,8 +1223,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 hostLobbyPlayers.appendChild(playerEl);
             });
         });
-        
-        rtdb.ref(`games/${pin}`).onDisconnect().remove(); // Clean up if host closes tab
+        rtdb.ref(`games/${pin}`).onDisconnect().remove(); 
     }
     
     // Step 3: Player joins with PIN
@@ -1253,7 +1233,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("You must be logged in to join a game.", "error");
             return;
         }
-        
         const gameRef = rtdb.ref(`games/${pin}`);
         gameRef.once('value', (snapshot) => {
             if (!snapshot.exists()) {
@@ -1264,13 +1243,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     showToast("This game has already started.", "error");
                     return;
                 }
-                
                 currentGamePin = pin;
-                // Add player to players list and scores list
                 gameRef.child(`players/${user.uid}`).set({ name: user.displayName });
                 gameRef.child(`scores/${user.uid}`).set({ name: user.displayName, score: 0 });
-                
-                initPlayerLobby(pin); // Go to player lobby
+                initPlayerLobby(pin); 
             }
         });
     }
@@ -1279,8 +1255,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function initPlayerLobby(pin) {
         showView('player-lobby');
         currentGamePin = pin;
-        
-        // Listen for player list changes
         const playersRef = rtdb.ref(`games/${pin}/players`);
         playersRef.on('value', (snapshot) => {
             const players = snapshot.val() || {};
@@ -1293,7 +1267,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Listen for game state changes
         playerGameListener = rtdb.ref(`games/${pin}`);
         playerGameListener.on('value', (snapshot) => {
             const gameData = snapshot.val();
@@ -1302,10 +1275,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 showView('home');
                 return;
             }
-            
             const state = gameData.gameState;
             const qIndex = gameData.currentQuestion;
-
             if (state === 'question') {
                 playerShowQuestion(qIndex);
             } else if (state === 'results') {
@@ -1322,33 +1293,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Step 5: Host starts the game
     hostStartGameBtn.onclick = () => {
         if (!currentGameRef) return;
-        // Start with question 0
         sendQuestion(0);
     };
 
     // Step 6: Host sends a question
     function sendQuestion(qIndex) {
         if (qIndex >= hostQuizData.questions.length) {
-            // No more questions, show final results
             hostShowFinalResults();
             return;
         }
-        
         rtdb.ref(`games/${currentGamePin}`).update({
             gameState: 'question',
             currentQuestion: qIndex,
-            answers: {} // Clear answers for new question
+            answers: {} 
         });
-        
         showView('game-host');
         gameHostLeaderboard.style.display = 'none';
         gameHostAnswers.style.display = 'grid';
         gameHostNextBtn.style.display = 'none'; 
-
         const q = hostQuizData.questions[qIndex];
         gameHostQCount.textContent = `Q ${qIndex + 1}/${hostQuizData.questions.length}`;
         gameHostQuestion.textContent = q.question;
-        
         gameHostAnswers.innerHTML = '';
         q.options.forEach((opt, index) => {
             const btn = document.createElement('button');
@@ -1360,11 +1325,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             gameHostAnswers.appendChild(btn);
         });
-        
-        // Start timer
         let qTimeLeft = 10;
         gameHostTimer.textContent = qTimeLeft;
-        timerInterval = setInterval(() => { // Use global timerInterval
+        timerInterval = setInterval(() => { 
             qTimeLeft--;
             gameHostTimer.textContent = qTimeLeft;
             if (qTimeLeft <= 0) {
@@ -1376,41 +1339,30 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Step 7: Host shows results for the question
     async function hostShowResults() {
-        clearInterval(timerInterval); // Stop the timer
+        clearInterval(timerInterval); 
         await rtdb.ref(`games/${currentGamePin}`).update({ gameState: 'results' });
-
         const qIndex = (await rtdb.ref(`games/${currentGamePin}/currentQuestion`).get()).val();
         const q = hostQuizData.questions[qIndex];
         const correctAnswerIndex = q.correct_answer_index;
-        
-        // Reveal correct answer
         gameHostAnswers.querySelector(`[data-correct="true"]`).classList.add('correct');
-        
-        // Calculate scores
         const answersSnapshot = await rtdb.ref(`games/${currentGamePin}/answers`).get();
         const answers = answersSnapshot.val() || {};
         const scoresRef = rtdb.ref(`games/${currentGamePin}/scores`);
         const scoresSnapshot = await scoresRef.get();
         const currentScores = scoresSnapshot.val() || {};
-        
         for (const uid in answers) {
             if (answers[uid].answerIndex == correctAnswerIndex) {
-                const timeTaken = answers[uid].time; // e.g., 2.5 seconds
-                const points = Math.round(1000 - (timeTaken * 100)); // Max 1000, less if slow
+                const timeTaken = answers[uid].time; 
+                const points = Math.round(1000 - (timeTaken * 100)); 
                 if(currentScores[uid]) {
                     currentScores[uid].score += points;
                 }
             }
         }
-        
-        await scoresRef.set(currentScores); // Update all scores at once
-        
-        // Show leaderboard
+        await scoresRef.set(currentScores); 
         displayHostLeaderboard(currentScores);
         gameHostLeaderboard.style.display = 'block';
         gameHostAnswers.style.display = 'none';
-        
-        // Show "Next" button
         gameHostNextBtn.style.display = 'block';
         if (qIndex + 1 >= hostQuizData.questions.length) {
             gameHostNextBtn.textContent = "Show Final Results";
@@ -1422,7 +1374,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Host "Next" button click
     gameHostNextBtn.onclick = async () => {
         const qIndex = (await rtdb.ref(`games/${currentGamePin}/currentQuestion`).get()).val();
-        sendQuestion(qIndex + 1); // This will handle "final results" if it's the last question
+        sendQuestion(qIndex + 1); 
     };
     
     function displayHostLeaderboard(scores) {
@@ -1439,9 +1391,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gameHostAnswers.style.display = 'none';
         gameHostNextBtn.style.display = 'none';
         gameHostTimer.style.display = 'none';
-        gameHostLeaderboard.style.display = 'block'; // Already showing
-        
-        // Clean up game after 30 seconds
+        gameHostLeaderboard.style.display = 'block'; 
         setTimeout(() => {
             if (currentGameRef) {
                 rtdb.ref(`games/${currentGamePin}`).remove();
@@ -1455,15 +1405,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (qIndex < 0) return;
         showView('game-player');
         gamePlayerStatus.textContent = `Question ${qIndex + 1}`;
-        gamePlayerAnswers.style.display = 'grid'; // Show answers
-        
-        // Reset/enable buttons
+        gamePlayerAnswers.style.display = 'grid'; 
         gamePlayerAnswers.querySelectorAll('.player-answer-btn').forEach(btn => {
             btn.disabled = false;
             btn.classList.remove('selected');
         });
-        
-        // Store time when question started
         gamePlayerAnswers.dataset.startTime = new Date().getTime();
     }
 
@@ -1472,16 +1418,12 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.onclick = () => {
             const answerIndex = btn.dataset.index;
             const startTime = parseFloat(gamePlayerAnswers.dataset.startTime);
-            const timeTaken = (new Date().getTime() - startTime) / 1000; // Time in seconds
-            
-            // Disable all buttons
+            const timeTaken = (new Date().getTime() - startTime) / 1000; 
             gamePlayerAnswers.querySelectorAll('.player-answer-btn').forEach(b => {
                 b.disabled = true;
             });
-            btn.classList.add('selected'); // Highlight selected
+            btn.classList.add('selected'); 
             gamePlayerStatus.textContent = "Answer submitted! Waiting for results...";
-            
-            // Submit answer to RTDB
             rtdb.ref(`games/${currentGamePin}/answers/${auth.currentUser.uid}`).set({
                 answerIndex: answerIndex,
                 time: timeTaken
@@ -1492,13 +1434,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Step 10: Player sees results
     function playerShowResults(gameData) {
         const myUid = auth.currentUser.uid;
-        if (!myUid) return; // Fix for race condition
-        
+        if (!myUid) return;
         const myAnswer = gameData.answers ? gameData.answers[myUid] : null;
         const myCurrentScore = gameData.scores[myUid] ? gameData.scores[myUid].score : 0;
-        
         gamePlayerStatus.textContent = `Your score: ${myCurrentScore}`;
-        
         if (myAnswer) {
              gamePlayerAnswers.querySelector(`[data-index="${myAnswer.answerIndex}"]`).classList.add('selected');
         } else {
@@ -1510,18 +1449,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function playerShowFinalResults(gameData) {
         const myUid = auth.currentUser.uid;
         if(!myUid || !gameData.scores[myUid]) {
-            showView('home'); // Boot out if something went wrong
+            showView('home'); 
             return;
         }
-        
         const myFinalScore = gameData.scores[myUid].score;
         const sortedScores = Object.values(gameData.scores).sort((a, b) => b.score - a.score);
         const myRank = sortedScores.findIndex(p => p.name === auth.currentUser.displayName) + 1;
-
         gamePlayerStatus.textContent = `Game Over! You finished #${myRank} with ${myFinalScore} points!`;
         gamePlayerAnswers.style.display = 'none';
-        
-        // Detach listener after a delay
         setTimeout(() => {
             showView('home');
         }, 5000);

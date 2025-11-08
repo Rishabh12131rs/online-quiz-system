@@ -58,7 +58,6 @@ header {
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    /* Make header sticky */
     position: sticky;
     top: 0;
     z-index: 900;
@@ -66,7 +65,7 @@ header {
 .logo-nav { display: flex; align-items: center; }
 .quizhub-logo { height: 40px; margin-right: 10px; }
 .site-title { font-family: 'Baloo 2', cursive; font-size: 1.8rem; color: var(--primary); }
-.pin-auth { display: flex; align-items: center; gap: 10px; }
+.pin-auth { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;}
 .pin-label { font-size: 0.9rem; }
 .pin-input {
     width: 100px;
@@ -79,7 +78,7 @@ header {
 #dark-mode-toggle { font-size: 1.5rem; background: none; padding: 0 10px; }
 #user-display { display: flex; align-items: center; gap: 10px; }
 
-/* --- *** UPDATED: Page Layout & Sidebar *** --- */
+/* --- Page Layout & Sidebar --- */
 .page-container {
     display: flex;
 }
@@ -123,8 +122,8 @@ header {
 /* --- Main Content & Hero --- */
 main {
     padding: 20px 4vw;
-    flex-grow: 1; /* Make main content take remaining space */
-    min-width: 0; /* Prevent flexbox overflow */
+    flex-grow: 1; 
+    min-width: 0; 
 }
 .hero-section { text-align: center; margin-bottom: 40px; }
 .hero-heading { font-family: 'Baloo 2', cursive; font-size: 2.5rem; margin-bottom: 0; }
@@ -274,7 +273,7 @@ main {
 }
 /* Specific modal sizes */
 #editor-modal-content, #study-editor-modal-content,
-#manage-modal-content, #results-modal-content, #my-results-modal-content,
+#manage-modal-content, #results-modal-content,
 #giphy-modal-content {
     max-width: 800px;
 }
@@ -313,15 +312,14 @@ main {
     gap: 10px;
 }
 
-/* --- *** UPDATED: Quiz Player View *** --- */
+/* --- Quiz Player View --- */
 #quiz-app-container {
-    /* No longer a modal */
     background: var(--bg-white);
     border-radius: 12px;
     box-shadow: var(--card-shadow);
     padding: 20px;
     max-width: 900px;
-    margin: 0 auto; /* Center it in the main content area */
+    margin: 0 auto; 
 }
 #quiz-controls {
     display: flex;
@@ -329,6 +327,7 @@ main {
     margin-bottom: 20px;
     padding-bottom: 20px;
     border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
 }
 #quiz-controls select {
     padding: 10px;
@@ -415,7 +414,7 @@ body.dark-mode .explanation-box {
     margin-bottom: 20px;
     border-bottom: 1px solid var(--border-color);
     padding-bottom: 20px;
-    flex-wrap: wrap; /* Allow items to wrap */
+    flex-wrap: wrap; 
 }
 #quiz-meta-form input, #study-meta-form input {
     flex-grow: 1;
@@ -492,17 +491,19 @@ body.dark-mode .explanation-box {
     padding-top: 20px;
 }
 
-/* --- *** UPDATED: Study Guide Player View *** --- */
+/* --- Study Guide Player View --- */
 #study-player-container {
-    /* No longer a modal */
     background: var(--bg-white);
     border-radius: 12px;
     box-shadow: var(--card-shadow);
     padding: 20px;
     max-width: 700px;
-    margin: 0 auto; /* Center it */
+    margin: 0 auto; 
 }
-
+#study-player-container h2 {
+    text-align: center;
+    font-family: 'Baloo 2', cursive;
+}
 .flashcard-player {
     perspective: 1000px;
     width: 100%;
@@ -567,6 +568,11 @@ body.dark-mode .explanation-box {
     font-weight: 700;
     color: var(--primary);
 }
+.my-result-card-title {
+    font-size: 0.9rem;
+    color: var(--secondary);
+}
+
 
 /* --- Giphy Modal --- */
 .giphy-search-box { display: flex; gap: 10px; margin-bottom: 20px; }
@@ -631,7 +637,7 @@ footer {
 
 /* --- Recommendation Box Styles --- */
 #quiz-meta-form {
-    flex-wrap: wrap; /* Allow items to wrap */
+    flex-wrap: wrap;
 }
 #quiz-title-input {
     flex-basis: 400px;
@@ -647,7 +653,6 @@ footer {
     color: var(--text-dark);
     font-family: 'Montserrat', sans-serif;
 }
-
 .recommendation-box {
     margin-top: 30px;
     padding: 20px;
@@ -656,19 +661,56 @@ footer {
     border-radius: 8px;
     text-align: center;
 }
-
 body.dark-mode .recommendation-box {
     background: #2a3a4a;
     border-color: var(--primary);
 }
-
 .recommendation-box h4 {
     margin-top: 0;
     font-size: 1.2rem;
     color: var(--text-dark);
 }
-
 .recommendation-box p {
     font-size: 1rem;
     color: var(--text-dark);
+}
+
+/* --- *** NEW: Dashboard Styles *** --- */
+#dashboard-view .hero-heading {
+    text-align: left;
+    margin-bottom: 20px;
+}
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 30px;
+}
+.dashboard-card {
+    background: var(--bg-white);
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    padding: 25px;
+}
+.dashboard-card h3 {
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.5rem;
+    margin-top: 0;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+}
+/* Re-style list items to fit in dashboard */
+.dashboard-card .manage-quiz-card,
+.dashboard-card .my-result-card {
+    padding: 10px; /* Make them more compact */
+}
+.dashboard-card .buttons-wrapper button {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+}
+/* Scrollable lists inside cards */
+#dashboard-my-results-list,
+#dashboard-my-content-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 10px; /* for scrollbar */
 }

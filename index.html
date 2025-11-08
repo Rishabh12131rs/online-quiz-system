@@ -17,6 +17,7 @@
         <div class="logo-nav">
             <img src="https://i.imgur.com/4M34hi2.png" class="quizhub-logo">
             <span class="site-title">QuizHub</span>
+            <button class="header-back-btn" id="header-back-btn" style="display: none;">&larr; Back</button>
         </div>
         <div class="pin-auth">
             <span class="pin-label">Join Game? ID:</span>
@@ -28,7 +29,11 @@
             <button class="my-results-btn" id="my-results-btn" style="display: none;">My Results</button>
 
             <div id="user-display" style="display: none;">
-                <span id="welcome-user"></span>
+                <div class="profile-icon" id="profile-icon">
+                    <span>👤</span>
+                    <div class="profile-tooltip" id="welcome-user-tooltip">
+                        </div>
+                </div>
                 <button class="sign-btn" id="logout-btn">Logout</button>
             </div>
         </div>

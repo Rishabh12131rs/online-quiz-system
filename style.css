@@ -49,6 +49,8 @@ body.dark-mode {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
+.success-btn { background: var(--success); }
+.success-btn:hover { background: #218838; }
 
 /* --- Header --- */
 header {
@@ -68,12 +70,14 @@ header {
 .pin-auth { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;}
 .pin-label { font-size: 0.9rem; }
 .pin-input {
-    width: 100px;
+    width: 60px; /* Shorter for 4-digit PIN */
     padding: 8px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
     background: var(--bg-light);
     color: var(--text-dark);
+    text-align: center;
+    font-size: 1.1rem;
 }
 #dark-mode-toggle { font-size: 1.5rem; background: none; padding: 0 10px; }
 #user-display { display: flex; align-items: center; gap: 10px; }
@@ -82,19 +86,17 @@ header {
 .page-container {
     display: flex;
 }
-
 .sidebar-nav {
     width: 240px;
     flex-shrink: 0;
     background: var(--bg-white);
-    height: calc(100vh - 73px); /* Full height minus header */
+    height: calc(100vh - 73px);
     position: sticky;
-    top: 73px; /* Stick below header */
+    top: 73px;
     border-right: 1px solid var(--border-color);
     padding: 20px;
     box-sizing: border-box;
 }
-
 .sidebar-link {
     display: flex;
     align-items: center;
@@ -108,16 +110,9 @@ header {
     margin-bottom: 8px;
     transition: background 0.2s;
 }
-.sidebar-link:hover {
-    background: var(--primary-light);
-}
-.sidebar-link.active {
-    background: var(--primary);
-    color: white;
-}
-.sidebar-link .nav-icon {
-    font-size: 1.2rem;
-}
+.sidebar-link:hover { background: var(--primary-light); }
+.sidebar-link.active { background: var(--primary); color: white; }
+.sidebar-link .nav-icon { font-size: 1.2rem; }
 
 /* --- Main Content & Hero --- */
 main {
@@ -144,10 +139,7 @@ main {
 .card-home p { color: var(--secondary); }
 
 /* --- Search & Quiz List --- */
-.search-container {
-    display: flex;
-    margin-bottom: 30px;
-}
+.search-container { display: flex; margin-bottom: 30px; }
 #search-bar {
     flex-grow: 1;
     padding: 15px;
@@ -187,12 +179,8 @@ main {
     font-weight: 700;
     cursor: pointer;
 }
-.quiz-card-title.study {
-    border-left: 5px solid var(--success);
-}
-.quiz-card-title.quiz {
-    border-left: 5px solid var(--primary);
-}
+.quiz-card-title.study { border-left: 5px solid var(--success); }
+.quiz-card-title.quiz { border-left: 5px solid var(--primary); }
 .quiz-card-footer {
     display: flex;
     justify-content: space-between;
@@ -209,11 +197,7 @@ main {
     padding: 5px 10px;
     border-radius: 20px;
 }
-.like-btn.liked {
-    background: var(--error);
-    color: white;
-    border-color: var(--error);
-}
+.like-btn.liked { background: var(--error); color: white; border-color: var(--error); }
 
 /* --- Subject Nav --- */
 .subject-nav {
@@ -271,7 +255,6 @@ main {
     color: var(--secondary);
     padding: 5px;
 }
-/* Specific modal sizes */
 #editor-modal-content, #study-editor-modal-content,
 #manage-modal-content, #results-modal-content,
 #giphy-modal-content {
@@ -353,13 +336,7 @@ main {
 .option-btn.correct { background: var(--success); color: white; border-color: var(--success); }
 .option-btn.incorrect { background: var(--error); color: white; border-color: var(--error); }
 .option-btn:disabled { cursor: not-allowed; }
-
-/* Fill in the blank styles */
-.fill-in-blank-group {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-}
+.fill-in-blank-group { display: flex; gap: 10px; margin-top: 15px; }
 #fill-answer-input {
     flex-grow: 1;
     padding: 12px;
@@ -369,7 +346,6 @@ main {
     color: var(--text-dark);
     font-size: 1rem;
 }
-
 #feedback { margin-top: 15px; font-weight: 700; }
 .explanation-box {
     background: var(--primary-light);
@@ -382,11 +358,7 @@ main {
     font-weight: normal;
     color: var(--text-dark);
 }
-body.dark-mode .explanation-box {
-    background: #2a3a4a;
-    border-color: var(--primary);
-    color: #eee;
-}
+body.dark-mode .explanation-box { background: #2a3a4a; border-color: var(--primary); color: #eee; }
 #timer-display {
     font-size: 2rem;
     font-weight: 700;
@@ -481,7 +453,6 @@ body.dark-mode .explanation-box {
     border: 1px solid var(--border-color);
     border-radius: 4px;
 }
-
 #editor-controls, #study-editor-controls {
     display: flex;
     justify-content: flex-end;
@@ -500,10 +471,7 @@ body.dark-mode .explanation-box {
     max-width: 700px;
     margin: 0 auto; 
 }
-#study-player-container h2 {
-    text-align: center;
-    font-family: 'Baloo 2', cursive;
-}
+#study-player-container h2 { text-align: center; font-family: 'Baloo 2', cursive; }
 .flashcard-player {
     perspective: 1000px;
     width: 100%;
@@ -561,18 +529,14 @@ body.dark-mode .explanation-box {
     border-radius: 8px;
     margin-bottom: 10px;
 }
-.buttons-wrapper { display: flex; gap: 10px; }
+.buttons-wrapper { display: flex; gap: 10px; flex-wrap: wrap; }
 .result-card-name, .my-result-card-name { font-weight: 700; }
 .result-card-score, .my-result-card-score {
     font-size: 1.2rem;
     font-weight: 700;
     color: var(--primary);
 }
-.my-result-card-title {
-    font-size: 0.9rem;
-    color: var(--secondary);
-}
-
+.my-result-card-title { font-size: 0.9rem; color: var(--secondary); }
 
 /* --- Giphy Modal --- */
 .giphy-search-box { display: flex; gap: 10px; margin-bottom: 20px; }
@@ -636,13 +600,8 @@ footer {
 }
 
 /* --- Recommendation Box Styles --- */
-#quiz-meta-form {
-    flex-wrap: wrap;
-}
-#quiz-title-input {
-    flex-basis: 400px;
-    flex-grow: 1;
-}
+#quiz-meta-form { flex-wrap: wrap; }
+#quiz-title-input { flex-basis: 400px; flex-grow: 1; }
 #quiz-recommend-id-input {
     flex-basis: 400px;
     flex-grow: 1;
@@ -661,25 +620,12 @@ footer {
     border-radius: 8px;
     text-align: center;
 }
-body.dark-mode .recommendation-box {
-    background: #2a3a4a;
-    border-color: var(--primary);
-}
-.recommendation-box h4 {
-    margin-top: 0;
-    font-size: 1.2rem;
-    color: var(--text-dark);
-}
-.recommendation-box p {
-    font-size: 1rem;
-    color: var(--text-dark);
-}
+body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--primary); }
+.recommendation-box h4 { margin-top: 0; font-size: 1.2rem; color: var(--text-dark); }
+.recommendation-box p { font-size: 1rem; color: var(--text-dark); }
 
-/* --- *** NEW: Dashboard Styles *** --- */
-#dashboard-view .hero-heading {
-    text-align: left;
-    margin-bottom: 20px;
-}
+/* --- Dashboard Styles --- */
+#dashboard-view .hero-heading { text-align: left; margin-bottom: 20px; }
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -698,19 +644,154 @@ body.dark-mode .recommendation-box {
     border-bottom: 2px solid var(--border-color);
     padding-bottom: 10px;
 }
-/* Re-style list items to fit in dashboard */
 .dashboard-card .manage-quiz-card,
 .dashboard-card .my-result-card {
-    padding: 10px; /* Make them more compact */
+    padding: 10px; 
 }
 .dashboard-card .buttons-wrapper button {
     font-size: 0.8rem;
     padding: 6px 10px;
 }
-/* Scrollable lists inside cards */
 #dashboard-my-results-list,
 #dashboard-my-content-list {
     max-height: 400px;
     overflow-y: auto;
-    padding-right: 10px; /* for scrollbar */
+    padding-right: 10px; 
 }
+
+/* --- *** NEW: Live Game Styles *** --- */
+.game-view {
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+    background: var(--bg-white);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+}
+.game-pin-box {
+    background: var(--bg-light);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 300px;
+}
+.game-pin-box span {
+    font-size: 1.2rem;
+    color: var(--secondary);
+}
+.game-pin-box h1 {
+    font-size: 4rem;
+    font-family: 'Baloo 2', cursive;
+    color: var(--primary);
+    margin: 10px 0;
+    letter-spacing: 4px;
+}
+.player-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+.player-list-item {
+    background: var(--bg-light);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 700;
+}
+
+/* Game Host Screen */
+.game-host-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+#game-host-timer {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--bg-light);
+    width: 60px;
+    height: 60px;
+    line-height: 60px;
+    border-radius: 50%;
+}
+#game-host-q-count {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+#game-host-question {
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+}
+.game-host-answers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+.host-answer-btn {
+    padding: 20px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: 3px solid transparent;
+}
+.host-answer-btn.correct {
+    border-color: var(--success);
+    box-shadow: 0 0 15px var(--success);
+}
+/* Colors for host answers */
+.host-answer-btn[data-index="0"] { background-color: #dc3545; color: white; }
+.host-answer-btn[data-index="1"] { background-color: #007bff; color: white; }
+.host-answer-btn[data-index="2"] { background-color: #ffc107; color: var(--text-dark); }
+.host-answer-btn[data-index="3"] { background-color: #28a745; color: white; }
+
+#game-host-leaderboard {
+    margin-top: 30px;
+    text-align: left;
+}
+#game-host-leaderboard-list {
+    list-style: decimal;
+    padding-left: 20px;
+}
+#game-host-leaderboard-list li {
+    font-size: 1.2rem;
+    font-weight: 700;
+    padding: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+#game-host-leaderboard-list li strong {
+    color: var(--primary);
+    margin-left: 10px;
+}
+
+/* Game Player Screen */
+#game-player-status {
+    font-size: 1.5rem;
+    color: var(--secondary);
+    margin-bottom: 30px;
+}
+.game-player-answers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    height: 70vh;
+}
+.player-answer-btn {
+    font-size: 4rem;
+    transition: all 0.1s ease-in-out;
+}
+.player-answer-btn:disabled {
+    opacity: 0.5;
+    transform: scale(0.95);
+}
+.player-answer-btn.selected {
+    border: 10px solid var(--bg-white);
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+.player-answer-btn[data-index="0"] { background-color: #dc3545; }
+.player-answer-btn[data-index="1"] { background-color: #007bff; }
+.player-answer-btn[data-index="2"] { background-color: #ffc107; }
+.player-answer-btn[data-index="3"] { background-color: #28a745; }

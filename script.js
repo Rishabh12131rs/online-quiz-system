@@ -16,6 +16,7 @@ const GIPHY_API_KEY = "gJ7xwNUraSP6midiKKewgrHIbdMJcsVx";
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
+const rtdb = firebase.database(); // *** NEW: INITIALIZE REALTIME DATABASE ***
 // --- END OF FIREBASE SETUP ---
 
 
@@ -29,7 +30,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Auth Elements
     const loginTab = document.getElementById('login-tab');
-    const signupTab = document.getElementById('signup-tab');
+    // ... (all other auth elements) ...
+    const logoutBtn = document.getElementById('logout-btn');
+    const googleSignInBtn = document.getElementById('google-signin-btn');
+    const welcomeUser = document.getElementById('welcome-user');
+    const userDisplay = document.getElementById('user-display');
+    const loginErr = document.getElementById('login-error');
+    const signupErr = document.getElementById('signup-error');
     const loginForm = document.getElementById('login-form');
     const signupForm = document.getElementById('signup-form');
     const loginEmail = document.getElementById('login-email');
@@ -37,68 +44,63 @@ document.addEventListener('DOMContentLoaded', () => {
     const signupUsername = document.getElementById('signup-username');
     const signupEmail = document.getElementById('signup-email');
     const signupPassword = document.getElementById('signup-password');
-    const loginErr = document.getElementById('login-error');
-    const signupErr = document.getElementById('signup-error');
-    const userDisplay = document.getElementById('user-display');
-    const welcomeUser = document.getElementById('welcome-user');
-    const logoutBtn = document.getElementById('logout-btn');
-    const googleSignInBtn = document.getElementById('google-signin-btn');
 
     // Forgot Password Elements
     const forgotPasswordLink = document.getElementById('forgot-password-link');
+    // ... (all other forgot password elements) ...
+    const backToLoginLink = document.getElementById('back-to-login-link');
     const forgotPasswordContainer = document.getElementById('forgot-password-container');
     const forgotPasswordForm = document.getElementById('forgot-password-form');
     const forgotEmail = document.getElementById('forgot-email');
     const forgotError = document.getElementById('forgot-error');
-    const backToLoginLink = document.getElementById('back-to-login-link');
 
-    // Join by ID Elements
-    const joinQuizBtn = document.getElementById('join-quiz-btn');
-    const quizIdInput = document.getElementById('quiz-id-input');
 
-    // Quiz App Elements
+    // --- *** UPDATED: Join Elements *** ---
+    const joinGameBtn = document.getElementById('join-game-btn');
+    const gamePinInput = document.getElementById('game-pin-input');
+    const legacyQuizIdInput = document.getElementById('quiz-id-input'); // Keep the old one for solo join
+
+    // Quiz App (SOLO) Elements
     const playQuizBtn = document.getElementById('play-quiz-btn');
     const startQuizBtn = document.getElementById('startQuizBtn');
-    const quizArea = document.getElementById('quiz-area');
-    const quizControls = document.getElementById('quiz-controls');
-    const quizNav = document.getElementById('quiz-navigation');
-    const leaderboardDiv = document.getElementById('leaderboard');
+    // ... (all other solo quiz elements) ...
     const nextBtn = document.getElementById('nextBtn');
     const questionNum = document.getElementById('questionNum');
     const scoreLabel = document.getElementById('scoreLabel');
     const timerDisplay = document.getElementById('timer-display');
+    const quizArea = document.getElementById('quiz-area');
+    const quizControls = document.getElementById('quiz-controls');
+    const quizNav = document.getElementById('quiz-navigation');
+    const leaderboardDiv = document.getElementById('leaderboard');
     
     // Main Page Elements
     const quizList = document.querySelector('.quiz-list'); 
     const searchBar = document.getElementById('search-bar'); 
-    // const myResultsBtn = document.getElementById('my-results-btn'); // *** REMOVED ***
 
     // --- Sidebar and View Elements ---
     const sidebarHomeBtn = document.getElementById('sidebar-home-btn');
     const sidebarLibraryBtn = document.getElementById('sidebar-library-btn');
-    const sidebarDashboardBtn = document.getElementById('sidebar-dashboard-btn'); // *** NEW ***
+    const sidebarDashboardBtn = document.getElementById('sidebar-dashboard-btn');
     const homeView = document.getElementById('home-view');
     const libraryView = document.getElementById('library-view');
-    const dashboardView = document.getElementById('dashboard-view'); // *** NEW ***
-    const dashboardWelcome = document.getElementById('dashboard-welcome'); // *** NEW ***
-    const dashboardMyResultsList = document.getElementById('dashboard-my-results-list'); // *** NEW ***
-    const dashboardMyContentList = document.getElementById('dashboard-my-content-list'); // *** NEW ***
+    const dashboardView = document.getElementById('dashboard-view');
+    const dashboardWelcome = document.getElementById('dashboard-welcome');
+    const dashboardMyResultsList = document.getElementById('dashboard-my-results-list');
+    const dashboardMyContentList = document.getElementById('dashboard-my-content-list');
 
     // Quiz Editor Elements
     const createQuizBtn = document.getElementById('create-quiz-btn');
     const editorContainer = document.getElementById('editor-container');
+    // ... (all other editor elements) ...
     const closeEditorBtn = document.getElementById('close-editor-btn');
     const addQuestionBtn = document.getElementById('add-question-btn');
     const questionListContainer = document.getElementById('question-list-container');
     const saveQuizBtn = document.getElementById('save-quiz-btn');
     const quizTitleInput = document.getElementById('quiz-title-input');
-    // const manageQuizzesBtn = document.getElementById('manage-quizzes-btn'); // *** REMOVED ***
-    const manageContainer = document.getElementById('manage-container');
-    const closeManageBtn = document.getElementById('close-manage-btn');
-    const myQuizListContainer = document.getElementById('my-quiz-list-container');
-    
+
     // --- Study Guide Editor Elements ---
     const createStudyGuideBtn = document.getElementById('create-study-guide-btn');
+    // ... (all other study guide editor elements) ...
     const studyEditorContainer = document.getElementById('study-editor-container');
     const closeStudyEditorBtn = document.getElementById('close-study-editor-btn');
     const studyTitleInput = document.getElementById('study-title-input');
@@ -108,6 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Study Player Elements ---
     const studyPlayerContainer = document.getElementById('study-player-container');
+    // ... (all other study player elements) ...
     const studyPlayerTitle = document.getElementById('study-player-title');
     const studyFlashcard = document.getElementById('study-flashcard');
     const flashcardFrontText = document.getElementById('flashcard-front-text');
@@ -116,27 +119,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const studyNextBtn = document.getElementById('study-next-btn');
     const studyCardCount = document.getElementById('study-card-count');
 
-    // Results Modal Elements
+    // Modals (Results, GIPHY, etc)
     const resultsContainer = document.getElementById('results-container');
     const closeResultsBtn = document.getElementById('close-results-btn');
     const resultsQuizTitle = document.getElementById('results-quiz-title');
     const quizResultsListContainer = document.getElementById('quiz-results-list-container');
-    
-    // "My Results" modal is no longer used
-    // const myResultsContainer = document.getElementById('my-results-container');
-    // const closeMyResultsBtn = document.getElementById('close-my-results-btn');
-    // const myResultsListContainer = document.getElementById('my-results-list-container');
-    
-    // GIPHY Modal Elements
     const giphyContainer = document.getElementById('giphy-container');
     const closeGiphyBtn = document.getElementById('close-giphy-btn');
     const giphySearchBar = document.getElementById('giphy-search-bar');
     const giphySearchBtn = document.getElementById('giphy-search-btn');
     const giphyResultsGrid = document.getElementById('giphy-results-grid');
+    const manageContainer = document.getElementById('manage-container'); // This is now just for showing results from dashboard
+    const closeManageBtn = document.getElementById('close-manage-btn');
     
-    // Toast & Dark Mode Elements
+    // Toast & Dark Mode
     const toast = document.getElementById('toast-notification');
     const darkModeToggle = document.getElementById('dark-mode-toggle');
+
+    // --- *** NEW: Live Game View Elements *** ---
+    const hostLobbyView = document.getElementById('host-lobby-view');
+    const hostLobbyTitle = document.getElementById('host-lobby-title');
+    const hostLobbyPin = document.getElementById('host-lobby-pin');
+    const hostStartGameBtn = document.getElementById('host-start-game-btn');
+    const hostLobbyPlayers = document.getElementById('host-lobby-players');
+
+    const playerLobbyView = document.getElementById('player-lobby-view');
+    const playerLobbyPlayers = document.getElementById('player-lobby-players');
+
+    const gameHostView = document.getElementById('game-host-view');
+    const gameHostTimer = document.getElementById('game-host-timer');
+    const gameHostQCount = document.getElementById('game-host-q-count');
+    const gameHostNextBtn = document.getElementById('game-host-next-btn');
+    const gameHostQuestion = document.getElementById('game-host-question');
+    const gameHostAnswers = document.getElementById('game-host-answers');
+    const gameHostLeaderboard = document.getElementById('game-host-leaderboard');
+    const gameHostLeaderboardList = document.getElementById('game-host-leaderboard-list');
+
+    const gamePlayerView = document.getElementById('game-player-view');
+    const gamePlayerStatus = document.getElementById('game-player-status');
+    const gamePlayerAnswers = document.getElementById('game-player-answers');
 
     // --- App State ---
     let questions = []; 
@@ -149,6 +170,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeGiphyQuestionCard = null; 
     let currentFlashcards = [];
     let currentFlashcardIndex = 0;
+    
+    // --- *** NEW: Live Game State *** ---
+    let currentGamePin = null;
+    let currentGameRef = null;
+    let hostQuizData = null; // The quiz object for the host
+    let playerGameListener = null; // To detach RTDB listener on leave
 
     // --- Toast Notification Function ---
     function showToast(message, type = '') {
@@ -175,19 +202,35 @@ document.addEventListener('DOMContentLoaded', () => {
         errorElement.textContent = message;
     }
 
-    // --- *** NEW: View Switching Logic *** ---
+    // --- View Switching Logic ---
     function showView(viewName) {
         // Hide all main views
         homeView.style.display = 'none';
         libraryView.style.display = 'none';
         quizAppContainer.style.display = 'none';
         studyPlayerContainer.style.display = 'none';
-        dashboardView.style.display = 'none'; // Hide dashboard
+        dashboardView.style.display = 'none';
+        hostLobbyView.style.display = 'none';
+        playerLobbyView.style.display = 'none';
+        gameHostView.style.display = 'none';
+        gamePlayerView.style.display = 'none';
+
+        // Detach any active game listeners if we're leaving a game
+        if (playerGameListener) {
+            playerGameListener.off(); // Detach the RTDB listener
+            playerGameListener = null;
+            rtdb.ref(`games/${currentGamePin}/players/${auth.currentUser.uid}`).remove(); // Remove self from game
+            currentGamePin = null;
+        }
+        if (currentGameRef) {
+            currentGameRef.off(); // Detach host listener
+            currentGameRef = null;
+        }
         
         // Deactivate all sidebar links
         sidebarHomeBtn.classList.remove('active');
         sidebarLibraryBtn.classList.remove('active');
-        sidebarDashboardBtn.classList.remove('active'); // Deactivate dashboard
+        sidebarDashboardBtn.classList.remove('active');
 
         // Show the requested view
         if (viewName === 'home') {
@@ -196,34 +239,38 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (viewName === 'library') {
             libraryView.style.display = 'block';
             sidebarLibraryBtn.classList.add('active');
-            loadSharedQuizzes(searchBar.value); // Load content when view is shown
+            loadSharedQuizzes(searchBar.value);
         } else if (viewName === 'dashboard') {
             dashboardView.style.display = 'block';
             sidebarDashboardBtn.classList.add('active');
-            loadDashboard(); // Load dashboard data
-        } else if (viewName === 'quiz') {
+            loadDashboard();
+        } else if (viewName === 'quiz') { // Solo API quiz
             quizAppContainer.style.display = 'block';
-            // No sidebar link gets 'active' state for this
-        } else if (viewName === 'study') {
+        } else if (viewName === 'study') { // Solo study
             studyPlayerContainer.style.display = 'block';
-            // No sidebar link gets 'active' state for this
+        } else if (viewName === 'host-lobby') {
+            hostLobbyView.style.display = 'block';
+        } else if (viewName === 'player-lobby') {
+            playerLobbyView.style.display = 'block';
+        } else if (viewName === 'game-host') {
+            gameHostView.style.display = 'block';
+        } else if (viewName === 'game-player') {
+            gamePlayerView.style.display = 'block';
         }
     }
 
-    // --- MAIN AUTHENTICATION LISTENER (UPDATED) ---
+    // --- MAIN AUTHENTICATION LISTENER ---
     auth.onAuthStateChanged(user => {
         if (user) {
             pageContainer.style.display = 'flex'; 
             authContainer.style.display = 'none'; 
             userDisplay.style.display = 'flex';
-            // myResultsBtn.style.display = 'block'; // No longer needed
             welcomeUser.textContent = `Hello, ${user.displayName || 'User'}`; 
             showView('home'); 
         } else {
             pageContainer.style.display = 'none'; 
             authContainer.style.display = 'flex'; 
             userDisplay.style.display = 'none';
-            // myResultsBtn.style.display = 'none'; // No longer needed
             welcomeUser.textContent = '';
         }
     });
@@ -236,42 +283,21 @@ document.addEventListener('DOMContentLoaded', () => {
         quizArea.innerHTML = "Click 'Start Quiz' to begin!"; 
         showLeaderboard(); 
     };
-
-    createQuizBtn.onclick = () => {
-        editorContainer.style.display = 'flex';
-    };
+    createQuizBtn.onclick = () => { editorContainer.style.display = 'flex'; };
     closeEditorBtn.onclick = () => {
         editorContainer.style.display = 'none';
         questionListContainer.innerHTML = ''; 
         quizTitleInput.value = '';
     };
-    
-    createStudyGuideBtn.onclick = () => {
-        studyEditorContainer.style.display = 'flex';
-    };
+    createStudyGuideBtn.onclick = () => { studyEditorContainer.style.display = 'flex'; };
     closeStudyEditorBtn.onclick = () => {
         studyEditorContainer.style.display = 'none';
         flashcardListContainer.innerHTML = '';
         studyTitleInput.value = '';
     };
-
-    studyFlashcard.onclick = () => {
-        studyFlashcard.classList.toggle('is-flipped');
-    };
-    
-    // "Manage Quizzes" button from editor is gone, this modal is now only for results
-    closeManageBtn.onclick = () => {
-        manageContainer.style.display = 'none';
-    };
-    closeResultsBtn.onclick = () => {
-        // manageContainer.style.display = 'flex'; // Don't reopen manage
-        resultsContainer.style.display = 'none';
-    };
-
-    // "My Results" button is gone, this modal is no longer used
-    // myResultsBtn.onclick = ...
-    // closeMyResultsBtn.onclick = ...
-    
+    studyFlashcard.onclick = () => { studyFlashcard.classList.toggle('is-flipped'); };
+    closeManageBtn.onclick = () => { manageContainer.style.display = 'none'; };
+    closeResultsBtn.onclick = () => { resultsContainer.style.display = 'none'; };
     closeGiphyBtn.onclick = () => {
         giphyContainer.style.display = 'none';
         editorContainer.style.display = 'flex';
@@ -348,8 +374,45 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch((error) => { showFriendlyError(error, forgotError); });
     };
     // --- End Auth Logic ---
+    
 
-    // --- Quiz Logic ---
+    // --- *** NEW: Live Game Join Logic *** ---
+    joinGameBtn.onclick = () => {
+        const pin = gamePinInput.value.trim();
+        if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+            // Check the *other* input (the solo play one)
+            const soloId = legacyQuizIdInput.value.trim();
+            if (soloId.length > 10) {
+                joinSoloContent(soloId);
+            } else {
+                showToast("Please enter a 4-digit Game PIN.", "error");
+            }
+            return;
+        }
+        joinLiveGame(pin);
+    };
+
+    // This is the old "Join" button logic, now in a separate function
+    function joinSoloContent(contentId) {
+        db.collection("quizzes").doc(contentId).get().then((doc) => {
+            if (doc.exists) {
+                legacyQuizIdInput.value = ''; 
+                const content = doc.data();
+                if (content.type === 'study') {
+                    startStudySession(content, doc.id);
+                } else {
+                    startCustomQuiz(content, doc.id); 
+                }
+            } else {
+                showToast("Content ID not found.", "error");
+            }
+        }).catch((error) => {
+            console.error("Error getting content:", error);
+            showToast("Error finding content.", "error");
+        });
+    }
+
+    // --- Solo Quiz Logic (Unchanged) ---
     function startApiQuiz(category, count, difficulty) { 
         currentQuizId = `api_${category}_${difficulty}`; 
         currentQuizObject = null;
@@ -362,7 +425,6 @@ document.addEventListener('DOMContentLoaded', () => {
         currentIndex = 0;
         let apiUrl = `https://opentdb.com/api.php?amount=${count}&category=${category}&type=multiple`;
         if (difficulty && difficulty !== "any") apiUrl += `&difficulty=${difficulty}`;
-
         fetch(apiUrl) 
             .then(res => res.json())
             .then(data => {
@@ -374,7 +436,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     explanation: 'Explanations are not available for API trivia questions.',
                     imageUrl: null
                 }));
-                
                 if (questions.length > 0) {
                     showQuestion();
                     quizNav.style.display = 'flex';
@@ -389,14 +450,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 timerDisplay.style.display = 'none'; 
             });
     }
-    
     startQuizBtn.onclick = function () { 
         const category = document.getElementById('quiz-category').value;
         const count = document.getElementById('quiz-count').value;
         const difficulty = document.getElementById('quiz-difficulty').value; 
         startApiQuiz(category, count, difficulty); 
     };
-
     function startCustomQuiz(quizObject, quizId) {
         questions = quizObject.questions;
         currentQuizId = quizId; 
@@ -408,36 +467,12 @@ document.addEventListener('DOMContentLoaded', () => {
         quizNav.style.display = 'flex'; 
         showQuestion(); 
     }
-
-    joinQuizBtn.onclick = () => {
-        const contentId = quizIdInput.value.trim();
-        if (contentId.length < 10) { 
-            showToast("Please enter a valid Content ID.", "error");
-            return;
-        }
-        db.collection("quizzes").doc(contentId).get().then((doc) => {
-            if (doc.exists) {
-                quizIdInput.value = ''; 
-                const content = doc.data();
-                if (content.type === 'study') {
-                    startStudySession(content, doc.id);
-                } else {
-                    startCustomQuiz(content, doc.id); 
-                }
-            } else {
-                showToast("Content ID not found in the database.", "error");
-            }
-        }).catch((error) => {
-            console.error("Error getting content:", error);
-            showToast("Error finding content.", "error");
-        });
-    };
     
+    // --- Solo Quiz Player (Unchanged) ---
     function showQuestion() {
         clearInterval(timerInterval);
-        
         if (currentIndex >= questions.length) {
-            // --- QUIZ COMPLETE LOGIC ---
+            // QUIZ COMPLETE LOGIC
             const finalScorePercent = (questions.length > 0) ? (score / questions.length) : 0;
             let recommendationHtml = ''; 
             if (finalScorePercent < 0.6 && currentQuizObject && currentQuizObject.recommendedStudyGuideId) {
@@ -475,12 +510,10 @@ document.addEventListener('DOMContentLoaded', () => {
             currentQuizObject = null; 
             return;
         }
-    
         const q = questions[currentIndex];
         let imageHtml = '';
         if (q.imageUrl) imageHtml = `<img src="${q.imageUrl}" alt="Quiz Image" class="quiz-question-image">`;
         let questionHtml = '';
-        
         if (q.questionType === 'fill') {
             questionHtml = `<div class="fill-in-blank-group"><input type="text" id="fill-answer-input" placeholder="Type your answer..."><button id="fill-submit-btn" class="card-btn">Submit</button></div>`;
         } else {
@@ -494,7 +527,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         let html = `<div class="question-block">${imageHtml}<h4>Q${currentIndex + 1}: ${decodeHTML(q.question)}</h4>${questionHtml}</div><br><div id="feedback"></div>`;
         quizArea.innerHTML = html;
-    
         if (q.questionType === 'fill') {
             document.getElementById('fill-submit-btn').onclick = () => checkFillBlankAnswer();
             document.getElementById('fill-answer-input').onkeyup = (e) => {
@@ -508,7 +540,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateControls();
         startTimer();
     }
-    
     function startTimer() {
         timeLeft = 10; 
         timerDisplay.textContent = timeLeft;
@@ -524,7 +555,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, 1000); 
     }
-    
     function handleNoAnswer() {
         const q = questions[currentIndex];
         let correctAnswerText;
@@ -542,7 +572,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const explanationHtml = q.explanation ? `<div class="explanation-box">${q.explanation}</div>` : '';
         document.getElementById('feedback').innerHTML = `<span style="color:red;">Time's up! Correct was: ${decodeHTML(correctAnswerText)}</span>${explanationHtml}`;
     }
-
     function checkFillBlankAnswer() {
         clearInterval(timerInterval);
         const input = document.getElementById('fill-answer-input');
@@ -562,7 +591,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         scoreLabel.textContent = 'Score: ' + score;
     }
-
     function selectAnswer(selectedButton) {
         clearInterval(timerInterval); 
         const isCorrect = selectedButton.dataset.correct === 'true';
@@ -585,33 +613,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         scoreLabel.textContent = 'Score: ' + score;
     }
-
     function disableOptions() {
         document.querySelectorAll('.option-btn').forEach((btn) => {
             btn.disabled = true;
         });
     }
-
     function updateControls() {
         nextBtn.disabled = currentIndex >= questions.length; 
         questionNum.textContent = `Q${currentIndex + 1}/${questions.length}`;
         scoreLabel.textContent = 'Score: ' + score;
     }
-
     nextBtn.onclick = function () {
         if (currentIndex < questions.length) { 
             currentIndex++;
             showQuestion();
         }
     };
-
     function decodeHTML(html) {
         const txt = document.createElement('textarea');
         txt.innerHTML = html;
         return txt.value;
     }
+    // --- End Solo Quiz ---
 
-    // --- LEADERBOARD & RESULTS LOGIC ---
+    // --- Leaderboard & Results Logic ---
     function saveQuizAttempt(username, uid, quizId, score) {
         if (!uid || !quizId) return; 
         db.collection("quiz_attempts").add({
@@ -621,7 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
             score: score,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         })
-        .then(() => console.log("Quiz attempt saved!"))
+        .then(() => console.log("Solo attempt saved!"))
         .catch(err => console.error("Error saving attempt: ", err));
         saveGlobalHighScore(username, uid, score);
     }
@@ -664,8 +689,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function showQuizResults(quizId, quizTitle) {
         resultsQuizTitle.textContent = `Results for: ${quizTitle}`;
         quizResultsListContainer.innerHTML = '<div class="loader"></div>';
-        // manageContainer.style.display = 'none'; // Don't need this
-        resultsContainer.style.display = 'flex'; // Show results modal
+        resultsContainer.style.display = 'flex'; 
         db.collection("quiz_attempts").where("quizId", "==", quizId).orderBy("score", "desc").get()
           .then((querySnapshot) => {
             if (querySnapshot.empty) {
@@ -684,39 +708,29 @@ document.addEventListener('DOMContentLoaded', () => {
           });
     }
     
-    // --- *** NEW: Dashboard Logic *** ---
+    // --- Dashboard Logic (REUSABLE) ---
     function loadDashboard() {
         const user = auth.currentUser;
         if (!user) {
-            showView('home'); // Should not happen, but as a fallback
+            showView('home');
             return;
         }
-        
         dashboardWelcome.textContent = `Welcome, ${user.displayName || 'User'}!`;
-        
-        // Load the two dashboard cards
         loadMyResults(dashboardMyResultsList);
         loadManageList(dashboardMyContentList);
     }
     
-    // --- *** UPDATED: Reusable function *** ---
     function loadMyResults(container) {
         const user = auth.currentUser;
         if (!user) return; 
-        
         container.innerHTML = '<div class="loader"></div>';
-        
-        db.collection("quiz_attempts")
-          .where("uid", "==", user.uid)
-          .orderBy("timestamp", "desc")
-          .limit(10) // Only show 10 most recent
+        db.collection("quiz_attempts").where("uid", "==", user.uid).orderBy("timestamp", "desc").limit(10) 
           .get()
           .then(async (querySnapshot) => {
                 if (querySnapshot.empty) {
                     container.innerHTML = '<p>You haven\'t played any quizzes yet.</p>';
                     return;
                 }
-                
                 let html = '';
                 const titlePromises = [];
                 const attempts = [];
@@ -730,7 +744,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
                 const titleDocs = await Promise.all(titlePromises);
-                
                 attempts.forEach((attempt, index) => {
                     let quizTitle = "API Quiz"; 
                     const titleDoc = titleDocs[index];
@@ -745,10 +758,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 container.innerHTML = '<p>Could not load your results.</p>';
           });
     }
-    // --- End Results Logic ---
-
-
-    // --- Quiz Editor Logic ---
+    
+    // --- Content Editor Logic (Unchanged) ---
+    // (Quiz Editor, Study Guide Editor, GIPHY, etc)
     let questionEditorId = 0; 
     function createNewQuestionEditor() {
         const questionId = questionEditorId++;
@@ -815,7 +827,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const explanation = card.querySelector('.explanation-input').value.trim();
             const imageUrl = card.dataset.imageUrl || null;
             const questionType = card.querySelector('.question-type-select').value;
-            // *** This is the check from your previous question ***
             if (questionText.length < 1 || explanation.length < 1) { // Changed to 1
                 allValid = false;
             }
@@ -842,7 +853,7 @@ document.addEventListener('DOMContentLoaded', () => {
             newQuiz.questions.push(questionData);
         });
         if (!allValid) {
-            showToast("Please fill in all questions, answers, and explanations.", "error"); // Simplified message
+            showToast("Please fill in all questions, answers, and explanations.", "error"); 
             saveQuizBtn.disabled = false;
             saveQuizBtn.textContent = "Save Quiz";
             return;
@@ -858,9 +869,6 @@ document.addEventListener('DOMContentLoaded', () => {
             saveQuizBtn.textContent = "Save Quiz";
         });
     };
-    // --- End Quiz Editor ---
-
-    // --- Study Guide Editor Logic ---
     let flashcardEditorId = 0;
     function createNewFlashcardEditor() {
         const cardId = flashcardEditorId++;
@@ -924,9 +932,6 @@ document.addEventListener('DOMContentLoaded', () => {
             saveStudyGuideBtn.textContent = "Save Study Guide";
         });
     };
-    // --- End Study Guide Editor ---
-    
-    // --- Study Guide Player Logic ---
     function startStudySession(studyGuide, guideId) {
         currentFlashcards = studyGuide.flashcards;
         currentFlashcardIndex = 0;
@@ -956,9 +961,6 @@ document.addEventListener('DOMContentLoaded', () => {
             displayFlashcard();
         }
     };
-    // --- End Study Player ---
-
-    // --- GIPHY Search Functions ---
     async function searchGiphy() {
         const searchTerm = giphySearchBar.value.trim();
         if (searchTerm.length < 2) return;
@@ -992,9 +994,9 @@ document.addEventListener('DOMContentLoaded', () => {
     giphySearchBar.onkeyup = (e) => {
         if (e.key === 'Enter') searchGiphy();
     };
-    // --- End GIPHY ---
+    // --- End Editor Logic ---
 
-    // --- Load/Like/Manage/Delete Content ---
+    // --- Load/Like/Manage/Delete Content (UPDATED) ---
     function loadSharedQuizzes(searchTerm = "") {
         quizList.innerHTML = '<div class="loader"></div>';
         let query = db.collection("quizzes").orderBy("likeCount", "desc");
@@ -1086,34 +1088,41 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // --- *** UPDATED: Reusable function *** ---
+    // *** UPDATED: Reusable function ***
     function loadManageList(container) {
         const user = auth.currentUser;
         if (!user) return;
-
         container.innerHTML = '<div class="loader"></div>'; 
-        
         db.collection("quizzes").where("authorUID", "==", user.uid).get().then((querySnapshot) => {
             container.innerHTML = ''; 
             if (querySnapshot.empty) {
                 container.innerHTML = '<p>You haven\'t created any content yet!</p>';
                 return;
             }
-
             querySnapshot.forEach((doc) => {
                 const content = doc.data();
                 const contentId = doc.id; 
                 const isStudyGuide = content.type === 'study';
                 const quizCard = document.createElement('div');
                 quizCard.className = 'manage-quiz-card';
-                let resultsButton = '';
+                
+                let buttonsHtml = '';
                 if (!isStudyGuide) {
-                    resultsButton = `<button class="results-quiz-btn" data-id="${contentId}" data-title="${content.title}">Results</button>`;
+                    // *** NEW: Host Game Button ***
+                    buttonsHtml += `<button class="host-game-btn" data-id="${contentId}">Host Game</button>`;
+                    buttonsHtml += `<button class="results-quiz-btn" data-id="${contentId}" data-title="${content.title}">Results</button>`;
                 }
-                quizCard.innerHTML = `<h4>${isStudyGuide ? '📚' : '❓'} ${content.title}</h4><div class="buttons-wrapper">${resultsButton}<button class="share-quiz-btn" data-id="${contentId}">Share</button><button class="delete-quiz-btn" data-id="${contentId}">Delete</button></div>`;
+                buttonsHtml += `<button class="share-quiz-btn" data-id="${contentId}">Share ID</button>`;
+                buttonsHtml += `<button class="delete-quiz-btn" data-id="${contentId}">Delete</button>`;
+                
+                quizCard.innerHTML = `<h4>${isStudyGuide ? '📚' : '❓'} ${content.title}</h4><div class="buttons-wrapper">${buttonsHtml}</div>`;
+
                 if (!isStudyGuide) {
                     quizCard.querySelector('.results-quiz-btn').onclick = (e) => {
                         showQuizResults(e.target.dataset.id, e.target.dataset.title);
+                    };
+                    quizCard.querySelector('.host-game-btn').onclick = (e) => {
+                        hostNewGame(e.target.dataset.id);
                     };
                 }
                 quizCard.querySelector('.share-quiz-btn').onclick = (e) => {
@@ -1149,31 +1158,228 @@ document.addEventListener('DOMContentLoaded', () => {
             return db.collection("quizzes").doc(quizId).delete();
         }).then(() => {
             showToast("Content deleted!", "success");
-            // Refresh the dashboard list
-            loadManageList(dashboardMyContentList);
+            loadDashboard(); // Refresh the dashboard list
         }).catch((error) => {
             console.error("Error removing content: ", error);
             showToast("Could not delete content.", "error");
         });
     }
-    // --- End Content Logic ---
+    
+    // --- *** NEW: LIVE GAME FUNCTIONS (RTDB) *** ---
+    
+    // Step 1: Host clicks "Host Game"
+    async function hostNewGame(quizId) {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        // 1. Get the quiz data from Firestore
+        const quizDoc = await db.collection("quizzes").doc(quizId).get();
+        if (!quizDoc.exists) {
+            showToast("Quiz not found.", "error");
+            return;
+        }
+        hostQuizData = quizDoc.data(); // Save quiz data for later
+        
+        // 2. Generate a unique 4-digit PIN
+        const pin = Math.floor(1000 + Math.random() * 9000).toString();
+        currentGamePin = pin;
+        
+        // 3. Create the game in Realtime Database
+        currentGameRef = rtdb.ref(`games/${pin}`);
+        await currentGameRef.set({
+            host: { uid: user.uid, name: user.displayName },
+            quizId: quizId,
+            quizTitle: hostQuizData.title,
+            gameState: "lobby", // lobby, in-game, results
+            currentQuestion: -1, // -1 = lobby, 0 = Q1, etc.
+            players: {},
+            answers: {},
+            scores: {}
+        });
+        
+        // 4. Add the host as the first player
+        await currentGameRef.child(`players/${user.uid}`).set({
+            name: user.displayName,
+            score: 0
+        });
+
+        // 5. Go to host lobby and listen for changes
+        initHostLobby(pin, hostQuizData.title);
+    }
+
+    // Step 2: Host lands in lobby
+    function initHostLobby(pin, title) {
+        showView('host-lobby');
+        hostLobbyTitle.textContent = `Hosting Quiz: ${title}`;
+        hostLobbyPin.textContent = pin;
+        
+        // Listen for new players joining
+        const playersRef = rtdb.ref(`games/${pin}/players`);
+        playersRef.on('value', (snapshot) => {
+            const players = snapshot.val() || {};
+            hostLobbyPlayers.innerHTML = '';
+            Object.values(players).forEach(player => {
+                const playerEl = document.createElement('div');
+                playerEl.className = 'player-list-item';
+                playerEl.textContent = player.name;
+                hostLobbyPlayers.appendChild(playerEl);
+            });
+        });
+        
+        // Make sure to detach listener when host leaves
+        currentGameRef.onDisconnect().remove();
+    }
+    
+    // Step 3: Player joins with PIN
+    function joinLiveGame(pin) {
+        const user = auth.currentUser;
+        if (!user) {
+            showToast("You must be logged in to join a game.", "error");
+            return;
+        }
+        
+        const gameRef = rtdb.ref(`games/${pin}`);
+        gameRef.once('value', (snapshot) => {
+            if (!snapshot.exists()) {
+                showToast("Game PIN not found.", "error");
+            } else {
+                const gameState = snapshot.val().gameState;
+                if (gameState !== 'lobby') {
+                    showToast("This game has already started.", "error");
+                    return;
+                }
+                
+                // Add player to the game
+                currentGamePin = pin;
+                gameRef.child(`players/${user.uid}`).set({
+                    name: user.displayName,
+                    score: 0
+                }).then(() => {
+                    initPlayerLobby(pin); // Go to player lobby
+                });
+            }
+        });
+    }
+    
+    // Step 4: Player lands in lobby
+    function initPlayerLobby(pin) {
+        showView('player-lobby');
+        currentGamePin = pin;
+        
+        // Listen for player list changes
+        const playersRef = rtdb.ref(`games/${pin}/players`);
+        playersRef.on('value', (snapshot) => {
+            const players = snapshot.val() || {};
+            playerLobbyPlayers.innerHTML = '';
+            Object.values(players).forEach(player => {
+                const playerEl = document.createElement('div');
+                playerEl.className = 'player-list-item';
+                playerEl.textContent = player.name;
+                playerLobbyPlayers.appendChild(playerEl);
+            });
+        });
+
+        // Listen for game state changes (Host starts game)
+        playerGameListener = rtdb.ref(`games/${pin}`);
+        playerGameListener.on('value', (snapshot) => {
+            const gameData = snapshot.val();
+            if (!gameData) {
+                // Host left, game ended
+                showToast("The host has ended the game.", "");
+                showView('home');
+                return;
+            }
+            
+            if (gameData.gameState === 'in-game') {
+                playerShowQuestion(gameData.currentQuestion);
+            } else if (gameData.gameState === 'results') {
+                // TODO: Show final results
+                showToast(`Game over! Final score: ${gameData.scores[auth.currentUser.uid]}`, "success");
+                showView('home');
+            }
+        });
+
+        // If player disconnects, remove them
+        rtdb.ref(`games/${pin}/players/${user.uid}`).onDisconnect().remove();
+    }
+
+    // Step 5: Host starts the game
+    hostStartGameBtn.onclick = () => {
+        if (!currentGameRef) return;
+        currentGameRef.update({
+            gameState: 'in-game',
+            currentQuestion: 0 // Move to the first question
+        });
+        hostShowQuestion(0);
+    };
+
+    // Step 6: Host game view
+    function hostShowQuestion(qIndex) {
+        showView('game-host');
+        gameHostLeaderboard.style.display = 'none'; // Hide leaderboard
+        gameHostNextBtn.textContent = "Show Results";
+
+        const q = hostQuizData.questions[qIndex];
+        gameHostQCount.textContent = `Q ${qIndex + 1}/${hostQuizData.questions.length}`;
+        gameHostQuestion.textContent = q.question;
+        
+        // Show answers
+        gameHostAnswers.innerHTML = '';
+        q.options.forEach((opt, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'host-answer-btn';
+            btn.dataset.index = index;
+            btn.textContent = opt;
+            if (index === q.correct_answer_index) {
+                btn.dataset.correct = "true";
+            }
+            gameHostAnswers.appendChild(btn);
+        });
+
+        // TODO: Start timer
+    }
+    
+    // TODO: hostNextBtn.onclick to show results, then next question
+
+    // Step 7: Player game view
+    function playerShowQuestion(qIndex) {
+        if (qIndex < 0) { // Still in lobby
+            showView('player-lobby');
+            return;
+        }
+        showView('game-player');
+        gamePlayerStatus.textContent = `Question ${qIndex + 1}`;
+        
+        // Reset/enable buttons
+        gamePlayerAnswers.querySelectorAll('.player-answer-btn').forEach(btn => {
+            btn.disabled = false;
+            btn.classList.remove('selected');
+        });
+    }
+
+    // Step 8: Player selects an answer
+    gamePlayerAnswers.querySelectorAll('.player-answer-btn').forEach(btn => {
+        btn.onclick = () => {
+            const answerIndex = btn.dataset.index;
+            // Disable all buttons
+            gamePlayerAnswers.querySelectorAll('.player-answer-btn').forEach(b => {
+                b.disabled = true;
+            });
+            btn.classList.add('selected'); // Highlight selected
+            gamePlayerStatus.textContent = "Answer submitted! Waiting...";
+            
+            // TODO: Submit answer to RTDB
+            // rtdb.ref(`games/${currentGamePin}/answers/${qIndex}/${auth.currentUser.uid}`).set(answerIndex);
+        };
+    });
 
 
-    // --- Initialization (UPDATED) ---
+    // --- Initialization ---
     function init() {
         // --- Sidebar Listeners ---
-        sidebarHomeBtn.onclick = (e) => {
-            e.preventDefault();
-            showView('home');
-        };
-        sidebarLibraryBtn.onclick = (e) => {
-            e.preventDefault();
-            showView('library');
-        };
-        sidebarDashboardBtn.onclick = (e) => {
-            e.preventDefault();
-            showView('dashboard');
-        };
+        sidebarHomeBtn.onclick = (e) => { e.preventDefault(); showView('home'); };
+        sidebarLibraryBtn.onclick = (e) => { e.preventDefault(); showView('library'); };
+        sidebarDashboardBtn.onclick = (e) => { e.preventDefault(); showView('dashboard'); };
 
         // --- Dark Mode Logic ---
         const theme = localStorage.getItem('theme');
@@ -1196,7 +1402,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        // Auth listener (onAuthStateChanged) handles all initial loading
+        // Auth listener handles initial view
         
         // Setup initial auth tab state
         loginTab.classList.add('active');
@@ -1211,17 +1417,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Add event listeners for the nav links
+        // Subject Nav Listeners
         document.querySelectorAll('.subject-nav a').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault(); 
                 const category = link.dataset.category;
-                
-                if (category === 'home') {
-                    showView('home');
-                } else if (category) {
-                    startApiQuiz(category, 10, 'any'); 
-                }
+                if (category === 'home') { showView('home'); } 
+                else if (category) { startApiQuiz(category, 10, 'any'); }
             });
         });
     }

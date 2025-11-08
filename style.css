@@ -304,6 +304,23 @@ main { padding: 20px 4vw; }
 .option-btn.correct { background: var(--success); color: white; border-color: var(--success); }
 .option-btn.incorrect { background: var(--error); color: white; border-color: var(--error); }
 .option-btn:disabled { cursor: not-allowed; }
+
+/* Fill in the blank styles */
+.fill-in-blank-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+#fill-answer-input {
+    flex-grow: 1;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-light);
+    color: var(--text-dark);
+    font-size: 1rem;
+}
+
 #feedback { margin-top: 15px; font-weight: 700; }
 .explanation-box {
     background: var(--primary-light);
@@ -407,6 +424,14 @@ body.dark-mode .explanation-box {
     margin-bottom: 10px;
 }
 .option-input-group input[type="text"] { flex-grow: 1; padding: 8px; }
+.fill-blank-editor input[type="text"] { 
+    width: 100%; 
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
 #editor-controls, #study-editor-controls {
     display: flex;
     justify-content: flex-end;
@@ -541,4 +566,51 @@ footer {
     margin-top: 40px;
     color: var(--secondary);
     border-top: 1px solid var(--border-color);
+}
+
+/* --- *** NEW STYLES *** --- */
+
+/* Style for the new input in the quiz editor */
+#quiz-meta-form {
+    flex-wrap: wrap; /* Allow items to wrap */
+}
+#quiz-title-input {
+    flex-basis: 400px;
+    flex-grow: 1;
+}
+#quiz-recommend-id-input {
+    flex-basis: 400px;
+    flex-grow: 1;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-light);
+    color: var(--text-dark);
+    font-family: 'Montserrat', sans-serif;
+}
+
+/* Style for the recommendation box on the results screen */
+.recommendation-box {
+    margin-top: 30px;
+    padding: 20px;
+    background: var(--primary-light);
+    border: 1px solid var(--primary);
+    border-radius: 8px;
+    text-align: center;
+}
+
+body.dark-mode .recommendation-box {
+    background: #2a3a4a;
+    border-color: var(--primary);
+}
+
+.recommendation-box h4 {
+    margin-top: 0;
+    font-size: 1.2rem;
+    color: var(--text-dark);
+}
+
+.recommendation-box p {
+    font-size: 1rem;
+    color: var(--text-dark);
 }

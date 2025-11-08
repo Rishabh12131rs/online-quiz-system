@@ -12,7 +12,6 @@ const firebaseConfig = {
 // *** NEW: PASTE YOUR GIPHY API KEY HERE ***
 const GIPHY_API_KEY = "gJ7xwNUraSP6midiKKewgrHIbdMJcsVx";
 // --- END OF GIPHY KEY ---
-
 // --- 2. INITIALIZE FIREBASE ---
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -132,6 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- App State ---
     let questions = []; // Holds API or custom quiz questions
     let currentQuizId = null; 
+    let currentQuizObject = null; // *** UPDATED ***
     let currentIndex = 0;
     let score = 0;
     let timerInterval; 
@@ -376,6 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Quiz Logic ---
     function startApiQuiz(category, count, difficulty) { 
         currentQuizId = `api_${category}_${difficulty}`; 
+        currentQuizObject = null; // API quizzes don't have recommendations
         
         mainContent.style.display = 'none';
         quizAppContainer.style.display = 'block';
@@ -427,9 +428,11 @@ document.addEventListener('DOMContentLoaded', () => {
         startApiQuiz(category, count, difficulty); 
     };
 
+    // *** UPDATED ***
     function startCustomQuiz(quizObject, quizId) {
         questions = quizObject.questions;
         currentQuizId = quizId; 
+        currentQuizObject = quizObject; // Store the whole quiz object
         
         score = 0;
         currentIndex = 0;
@@ -470,11 +473,59 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     
+    // *** UPDATED ***
     function showQuestion() {
         clearInterval(timerInterval);
         
         if (currentIndex >= questions.length) {
-            quizArea.innerHTML = `<h2>Quiz Complete!</h2><p>Your final score is: ${score} / ${questions.length}</p>`;
+            // --- QUIZ COMPLETE LOGIC ---
+            const finalScorePercent = (questions.length > 0) ? (score / questions.length) : 0;
+            let recommendationHtml = ''; // Placeholder for the recommendation box
+    
+            // Check for low score AND if this is a custom quiz that has a recommendation
+            if (finalScorePercent < 0.6 && currentQuizObject && currentQuizObject.recommendedStudyGuideId) {
+                
+                const guideId = currentQuizObject.recommendedStudyGuideId;
+                // Add a placeholder which we will fill
+                recommendationHtml = `<div class="recommendation-box" data-guide-id="${guideId}">Loading recommendation...</div>`;
+                
+                // Asynchronously fetch the study guide info
+                db.collection("quizzes").doc(guideId).get()
+                    .then(doc => {
+                        const recBox = document.querySelector(`.recommendation-box[data-guide-id="${guideId}"]`);
+                        if (recBox && doc.exists) {
+                            const studyGuideData = doc.data();
+                            const studyGuideTitle = studyGuideData.title;
+                            
+                            recBox.innerHTML = `
+                                <h4>You scored ${score}/${questions.length}.</h4>
+                                <p>We recommend reviewing this study guide before trying again:</p>
+                                <button id="recommend-btn" class="card-btn">Study: ${studyGuideTitle}</button>
+                            `;
+                            
+                            document.getElementById('recommend-btn').onclick = () => {
+                                // Close the quiz player and open the study player
+                                quizAppContainer.style.display = 'none';
+                                startStudySession(studyGuideData, guideId);
+                            };
+                        } else if (recBox) {
+                            recBox.innerHTML = '<p>Recommended study guide not found.</p>';
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error fetching recommendation:", err);
+                        const recBox = document.querySelector(`.recommendation-box[data-guide-id="${guideId}"]`);
+                        if(recBox) recBox.style.display = 'none';
+                    });
+            }
+    
+            // Display final score and recommendation
+            quizArea.innerHTML = `
+                <h2>Quiz Complete!</h2>
+                <p>Your final score is: ${score} / ${questions.length}</p>
+                ${recommendationHtml}
+            `;
+            
             quizNav.style.display = 'none';
             quizControls.style.display = 'flex'; 
             timerDisplay.style.display = 'none'; 
@@ -484,16 +535,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const uid = user ? user.uid : null;
             saveQuizAttempt(username, uid, currentQuizId, score);
             showLeaderboard();
+            
+            currentQuizObject = null; // Clear the quiz object
             return;
+            // --- END OF QUIZ COMPLETE LOGIC ---
         }
-
+    
         const q = questions[currentIndex];
         
         let imageHtml = '';
         if (q.imageUrl) {
             imageHtml = `<img src="${q.imageUrl}" alt="Quiz Image" class="quiz-question-image">`;
         }
-
+    
         let questionHtml = '';
         
         // --- NEW: Check question type ---
@@ -519,12 +573,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 return `<button class="option-btn" data-correct="${isCorrect}">${decodeHTML(opt)}</button>`;
             }).join('');
         }
-
+    
         let html = `<div class="question-block">${imageHtml}<h4>Q${currentIndex + 1}: ${decodeHTML(q.question)}</h4>`;
         html += questionHtml;
         html += '</div><br><div id="feedback"></div>';
         quizArea.innerHTML = html;
-
+    
         // Add event listeners based on type
         if (q.questionType === 'fill') {
             document.getElementById('fill-submit-btn').onclick = () => checkFillBlankAnswer();
@@ -536,7 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.onclick = () => selectAnswer(btn);
             });
         }
-
+    
         updateControls();
         startTimer();
     }
@@ -890,19 +944,23 @@ document.addEventListener('DOMContentLoaded', () => {
     
     addQuestionBtn.onclick = createNewQuestionEditor;
 
+    // *** UPDATED ***
     saveQuizBtn.onclick = () => {
         const user = auth.currentUser;
         if (!user) { 
             showToast("Your session expired. Please log in again.", "error");
             return;
         }
-
+    
         const title = quizTitleInput.value.trim();
+        // --- NEW: Get the recommended ID ---
+        const recommendId = document.getElementById('quiz-recommend-id-input').value.trim();
+    
         if (title.length < 3) {
             showToast("Please enter a quiz title (at least 3 characters).", "error");
             return;
         }
-
+    
         const questionCards = questionListContainer.querySelectorAll('.question-editor-card');
         if (questionCards.length === 0) {
             showToast("Please add at least one question.", "error");
@@ -911,17 +969,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         saveQuizBtn.disabled = true; 
         saveQuizBtn.textContent = "Saving...";
-
+    
         let newQuiz = {
             title: title,
             author: user.displayName || 'Anonymous', 
             authorUID: user.uid, 
             likeCount: 0, 
             likedBy: [],
-            type: 'quiz', // NEW: Define content type
+            type: 'quiz',
+            recommendedStudyGuideId: recommendId || null, // <-- ADD THIS LINE
             questions: []
         };
-
+    
         let allValid = true;
         
         questionCards.forEach(card => {
@@ -938,7 +997,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 imageUrl: imageUrl,
                 questionType: questionType
             };
-
+    
             if (questionType === 'mc') {
                 const optionInputs = card.querySelectorAll('.option-input-group input[type="text"]');
                 const correctInput = card.querySelector('.option-input-group input[type="radio"]:checked');
@@ -959,7 +1018,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             newQuiz.questions.push(questionData);
         });
-
+    
         if (!allValid) {
             showToast("Please fill in all questions, answers, and explanations.", "error");
             saveQuizBtn.disabled = false;

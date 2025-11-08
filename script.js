@@ -92,9 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const questionListContainer = document.getElementById('question-list-container');
     const saveQuizBtn = document.getElementById('save-quiz-btn');
     const quizTitleInput = document.getElementById('quiz-title-input');
-    // const manageQuizzesBtn = document.getElementById('manage-quizzes-btn'); // *** REMOVED - THIS CAUSED THE BUG ***
-    const manageContainer = document.getElementById('manage-container'); // This is the old modal, now just for results
-    const closeManageBtn = document.getElementById('close-manage-btn');
+    // const manageContainer = document.getElementById('manage-container'); // *** REMOVED - THIS CAUSED THE BUG ***
+    // const closeManageBtn = document.getElementById('close-manage-btn'); // *** REMOVED - THIS CAUSED THE BUG ***
     
     // --- Study Guide Editor Elements ---
     const createStudyGuideBtn = document.getElementById('create-study-guide-btn');
@@ -292,9 +291,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     studyFlashcard.onclick = () => { studyFlashcard.classList.toggle('is-flipped'); };
     
-    // *** REMOVED manageQuizzesBtn.onclick ***
+    // *** REMOVED closeManageBtn.onclick ***
     
-    closeManageBtn.onclick = () => { manageContainer.style.display = 'none'; };
     closeResultsBtn.onclick = () => { resultsContainer.style.display = 'none'; };
     closeGiphyBtn.onclick = () => {
         giphyContainer.style.display = 'none';
@@ -374,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- End Auth Logic ---
     
 
-    // --- *** FIXED: New Join Logic *** ---
+    // --- FIXED: New Join Logic ---
     joinGameBtn.onclick = () => {
         const input = gamePinInput.value.trim();
         if (input.length === 4 && /^\d{4}$/.test(input)) {
@@ -412,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentQuizId = `api_${category}_${difficulty}`; 
         currentQuizObject = null;
         showView('quiz'); 
-        quizControls.style.display = 'none';
+        quizControls.style.display = 'flex';
         quizArea.innerHTML = '<div class="loader"></div>'; 
         quizNav.style.display = 'none';
         timerDisplay.style.display = 'none';

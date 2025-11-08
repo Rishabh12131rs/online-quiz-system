@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- *** NEW: Practice Mode Functions *** ---
+    // --- *** UPDATED: Practice Mode Functions *** ---
 
     // 1. Called when a user clicks a topic in the sidebar
     async function selectTopic(topicId) {

@@ -4,6 +4,8 @@
     --primary-light: #e6f2ff;
     --bg-white: #FFFFFF;
     --bg-light: #f8f9fa;
+    --bg-green-light: #f0f9f3;
+    --bg-red-light: #fdf3f4;
     --border-color: #dee2e6;
     --text-dark: #212529;
     --text-light: #6c757d;
@@ -64,6 +66,7 @@ header {
     background: var(--primary);
     padding: 0 4vw;
     gap: 1px;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
 }
 .subject-nav a {
     color: white;
@@ -80,6 +83,53 @@ header {
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
 }
 
+/* --- Hero Welcome/Search Section --- */
+.hero-welcome {
+    background: #00c6a9; /* Examveda's green */
+    color: white;
+    padding: 40px 4vw;
+    text-align: center;
+}
+.hero-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+.hero-content h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 10px 0;
+    color: white;
+}
+.hero-content p {
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+}
+.search-box {
+    display: flex;
+    background: var(--bg-white);
+    border-radius: 30px;
+    padding: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+.search-box input {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    font-size: 1.1rem;
+    padding: 0 20px;
+    background: transparent;
+}
+.search-box button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 30px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
 /* --- Main Layout (Sidebar + Content) --- */
 .container {
     display: flex;
@@ -87,7 +137,7 @@ header {
     gap: 20px;
 }
 .sidebar {
-    flex: 0 0 250px; /* 250px wide, don't grow or shrink */
+    flex: 0 0 250px; 
     background: var(--bg-white);
     border: 1px solid var(--border-color);
     border-radius: 5px;
@@ -120,13 +170,13 @@ header {
 }
 
 .content {
-    flex-grow: 1; /* Take up remaining space */
+    flex-grow: 1; 
 }
 #content-title {
     margin-top: 0;
 }
 
-/* --- *** NEW: Practice Mode Styles *** --- */
+/* --- Practice Mode Styles --- */
 .question-container {
     background: var(--bg-white);
     border: 1px solid var(--border-color);
@@ -158,12 +208,12 @@ header {
 }
 /* Style for after an answer is revealed */
 .practice-option.correct {
-    background: var(--success-light);
+    background: var(--bg-green-light);
     border-color: var(--success);
     font-weight: 700;
 }
 .practice-option.incorrect {
-    background: var(--error-light);
+    background: var(--bg-red-light);
     border-color: var(--error);
 }
 
@@ -216,7 +266,6 @@ header {
     background: var(--text-light);
     cursor: not-allowed;
 }
-/* --- End of Practice Mode Styles --- */
 
 
 /* --- Modal Styles --- */
@@ -377,4 +426,14 @@ header {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* --- Media Queries --- */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+    .sidebar {
+        flex: 0 0 auto; /* Allow sidebar to be auto height */
+    }
 }

@@ -16,7 +16,7 @@ const GIPHY_API_KEY = "gJ7xwNUraSP6midiKKewgrHIbdMJcsVx";
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
-const rtdb = firebase.database(); // *** NEW: INITIALIZE REALTIME DATABASE ***
+const rtdb = firebase.database(); // INITIALIZE REALTIME DATABASE
 // --- END OF FIREBASE SETUP ---
 
 
@@ -30,13 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Auth Elements
     const loginTab = document.getElementById('login-tab');
-    // ... (all other auth elements) ...
-    const logoutBtn = document.getElementById('logout-btn');
-    const googleSignInBtn = document.getElementById('google-signin-btn');
-    const welcomeUser = document.getElementById('welcome-user');
-    const userDisplay = document.getElementById('user-display');
-    const loginErr = document.getElementById('login-error');
-    const signupErr = document.getElementById('signup-error');
+    const signupTab = document.getElementById('signup-tab');
     const loginForm = document.getElementById('login-form');
     const signupForm = document.getElementById('signup-form');
     const loginEmail = document.getElementById('login-email');
@@ -44,34 +38,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const signupUsername = document.getElementById('signup-username');
     const signupEmail = document.getElementById('signup-email');
     const signupPassword = document.getElementById('signup-password');
+    const loginErr = document.getElementById('login-error');
+    const signupErr = document.getElementById('signup-error');
+    const userDisplay = document.getElementById('user-display');
+    const welcomeUser = document.getElementById('welcome-user');
+    const logoutBtn = document.getElementById('logout-btn');
+    const googleSignInBtn = document.getElementById('google-signin-btn');
 
     // Forgot Password Elements
     const forgotPasswordLink = document.getElementById('forgot-password-link');
-    // ... (all other forgot password elements) ...
-    const backToLoginLink = document.getElementById('back-to-login-link');
     const forgotPasswordContainer = document.getElementById('forgot-password-container');
     const forgotPasswordForm = document.getElementById('forgot-password-form');
     const forgotEmail = document.getElementById('forgot-email');
     const forgotError = document.getElementById('forgot-error');
+    const backToLoginLink = document.getElementById('back-to-login-link');
 
-
-    // --- *** UPDATED: Join Elements *** ---
+    // --- UPDATED: Join Elements ---
     const joinGameBtn = document.getElementById('join-game-btn');
-    const gamePinInput = document.getElementById('game-pin-input');
-    const legacyQuizIdInput = document.getElementById('quiz-id-input'); // Keep the old one for solo join
+    const gamePinInput = document.getElementById('game-pin-input'); // One input for both
 
     // Quiz App (SOLO) Elements
     const playQuizBtn = document.getElementById('play-quiz-btn');
     const startQuizBtn = document.getElementById('startQuizBtn');
-    // ... (all other solo quiz elements) ...
-    const nextBtn = document.getElementById('nextBtn');
-    const questionNum = document.getElementById('questionNum');
-    const scoreLabel = document.getElementById('scoreLabel');
-    const timerDisplay = document.getElementById('timer-display');
     const quizArea = document.getElementById('quiz-area');
     const quizControls = document.getElementById('quiz-controls');
     const quizNav = document.getElementById('quiz-navigation');
     const leaderboardDiv = document.getElementById('leaderboard');
+    const nextBtn = document.getElementById('nextBtn');
+    const questionNum = document.getElementById('questionNum');
+    const scoreLabel = document.getElementById('scoreLabel');
+    const timerDisplay = document.getElementById('timer-display');
     
     // Main Page Elements
     const quizList = document.querySelector('.quiz-list'); 
@@ -91,16 +87,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Quiz Editor Elements
     const createQuizBtn = document.getElementById('create-quiz-btn');
     const editorContainer = document.getElementById('editor-container');
-    // ... (all other editor elements) ...
     const closeEditorBtn = document.getElementById('close-editor-btn');
     const addQuestionBtn = document.getElementById('add-question-btn');
     const questionListContainer = document.getElementById('question-list-container');
     const saveQuizBtn = document.getElementById('save-quiz-btn');
     const quizTitleInput = document.getElementById('quiz-title-input');
-
+    const manageContainer = document.getElementById('manage-container'); // This is the old modal, now just for results
+    const closeManageBtn = document.getElementById('close-manage-btn');
+    
     // --- Study Guide Editor Elements ---
     const createStudyGuideBtn = document.getElementById('create-study-guide-btn');
-    // ... (all other study guide editor elements) ...
     const studyEditorContainer = document.getElementById('study-editor-container');
     const closeStudyEditorBtn = document.getElementById('close-study-editor-btn');
     const studyTitleInput = document.getElementById('study-title-input');
@@ -110,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Study Player Elements ---
     const studyPlayerContainer = document.getElementById('study-player-container');
-    // ... (all other study player elements) ...
     const studyPlayerTitle = document.getElementById('study-player-title');
     const studyFlashcard = document.getElementById('study-flashcard');
     const flashcardFrontText = document.getElementById('flashcard-front-text');
@@ -119,33 +114,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const studyNextBtn = document.getElementById('study-next-btn');
     const studyCardCount = document.getElementById('study-card-count');
 
-    // Modals (Results, GIPHY, etc)
+    // Results Modal Elements
     const resultsContainer = document.getElementById('results-container');
     const closeResultsBtn = document.getElementById('close-results-btn');
     const resultsQuizTitle = document.getElementById('results-quiz-title');
     const quizResultsListContainer = document.getElementById('quiz-results-list-container');
+    
+    // GIPHY Modal Elements
     const giphyContainer = document.getElementById('giphy-container');
     const closeGiphyBtn = document.getElementById('close-giphy-btn');
     const giphySearchBar = document.getElementById('giphy-search-bar');
     const giphySearchBtn = document.getElementById('giphy-search-btn');
     const giphyResultsGrid = document.getElementById('giphy-results-grid');
-    const manageContainer = document.getElementById('manage-container'); // This is now just for showing results from dashboard
-    const closeManageBtn = document.getElementById('close-manage-btn');
     
     // Toast & Dark Mode
     const toast = document.getElementById('toast-notification');
     const darkModeToggle = document.getElementById('dark-mode-toggle');
 
-    // --- *** NEW: Live Game View Elements *** ---
+    // --- Live Game View Elements ---
     const hostLobbyView = document.getElementById('host-lobby-view');
     const hostLobbyTitle = document.getElementById('host-lobby-title');
     const hostLobbyPin = document.getElementById('host-lobby-pin');
     const hostStartGameBtn = document.getElementById('host-start-game-btn');
     const hostLobbyPlayers = document.getElementById('host-lobby-players');
-
     const playerLobbyView = document.getElementById('player-lobby-view');
     const playerLobbyPlayers = document.getElementById('player-lobby-players');
-
     const gameHostView = document.getElementById('game-host-view');
     const gameHostTimer = document.getElementById('game-host-timer');
     const gameHostQCount = document.getElementById('game-host-q-count');
@@ -154,7 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameHostAnswers = document.getElementById('game-host-answers');
     const gameHostLeaderboard = document.getElementById('game-host-leaderboard');
     const gameHostLeaderboardList = document.getElementById('game-host-leaderboard-list');
-
     const gamePlayerView = document.getElementById('game-player-view');
     const gamePlayerStatus = document.getElementById('game-player-status');
     const gamePlayerAnswers = document.getElementById('game-player-answers');
@@ -171,11 +163,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFlashcards = [];
     let currentFlashcardIndex = 0;
     
-    // --- *** NEW: Live Game State *** ---
+    // --- Live Game State ---
     let currentGamePin = null;
     let currentGameRef = null;
-    let hostQuizData = null; // The quiz object for the host
-    let playerGameListener = null; // To detach RTDB listener on leave
+    let hostQuizData = null; 
+    let playerGameListener = null;
 
     // --- Toast Notification Function ---
     function showToast(message, type = '') {
@@ -219,7 +211,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (playerGameListener) {
             playerGameListener.off(); // Detach the RTDB listener
             playerGameListener = null;
-            rtdb.ref(`games/${currentGamePin}/players/${auth.currentUser.uid}`).remove(); // Remove self from game
+            if(currentGamePin && auth.currentUser) {
+                rtdb.ref(`games/${currentGamePin}/players/${auth.currentUser.uid}`).remove(); // Remove self from game
+            }
             currentGamePin = null;
         }
         if (currentGameRef) {
@@ -303,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editorContainer.style.display = 'flex';
     };
 
-    // --- FIREBASE AUTHENTICATION LOGIC (Unchanged) ---
+    // --- FIREBASE AUTHENTICATION LOGIC ---
     loginTab.onclick = () => {
         loginTab.classList.add('active');
         signupTab.classList.remove('active');
@@ -376,27 +370,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- End Auth Logic ---
     
 
-    // --- *** NEW: Live Game Join Logic *** ---
+    // --- *** BUG FIX: New Join Logic *** ---
     joinGameBtn.onclick = () => {
-        const pin = gamePinInput.value.trim();
-        if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
-            // Check the *other* input (the solo play one)
-            const soloId = legacyQuizIdInput.value.trim();
-            if (soloId.length > 10) {
-                joinSoloContent(soloId);
-            } else {
-                showToast("Please enter a 4-digit Game PIN.", "error");
-            }
-            return;
+        const input = gamePinInput.value.trim();
+        if (input.length === 4 && /^\d{4}$/.test(input)) {
+            // This is a 4-digit game PIN
+            joinLiveGame(input);
+        } else if (input.length > 10) { 
+            // This is a long Firestore ID for solo play
+            joinSoloContent(input); 
+        } else {
+            showToast("Please enter a 4-digit Game PIN or a full Content ID.", "error");
         }
-        joinLiveGame(pin);
     };
 
-    // This is the old "Join" button logic, now in a separate function
     function joinSoloContent(contentId) {
+        gamePinInput.value = ""; // Clear input
         db.collection("quizzes").doc(contentId).get().then((doc) => {
             if (doc.exists) {
-                legacyQuizIdInput.value = ''; 
                 const content = doc.data();
                 if (content.type === 'study') {
                     startStudySession(content, doc.id);
@@ -412,7 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Solo Quiz Logic (Unchanged) ---
+    // --- Solo Quiz Logic ---
     function startApiQuiz(category, count, difficulty) { 
         currentQuizId = `api_${category}_${difficulty}`; 
         currentQuizObject = null;
@@ -468,7 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showQuestion(); 
     }
     
-    // --- Solo Quiz Player (Unchanged) ---
+    // --- Solo Quiz Player ---
     function showQuestion() {
         clearInterval(timerInterval);
         if (currentIndex >= questions.length) {
@@ -758,9 +749,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 container.innerHTML = '<p>Could not load your results.</p>';
           });
     }
-    
-    // --- Content Editor Logic (Unchanged) ---
-    // (Quiz Editor, Study Guide Editor, GIPHY, etc)
+    // --- End Results Logic ---
+
+
+    // --- Content Editor Logic ---
     let questionEditorId = 0; 
     function createNewQuestionEditor() {
         const questionId = questionEditorId++;
@@ -792,6 +784,8 @@ document.addEventListener('DOMContentLoaded', () => {
         questionListContainer.appendChild(questionCard);
     }
     addQuestionBtn.onclick = createNewQuestionEditor;
+    
+    // --- *** BUG FIX: Validation length changed from 5 to 1 *** ---
     saveQuizBtn.onclick = () => {
         const user = auth.currentUser;
         if (!user) { 
@@ -827,7 +821,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const explanation = card.querySelector('.explanation-input').value.trim();
             const imageUrl = card.dataset.imageUrl || null;
             const questionType = card.querySelector('.question-type-select').value;
-            if (questionText.length < 1 || explanation.length < 1) { // Changed to 1
+            
+            // *** BUG FIX: Changed from < 5 to < 1 ***
+            if (questionText.length < 1 || explanation.length < 1) { 
                 allValid = false;
             }
             let questionData = {
@@ -853,6 +849,7 @@ document.addEventListener('DOMContentLoaded', () => {
             newQuiz.questions.push(questionData);
         });
         if (!allValid) {
+            // *** BUG FIX: Updated error message ***
             showToast("Please fill in all questions, answers, and explanations.", "error"); 
             saveQuizBtn.disabled = false;
             saveQuizBtn.textContent = "Save Quiz";
@@ -869,6 +866,9 @@ document.addEventListener('DOMContentLoaded', () => {
             saveQuizBtn.textContent = "Save Quiz";
         });
     };
+    // --- End Quiz Editor ---
+
+    // --- Study Guide Editor Logic ---
     let flashcardEditorId = 0;
     function createNewFlashcardEditor() {
         const cardId = flashcardEditorId++;
@@ -932,6 +932,9 @@ document.addEventListener('DOMContentLoaded', () => {
             saveStudyGuideBtn.textContent = "Save Study Guide";
         });
     };
+    // --- End Study Guide Editor ---
+    
+    // --- Study Guide Player Logic ---
     function startStudySession(studyGuide, guideId) {
         currentFlashcards = studyGuide.flashcards;
         currentFlashcardIndex = 0;
@@ -961,6 +964,9 @@ document.addEventListener('DOMContentLoaded', () => {
             displayFlashcard();
         }
     };
+    // --- End Study Player ---
+
+    // --- GIPHY Search Functions ---
     async function searchGiphy() {
         const searchTerm = giphySearchBar.value.trim();
         if (searchTerm.length < 2) return;
@@ -994,9 +1000,9 @@ document.addEventListener('DOMContentLoaded', () => {
     giphySearchBar.onkeyup = (e) => {
         if (e.key === 'Enter') searchGiphy();
     };
-    // --- End Editor Logic ---
+    // --- End GIPHY ---
 
-    // --- Load/Like/Manage/Delete Content (UPDATED) ---
+    // --- Load/Like/Manage/Delete Content ---
     function loadSharedQuizzes(searchTerm = "") {
         quizList.innerHTML = '<div class="loader"></div>';
         let query = db.collection("quizzes").orderBy("likeCount", "desc");
@@ -1108,7 +1114,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 let buttonsHtml = '';
                 if (!isStudyGuide) {
-                    // *** NEW: Host Game Button ***
                     buttonsHtml += `<button class="host-game-btn" data-id="${contentId}">Host Game</button>`;
                     buttonsHtml += `<button class="results-quiz-btn" data-id="${contentId}" data-title="${content.title}">Results</button>`;
                 }
@@ -1178,7 +1183,14 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("Quiz not found.", "error");
             return;
         }
-        hostQuizData = quizDoc.data(); // Save quiz data for later
+        hostQuizData = quizDoc.data(); 
+        
+        // --- Filter for only MC questions ---
+        hostQuizData.questions = hostQuizData.questions.filter(q => q.questionType === 'mc');
+        if (hostQuizData.questions.length === 0) {
+            showToast("This quiz has no multiple-choice questions and cannot be hosted.", "error");
+            return;
+        }
         
         // 2. Generate a unique 4-digit PIN
         const pin = Math.floor(1000 + Math.random() * 9000).toString();
@@ -1190,15 +1202,17 @@ document.addEventListener('DOMContentLoaded', () => {
             host: { uid: user.uid, name: user.displayName },
             quizId: quizId,
             quizTitle: hostQuizData.title,
-            gameState: "lobby", // lobby, in-game, results
-            currentQuestion: -1, // -1 = lobby, 0 = Q1, etc.
+            gameState: "lobby", // lobby, question, results, final
+            currentQuestion: -1, 
             players: {},
-            answers: {},
             scores: {}
         });
         
-        // 4. Add the host as the first player
+        // 4. Add the host as the first player (optional, but good for testing)
         await currentGameRef.child(`players/${user.uid}`).set({
+            name: user.displayName
+        });
+        await currentGameRef.child(`scores/${user.uid}`).set({
             name: user.displayName,
             score: 0
         });
@@ -1226,8 +1240,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
         
-        // Make sure to detach listener when host leaves
-        currentGameRef.onDisconnect().remove();
+        currentGameRef.onDisconnect().remove(); // Clean up if host closes tab
     }
     
     // Step 3: Player joins with PIN
@@ -1249,14 +1262,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 
-                // Add player to the game
                 currentGamePin = pin;
-                gameRef.child(`players/${user.uid}`).set({
-                    name: user.displayName,
-                    score: 0
-                }).then(() => {
-                    initPlayerLobby(pin); // Go to player lobby
-                });
+                // Add player to players list and scores list
+                gameRef.child(`players/${user.uid}`).set({ name: user.displayName });
+                gameRef.child(`scores/${user.uid}`).set({ name: user.displayName, score: 0 });
+                
+                initPlayerLobby(pin); // Go to player lobby
             }
         });
     }
@@ -1279,51 +1290,62 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Listen for game state changes (Host starts game)
+        // Listen for game state changes
         playerGameListener = rtdb.ref(`games/${pin}`);
         playerGameListener.on('value', (snapshot) => {
             const gameData = snapshot.val();
             if (!gameData) {
-                // Host left, game ended
                 showToast("The host has ended the game.", "");
                 showView('home');
                 return;
             }
             
-            if (gameData.gameState === 'in-game') {
-                playerShowQuestion(gameData.currentQuestion);
-            } else if (gameData.gameState === 'results') {
-                // TODO: Show final results
-                showToast(`Game over! Final score: ${gameData.scores[auth.currentUser.uid]}`, "success");
-                showView('home');
+            const state = gameData.gameState;
+            const qIndex = gameData.currentQuestion;
+
+            if (state === 'question') {
+                playerShowQuestion(qIndex);
+            } else if (state === 'results') {
+                playerShowResults(gameData);
+            } else if (state === 'final') {
+                playerShowFinalResults(gameData);
             }
         });
 
-        // If player disconnects, remove them
-        rtdb.ref(`games/${pin}/players/${user.uid}`).onDisconnect().remove();
+        rtdb.ref(`games/${pin}/players/${auth.currentUser.uid}`).onDisconnect().remove();
+        rtdb.ref(`games/${pin}/scores/${auth.currentUser.uid}`).onDisconnect().remove();
     }
 
     // Step 5: Host starts the game
     hostStartGameBtn.onclick = () => {
         if (!currentGameRef) return;
-        currentGameRef.update({
-            gameState: 'in-game',
-            currentQuestion: 0 // Move to the first question
-        });
-        hostShowQuestion(0);
+        // Start with question 0
+        sendQuestion(0);
     };
 
-    // Step 6: Host game view
-    function hostShowQuestion(qIndex) {
+    // Step 6: Host sends a question
+    function sendQuestion(qIndex) {
+        if (qIndex >= hostQuizData.questions.length) {
+            // No more questions, show final results
+            hostShowFinalResults();
+            return;
+        }
+        
+        currentGameRef.update({
+            gameState: 'question',
+            currentQuestion: qIndex,
+            answers: {} // Clear answers for new question
+        });
+        
         showView('game-host');
-        gameHostLeaderboard.style.display = 'none'; // Hide leaderboard
-        gameHostNextBtn.textContent = "Show Results";
+        gameHostLeaderboard.style.display = 'none';
+        gameHostAnswers.style.display = 'grid';
+        gameHostNextBtn.style.display = 'none'; // Hide "Next" button
 
         const q = hostQuizData.questions[qIndex];
         gameHostQCount.textContent = `Q ${qIndex + 1}/${hostQuizData.questions.length}`;
         gameHostQuestion.textContent = q.question;
         
-        // Show answers
         gameHostAnswers.innerHTML = '';
         q.options.forEach((opt, index) => {
             const btn = document.createElement('button');
@@ -1335,18 +1357,88 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             gameHostAnswers.appendChild(btn);
         });
-
-        // TODO: Start timer
+        
+        // Start timer
+        let qTimeLeft = 10;
+        gameHostTimer.textContent = qTimeLeft;
+        const qTimer = setInterval(() => {
+            qTimeLeft--;
+            gameHostTimer.textContent = qTimeLeft;
+            if (qTimeLeft <= 0) {
+                clearInterval(qTimer);
+                hostShowResults();
+            }
+        }, 1000);
     }
     
-    // TODO: hostNextBtn.onclick to show results, then next question
+    // Step 7: Host shows results for the question
+    async function hostShowResults() {
+        await currentGameRef.update({ gameState: 'results' });
 
-    // Step 7: Player game view
-    function playerShowQuestion(qIndex) {
-        if (qIndex < 0) { // Still in lobby
-            showView('player-lobby');
-            return;
+        const qIndex = (await currentGameRef.child('currentQuestion').get()).val();
+        const q = hostQuizData.questions[qIndex];
+        const correctAnswerIndex = q.correct_answer_index;
+        
+        // Reveal correct answer
+        gameHostAnswers.querySelector(`[data-correct="true"]`).classList.add('correct');
+        
+        // Calculate scores
+        const answersSnapshot = await currentGameRef.child('answers').get();
+        const answers = answersSnapshot.val() || {};
+        const scoresRef = currentGameRef.child('scores');
+        const scoresSnapshot = await scoresRef.get();
+        const currentScores = scoresSnapshot.val() || {};
+        
+        for (const uid in answers) {
+            if (answers[uid].answerIndex == correctAnswerIndex) {
+                const timeTaken = answers[uid].time; // e.g., 2.5 seconds
+                const points = Math.round(1000 - (timeTaken * 100)); // Max 1000, less if slow
+                currentScores[uid].score += points;
+            }
         }
+        
+        await scoresRef.set(currentScores); // Update all scores at once
+        
+        // Show leaderboard
+        displayHostLeaderboard(currentScores);
+        gameHostLeaderboard.style.display = 'block';
+        gameHostAnswers.style.display = 'none';
+        
+        // Show "Next" button
+        gameHostNextBtn.style.display = 'block';
+        if (qIndex + 1 >= hostQuizData.questions.length) {
+            gameHostNextBtn.textContent = "Show Final Results";
+        } else {
+            gameHostNextBtn.textContent = "Next Question";
+        }
+    }
+    
+    // Host "Next" button click
+    gameHostNextBtn.onclick = async () => {
+        const qIndex = (await currentGameRef.child('currentQuestion').get()).val();
+        sendQuestion(qIndex + 1); // This will handle "final results" if it's the last question
+    };
+    
+    function displayHostLeaderboard(scores) {
+        gameHostLeaderboardList.innerHTML = '';
+        const sortedScores = Object.values(scores).sort((a, b) => b.score - a.score);
+        sortedScores.slice(0, 5).forEach((player, index) => { // Top 5
+            gameHostLeaderboardList.innerHTML += `<li>${player.name} <strong>${player.score}</strong></li>`;
+        });
+    }
+
+    function hostShowFinalResults() {
+        currentGameRef.update({ gameState: 'final' });
+        gameHostQuestion.textContent = "Game Over!";
+        gameHostAnswers.style.display = 'none';
+        gameHostNextBtn.style.display = 'none';
+        gameHostTimer.style.display = 'none';
+        gameHostLeaderboard.style.display = 'block'; // Already showing
+    }
+
+    // Step 8: Player game view
+    function playerShowQuestion(qIndex) {
+        if (qIndex < 0) return;
         showView('game-player');
         gamePlayerStatus.textContent = `Question ${qIndex + 1}`;
         
@@ -1355,24 +1447,65 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.disabled = false;
             btn.classList.remove('selected');
         });
+        
+        // Store time when question started
+        gamePlayerAnswers.dataset.startTime = new Date().getTime();
     }
 
-    // Step 8: Player selects an answer
+    // Step 9: Player selects an answer
     gamePlayerAnswers.querySelectorAll('.player-answer-btn').forEach(btn => {
         btn.onclick = () => {
             const answerIndex = btn.dataset.index;
+            const startTime = parseFloat(gamePlayerAnswers.dataset.startTime);
+            const timeTaken = (new Date().getTime() - startTime) / 1000; // Time in seconds
+            
             // Disable all buttons
             gamePlayerAnswers.querySelectorAll('.player-answer-btn').forEach(b => {
                 b.disabled = true;
             });
             btn.classList.add('selected'); // Highlight selected
-            gamePlayerStatus.textContent = "Answer submitted! Waiting...";
+            gamePlayerStatus.textContent = "Answer submitted! Waiting for results...";
             
-            // TODO: Submit answer to RTDB
-            // rtdb.ref(`games/${currentGamePin}/answers/${qIndex}/${auth.currentUser.uid}`).set(answerIndex);
+            // Submit answer to RTDB
+            rtdb.ref(`games/${currentGamePin}/answers/${auth.currentUser.uid}`).set({
+                answerIndex: answerIndex,
+                time: timeTaken
+            });
         };
     });
+    
+    // Step 10: Player sees results
+    function playerShowResults(gameData) {
+        const myUid = auth.currentUser.uid;
+        const myAnswer = gameData.answers ? gameData.answers[myUid] : null;
+        const myCurrentScore = gameData.scores[myUid].score;
+        
+        gamePlayerStatus.textContent = `Your score: ${myCurrentScore}`;
+        
+        // Show if answer was right or wrong
+        // (This requires getting quiz data, which player doesn't have... simple for now)
+        if (myAnswer) {
+             gamePlayerAnswers.querySelector(`[data-index="${myAnswer.answerIndex}"]`).classList.add('selected');
+        }
+    }
+    
+    // Step 11: Player sees final results
+    function playerShowFinalResults(gameData) {
+        const myUid = auth.currentUser.uid;
+        const myFinalScore = gameData.scores[myUid].score;
+        
+        const sortedScores = Object.values(gameData.scores).sort((a, b) => b.score - a.score);
+        const myRank = sortedScores.findIndex(p => p.name === auth.currentUser.displayName) + 1;
 
+        gamePlayerStatus.textContent = `Game Over! You finished #${myRank} with ${myFinalScore} points!`;
+        gamePlayerAnswers.style.display = 'none';
+        
+        // Detach listener after a delay
+        setTimeout(() => {
+            showView('home');
+        }, 5000);
+    }
+    
 
     // --- Initialization ---
     function init() {

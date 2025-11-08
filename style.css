@@ -70,14 +70,13 @@ header {
 .pin-auth { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;}
 .pin-label { font-size: 0.9rem; }
 .pin-input {
-    width: 60px; /* Shorter for 4-digit PIN */
+    width: 120px; /* Wider for PIN or ID */
     padding: 8px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
     background: var(--bg-light);
     color: var(--text-dark);
-    text-align: center;
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 #dark-mode-toggle { font-size: 1.5rem; background: none; padding: 0 10px; }
 #user-display { display: flex; align-items: center; gap: 10px; }
@@ -659,7 +658,7 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
     padding-right: 10px; 
 }
 
-/* --- *** NEW: Live Game Styles *** --- */
+/* --- Live Game Styles --- */
 .game-view {
     max-width: 900px;
     margin: 0 auto;
@@ -741,7 +740,6 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
     border-color: var(--success);
     box-shadow: 0 0 15px var(--success);
 }
-/* Colors for host answers */
 .host-answer-btn[data-index="0"] { background-color: #dc3545; color: white; }
 .host-answer-btn[data-index="1"] { background-color: #007bff; color: white; }
 .host-answer-btn[data-index="2"] { background-color: #ffc107; color: var(--text-dark); }

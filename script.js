@@ -22,8 +22,8 @@ const auth = firebase.auth();
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- Element References ---
-    const pageContainer = document.getElementById('page-container'); // *** NEW ***
-    const mainContent = document.getElementById('main-content'); // This is now the content area
+    const pageContainer = document.getElementById('page-container');
+    const mainContent = document.getElementById('main-content');
     const authContainer = document.getElementById('auth-container');
     const quizAppContainer = document.getElementById('quiz-app-container');
 
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Quiz App Elements
     const playQuizBtn = document.getElementById('play-quiz-btn');
-    const closeQuizBtn = document.getElementById('close-quiz-btn');
+    // const closeQuizBtn = document.getElementById('close-quiz-btn'); // *** REMOVED ***
     const startQuizBtn = document.getElementById('startQuizBtn');
     const quizArea = document.getElementById('quiz-area');
     const quizControls = document.getElementById('quiz-controls');
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeManageBtn = document.getElementById('close-manage-btn');
     const myQuizListContainer = document.getElementById('my-quiz-list-container');
     
-    // --- NEW: Study Guide Editor Elements ---
+    // --- Study Guide Editor Elements ---
     const createStudyGuideBtn = document.getElementById('create-study-guide-btn');
     const studyEditorContainer = document.getElementById('study-editor-container');
     const closeStudyEditorBtn = document.getElementById('close-study-editor-btn');
@@ -102,9 +102,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const flashcardListContainer = document.getElementById('flashcard-list-container');
     const saveStudyGuideBtn = document.getElementById('save-study-guide-btn');
     
-    // --- NEW: Study Player Elements ---
+    // --- Study Player Elements ---
     const studyPlayerContainer = document.getElementById('study-player-container');
-    const closeStudyPlayerBtn = document.getElementById('close-study-player-btn');
+    // const closeStudyPlayerBtn = document.getElementById('close-study-player-btn'); // *** REMOVED ***
     const studyPlayerTitle = document.getElementById('study-player-title');
     const studyFlashcard = document.getElementById('study-flashcard');
     const flashcardFrontText = document.getElementById('flashcard-front-text');
@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let timeLeft = 10; 
     let activeGiphyQuestionCard = null; 
     
-    // --- NEW: Study Guide State ---
+    // --- Study Guide State ---
     let currentFlashcards = [];
     let currentFlashcardIndex = 0;
 
@@ -191,6 +191,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Hide all main views
         homeView.style.display = 'none';
         libraryView.style.display = 'none';
+        quizAppContainer.style.display = 'none';
+        studyPlayerContainer.style.display = 'none';
         
         // Deactivate all sidebar links
         sidebarHomeBtn.classList.remove('active');
@@ -205,10 +207,16 @@ document.addEventListener('DOMContentLoaded', () => {
             sidebarLibraryBtn.classList.add('active');
             // Load quizzes *only* when we switch to this view
             loadSharedQuizzes(searchBar.value);
+        } else if (viewName === 'quiz') {
+            quizAppContainer.style.display = 'block';
+            // No sidebar link gets 'active' state for this
+        } else if (viewName === 'study') {
+            studyPlayerContainer.style.display = 'block';
+            // No sidebar link gets 'active' state for this
         }
     }
 
-    // --- MAIN AUTHENTICATION LISTENER (*** UPDATED ***) ---
+    // --- MAIN AUTHENTICATION LISTENER (UPDATED) ---
     auth.onAuthStateChanged(user => {
         if (user) {
             pageContainer.style.display = 'flex'; // Show the main app
@@ -228,20 +236,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Page/Modal Toggling (*** UPDATED ***) ---
+    // --- Page/Modal Toggling (UPDATED) ---
     playQuizBtn.onclick = () => {
-        // This is now a full-page modal
-        quizAppContainer.style.display = 'block';
+        showView('quiz'); // Show quiz view
         quizControls.style.display = 'flex'; 
         quizNav.style.display = 'none'; 
         quizArea.innerHTML = "Click 'Start Quiz' to begin!"; 
         showLeaderboard(); 
     };
-    closeQuizBtn.onclick = () => {
-        // Return to the main app layout
-        quizAppContainer.style.display = 'none';
-        showView('home'); // Go back to home view
-    };
+    // *** closeQuizBtn.onclick REMOVED ***
 
     createQuizBtn.onclick = () => {
         editorContainer.style.display = 'flex';
@@ -250,10 +253,9 @@ document.addEventListener('DOMContentLoaded', () => {
         editorContainer.style.display = 'none';
         questionListContainer.innerHTML = ''; 
         quizTitleInput.value = '';
-        // Don't need to load quizzes, just close the modal
     };
     
-    // --- NEW: Study Guide Editor Toggling ---
+    // --- Study Guide Editor Toggling ---
     createStudyGuideBtn.onclick = () => {
         studyEditorContainer.style.display = 'flex';
     };
@@ -263,10 +265,8 @@ document.addEventListener('DOMContentLoaded', () => {
         studyTitleInput.value = '';
     };
 
-    // --- NEW: Study Player Toggling ---
-    closeStudyPlayerBtn.onclick = () => {
-        studyPlayerContainer.style.display = 'none';
-    };
+    // --- Study Player Toggling ---
+    // *** closeStudyPlayerBtn.onclick REMOVED ***
     studyFlashcard.onclick = () => {
         studyFlashcard.classList.toggle('is-flipped');
     };
@@ -316,63 +316,43 @@ document.addEventListener('DOMContentLoaded', () => {
         loginForm.style.display = 'none';
         signupErr.textContent = '';
     };
-
     signupForm.onsubmit = e => {
         e.preventDefault();
         const username = signupUsername.value.trim();
         const email = signupEmail.value.trim();
         const password = signupPassword.value.trim();
-
         if (username.length < 3) {
             signupErr.textContent = 'Username must be at least 3 characters.';
             return;
         }
-
         auth.createUserWithEmailAndPassword(email, password)
             .then((userCredential) => {
                 const user = userCredential.user;
-                return user.updateProfile({
-                    displayName: username
-                });
+                return user.updateProfile({ displayName: username });
             })
-            .then(() => {
-                console.log("User signed up!");
-            })
-            .catch((error) => {
-                showFriendlyError(error, signupErr); 
-            });
+            .then(() => { console.log("User signed up!"); })
+            .catch((error) => { showFriendlyError(error, signupErr); });
     };
-
     loginForm.onsubmit = e => {
         e.preventDefault();
         const email = loginEmail.value.trim();
         const password = loginPassword.value.trim();
-
         auth.signInWithEmailAndPassword(email, password)
             .then((userCredential) => {
                 console.log("User logged in!");
                 loginErr.textContent = '';
             })
-            .catch((error) => {
-                showFriendlyError(error, loginErr); 
-            });
+            .catch((error) => { showFriendlyError(error, loginErr); });
     };
-    
     googleSignInBtn.onclick = () => {
         const provider = new firebase.auth.GoogleAuthProvider();
         auth.signInWithPopup(provider)
-            .then((result) => {
-                console.log("User signed in with Google!");
-            }).catch((error) => {
-                showFriendlyError(error, loginErr);
-            });
+            .then((result) => { console.log("User signed in with Google!"); })
+            .catch((error) => { showFriendlyError(error, loginErr); });
     };
-
     logoutBtn.onclick = () => {
         auth.signOut().catch(err => console.error("Sign out error", err));
     };
-
-    // Forgot Password Logic (Unchanged)
     forgotPasswordLink.onclick = () => {
         authContainer.style.display = 'none';
         forgotPasswordContainer.style.display = 'flex';
@@ -384,23 +364,21 @@ document.addEventListener('DOMContentLoaded', () => {
     forgotPasswordForm.onsubmit = (e) => {
         e.preventDefault();
         const email = forgotEmail.value.trim();
-        
         auth.sendPasswordResetEmail(email)
             .then(() => {
                 showToast("Password reset email sent!", "success");
                 backToLoginLink.click(); 
             })
-            .catch((error) => {
-                showFriendlyError(error, forgotError); 
-            });
+            .catch((error) => { showFriendlyError(error, forgotError); });
     };
+    // --- End Auth Logic ---
 
-    // --- Quiz Logic (*** UPDATED ***) ---
+    // --- Quiz Logic (UPDATED) ---
     function startApiQuiz(category, count, difficulty) { 
         currentQuizId = `api_${category}_${difficulty}`; 
         currentQuizObject = null; // API quizzes don't have recommendations
         
-        quizAppContainer.style.display = 'block'; // Show the quiz player modal
+        showView('quiz'); // *** NEW ***
         quizControls.style.display = 'none';
         quizArea.innerHTML = '<div class="loader"></div>'; 
         quizNav.style.display = 'none';
@@ -417,12 +395,11 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch(apiUrl) 
             .then(res => res.json())
             .then(data => {
-                // Convert API questions to our new format
                 questions = data.results.map(q => ({
                     question: q.question,
                     options: [...q.incorrect_answers, q.correct_answer].sort(() => Math.random() - 0.5),
-                    correct_answer: q.correct_answer, // Store the correct text
-                    questionType: 'mc', // API is always multiple choice
+                    correct_answer: q.correct_answer,
+                    questionType: 'mc',
                     explanation: 'Explanations are not available for API trivia questions.',
                     imageUrl: null
                 }));
@@ -452,19 +429,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function startCustomQuiz(quizObject, quizId) {
         questions = quizObject.questions;
         currentQuizId = quizId; 
-        currentQuizObject = quizObject; // Store the whole quiz object
+        currentQuizObject = quizObject; 
         
         score = 0;
         currentIndex = 0;
         
-        quizAppContainer.style.display = 'block'; // Show quiz player modal
+        showView('quiz'); // *** NEW ***
         quizControls.style.display = 'none'; 
         quizNav.style.display = 'flex'; 
         
         showQuestion(); 
     }
 
-    // --- Join Logic (Handles Quizzes and Study Guides) ---
+    // --- Join Logic (UPDATED) ---
     joinQuizBtn.onclick = () => {
         const contentId = quizIdInput.value.trim();
         if (contentId.length < 10) { 
@@ -477,11 +454,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 quizIdInput.value = ''; 
                 const content = doc.data();
                 if (content.type === 'study') {
-                    // It's a study guide
-                    startStudySession(content, doc.id);
+                    startStudySession(content, doc.id); // This will call showView('study')
                 } else {
-                    // It's a quiz
-                    startCustomQuiz(content, doc.id); 
+                    startCustomQuiz(content, doc.id); // This will call showView('quiz')
                 }
             } else {
                 showToast("Content ID not found in the database.", "error");
@@ -499,16 +474,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentIndex >= questions.length) {
             // --- QUIZ COMPLETE LOGIC ---
             const finalScorePercent = (questions.length > 0) ? (score / questions.length) : 0;
-            let recommendationHtml = ''; // Placeholder for the recommendation box
+            let recommendationHtml = ''; 
     
-            // Check for low score AND if this is a custom quiz that has a recommendation
             if (finalScorePercent < 0.6 && currentQuizObject && currentQuizObject.recommendedStudyGuideId) {
-                
                 const guideId = currentQuizObject.recommendedStudyGuideId;
-                // Add a placeholder which we will fill
                 recommendationHtml = `<div class="recommendation-box" data-guide-id="${guideId}">Loading recommendation...</div>`;
                 
-                // Asynchronously fetch the study guide info
                 db.collection("quizzes").doc(guideId).get()
                     .then(doc => {
                         const recBox = document.querySelector(`.recommendation-box[data-guide-id="${guideId}"]`);
@@ -523,8 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             `;
                             
                             document.getElementById('recommend-btn').onclick = () => {
-                                // Close the quiz player and open the study player
-                                quizAppContainer.style.display = 'none';
+                                // *** UPDATED: No longer a modal ***
                                 startStudySession(studyGuideData, guideId);
                             };
                         } else if (recBox) {
@@ -538,7 +508,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
             }
     
-            // Display final score and recommendation
             quizArea.innerHTML = `
                 <h2>Quiz Complete!</h2>
                 <p>Your final score is: ${score} / ${questions.length}</p>
@@ -555,13 +524,12 @@ document.addEventListener('DOMContentLoaded', () => {
             saveQuizAttempt(username, uid, currentQuizId, score);
             showLeaderboard();
             
-            currentQuizObject = null; // Clear the quiz object
+            currentQuizObject = null; 
             return;
             // --- END OF QUIZ COMPLETE LOGIC ---
         }
     
         const q = questions[currentIndex];
-        
         let imageHtml = '';
         if (q.imageUrl) {
             imageHtml = `<img src="${q.imageUrl}" alt="Quiz Image" class="quiz-question-image">`;
@@ -570,7 +538,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let questionHtml = '';
         
         if (q.questionType === 'fill') {
-            // Render Fill-in-the-Blank
             questionHtml = `
                 <div class="fill-in-blank-group">
                     <input type="text" id="fill-answer-input" placeholder="Type your answer...">
@@ -578,13 +545,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
         } else {
-            // Render Multiple Choice (default)
             let options = q.options || [];
             questionHtml = options.map(opt => {
                 let isCorrect;
-                if (q.correct_answer) { // API format
+                if (q.correct_answer) { 
                     isCorrect = decodeHTML(opt) === decodeHTML(q.correct_answer);
-                } else { // Custom quiz format
+                } else { 
                     isCorrect = decodeHTML(opt) === decodeHTML(q.options[q.correct_answer_index]);
                 }
                 return `<button class="option-btn" data-correct="${isCorrect}">${decodeHTML(opt)}</button>`;
@@ -596,7 +562,6 @@ document.addEventListener('DOMContentLoaded', () => {
         html += '</div><br><div id="feedback"></div>';
         quizArea.innerHTML = html;
     
-        // Add event listeners based on type
         if (q.questionType === 'fill') {
             document.getElementById('fill-submit-btn').onclick = () => checkFillBlankAnswer();
             document.getElementById('fill-answer-input').onkeyup = (e) => {
@@ -617,15 +582,12 @@ document.addEventListener('DOMContentLoaded', () => {
         timerDisplay.textContent = timeLeft;
         timerDisplay.className = ''; 
         timerDisplay.style.display = 'block';
-
         timerInterval = setInterval(() => {
             timeLeft--;
             timerDisplay.textContent = timeLeft;
-
             if (timeLeft <= 3) {
                 timerDisplay.className = 'low-time'; 
             }
-
             if (timeLeft <= 0) {
                 clearInterval(timerInterval);
                 handleNoAnswer();
@@ -636,41 +598,32 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleNoAnswer() {
         const q = questions[currentIndex];
         let correctAnswerText;
-        
         if (q.questionType === 'fill') {
             correctAnswerText = q.answer;
             document.getElementById('fill-submit-btn').disabled = true;
             document.getElementById('fill-answer-input').disabled = true;
         } else {
-            if (q.correct_answer) { // API
-                correctAnswerText = q.correct_answer;
-            } else { // Custom
-                correctAnswerText = q.options[q.correct_answer_index];
-            }
+            if (q.correct_answer) { correctAnswerText = q.correct_answer; } 
+            else { correctAnswerText = q.options[q.correct_answer_index]; }
             disableOptions();
             const correctButton = document.querySelector(`.option-btn[data-correct="true"]`);
             if (correctButton) correctButton.classList.add('correct');
         }
-        
         const explanationHtml = q.explanation ? `<div class="explanation-box">${q.explanation}</div>` : '';
         document.getElementById('feedback').innerHTML = `<span style="color:red;">Time's up! Correct was: ${decodeHTML(correctAnswerText)}</span>${explanationHtml}`;
     }
 
     function checkFillBlankAnswer() {
         clearInterval(timerInterval);
-        
         const input = document.getElementById('fill-answer-input');
         const submitBtn = document.getElementById('fill-submit-btn');
         input.disabled = true;
         submitBtn.disabled = true;
-        
         const q = questions[currentIndex];
         const userAnswer = input.value.trim();
         const correctAnswer = q.answer.trim();
         const explanationHtml = q.explanation ? `<div class="explanation-box">${q.explanation}</div>` : '';
         const feedbackDiv = document.getElementById('feedback');
-        
-        // Simple case-insensitive check
         if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
             feedbackDiv.innerHTML = `<span style="color:green;">Correct!</span>${explanationHtml}`;
             score++;
@@ -682,34 +635,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function selectAnswer(selectedButton) {
         clearInterval(timerInterval); 
-
         const isCorrect = selectedButton.dataset.correct === 'true';
         const feedbackDiv = document.getElementById('feedback');
         const q = questions[currentIndex];
         const explanationHtml = q.explanation ? `<div class="explanation-box">${q.explanation}</div>` : '';
-        
         disableOptions(); 
-
         if (isCorrect) {
             selectedButton.classList.add('correct'); 
             feedbackDiv.innerHTML = `<span style="color:green;">Correct!</span>${explanationHtml}`;
             score++;
         } else {
             selectedButton.classList.add('incorrect'); 
-            
             let correctAnswerText;
-            if (q.correct_answer) {
-                correctAnswerText = q.correct_answer;
-            } else {
-                correctAnswerText = q.options[q.correct_answer_index];
-            }
-
+            if (q.correct_answer) { correctAnswerText = q.correct_answer; } 
+            else { correctAnswerText = q.options[q.correct_answer_index]; }
             feedbackDiv.innerHTML = `<span style="color:red;">Wrong! Correct was: ${decodeHTML(correctAnswerText)}</span>${explanationHtml}`;
-            
             const correctButton = document.querySelector(`.option-btn[data-correct="true"]`);
             if (correctButton) correctButton.classList.add('correct');
         }
-        
         scoreLabel.textContent = 'Score: ' + score;
     }
 
@@ -741,7 +684,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- LEADERBOARD & RESULTS LOGIC (Unchanged) ---
     function saveQuizAttempt(username, uid, quizId, score) {
         if (!uid || !quizId) return; 
-        
         db.collection("quiz_attempts").add({
             username: username,
             uid: uid,
@@ -751,16 +693,12 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then(() => console.log("Quiz attempt saved!"))
         .catch(err => console.error("Error saving attempt: ", err));
-
         saveGlobalHighScore(username, uid, score);
     }
-    
     function saveGlobalHighScore(username, uid, newScore) {
         if (!uid) uid = 'anonymous_' + new Date().getTime(); 
         if (newScore === 0) return; 
-
         const userDocRef = db.collection("leaderboard").doc(uid); 
-
         userDocRef.get().then((doc) => {
             if (doc.exists) {
                 const currentScore = doc.data().score || 0;
@@ -772,14 +710,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }).catch((error) => console.error("Error saving high score: ", error));
     }
-
     function showLeaderboard() {
         leaderboardDiv.innerHTML = '<h3>Global Leaderboard</h3><div class="loader"></div>';
-        
-        db.collection("leaderboard")
-          .orderBy("score", "desc") 
-          .limit(10) 
-          .get()
+        db.collection("leaderboard").orderBy("score", "desc").limit(10).get()
           .then((querySnapshot) => {
             if (querySnapshot.empty) {
                 leaderboardDiv.innerHTML = '<h3>Global Leaderboard</h3><p>No scores yet. Play a quiz!</p>';
@@ -798,17 +731,12 @@ document.addEventListener('DOMContentLoaded', () => {
             leaderboardDiv.innerHTML = '<h3>Global Leaderboard</h3><p>Could not load scores.</p>';
           });
     }
-
     function showQuizResults(quizId, quizTitle) {
         resultsQuizTitle.textContent = `Results for: ${quizTitle}`;
         quizResultsListContainer.innerHTML = '<div class="loader"></div>';
         manageContainer.style.display = 'none'; 
         resultsContainer.style.display = 'flex'; 
-
-        db.collection("quiz_attempts")
-          .where("quizId", "==", quizId) 
-          .orderBy("score", "desc") 
-          .get()
+        db.collection("quiz_attempts").where("quizId", "==", quizId).orderBy("score", "desc").get()
           .then((querySnapshot) => {
             if (querySnapshot.empty) {
                 quizResultsListContainer.innerHTML = '<p>No one has played this quiz yet.</p>';
@@ -817,12 +745,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let html = '';
             querySnapshot.forEach((doc) => {
                 const attempt = doc.data();
-                html += `
-                    <div class="result-card">
-                        <span class="result-card-name">${attempt.username}</span>
-                        <span class="result-card-score">${attempt.score}</span>
-                    </div>
-                `;
+                html += `<div class="result-card"><span class="result-card-name">${attempt.username}</span><span class="result-card-score">${attempt.score}</span></div>`;
             });
             quizResultsListContainer.innerHTML = html;
           }).catch(err => {
@@ -830,55 +753,36 @@ document.addEventListener('DOMContentLoaded', () => {
             quizResultsListContainer.innerHTML = '<p>Could not load results.</p>';
           });
     }
-
     function loadMyResults() {
         const user = auth.currentUser;
         if (!user) return; 
         myResultsListContainer.innerHTML = '<div class="loader"></div>';
-        
-        db.collection("quiz_attempts")
-          .where("uid", "==", user.uid)
-          .orderBy("timestamp", "desc")
-          .limit(20) 
-          .get()
+        db.collection("quiz_attempts").where("uid", "==", user.uid).orderBy("timestamp", "desc").limit(20).get()
           .then(async (querySnapshot) => {
                 if (querySnapshot.empty) {
                     myResultsListContainer.innerHTML = '<p>You haven\'t played any quizzes yet.</p>';
                     return;
                 }
-                
                 let html = '';
                 const titlePromises = [];
                 const attempts = [];
-
                 querySnapshot.forEach((doc) => {
                     const attempt = doc.data();
                     attempts.push(attempt);
                     if (!attempt.quizId.startsWith('api_')) {
                         titlePromises.push(db.collection('quizzes').doc(attempt.quizId).get());
                     } else {
-                        titlePromises.push(Promise.resolve(null)); // Placeholder
+                        titlePromises.push(Promise.resolve(null));
                     }
                 });
-
                 const titleDocs = await Promise.all(titlePromises);
-                
                 attempts.forEach((attempt, index) => {
-                    let quizTitle = "API Quiz"; // Default for API quizzes
+                    let quizTitle = "API Quiz"; 
                     const titleDoc = titleDocs[index];
                     if (titleDoc && titleDoc.exists) {
                         quizTitle = titleDoc.data().title;
                     }
-
-                    html += `
-                        <div class="my-result-card">
-                            <div>
-                                <div class="my-result-card-name">${quizTitle}</div>
-                                <div class="my-result-card-title">${new Date(attempt.timestamp.toDate()).toLocaleDateString()}</div>
-                            </div>
-                            <span class="my-result-card-score">${attempt.score}</span>
-                        </div>
-                    `;
+                    html += `<div class="my-result-card"><div><div class="my-result-card-name">${quizTitle}</div><div class="my-result-card-title">${new Date(attempt.timestamp.toDate()).toLocaleDateString()}</div></div><span class="my-result-card-score">${attempt.score}</span></div>`;
                 });
                 myResultsListContainer.innerHTML = html;
           }).catch(err => {
@@ -886,8 +790,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 myResultsListContainer.innerHTML = '<p>Could not load your results.</p>';
           });
     }
+    // --- End Results Logic ---
 
-    // --- Quiz Editor Logic (With Question Types) ---
+
+    // --- Quiz Editor Logic (Unchanged) ---
     let questionEditorId = 0; 
     function createNewQuestionEditor() {
         const questionId = questionEditorId++;
@@ -895,48 +801,10 @@ document.addEventListener('DOMContentLoaded', () => {
         questionCard.className = 'question-editor-card';
         questionCard.dataset.id = questionId;
         questionCard.dataset.imageUrl = ""; 
-        
-        questionCard.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <select class="question-type-select">
-                    <option value="mc" selected>Multiple Choice</option>
-                    <option value="fill">Fill-in-the-Blank</option>
-                </select>
-                <button class="delete-question-btn">Delete Question</button>
-            </div>
-            <textarea class="question-text" placeholder="Enter your question here..."></textarea>
-            <textarea class="explanation-input" placeholder="Enter the EXPLANATION for this question..."></textarea>
-            <img class="question-gif-preview" src="" alt="GIF Preview" style="display: none;">
-            <button class="add-gif-btn">Add GIF</button>
-            
-            <div class="options-editor">
-                <div class="option-input-group">
-                    <input type="radio" name="correct-answer-${questionId}" value="0" checked>
-                    <input type="text" placeholder="Answer 1 (Correct)">
-                </div>
-                <div class="option-input-group">
-                    <input type="radio" name="correct-answer-${questionId}" value="1">
-                    <input type="text" placeholder="Answer 2">
-                </div>
-                <div class="option-input-group">
-                    <input type="radio" name="correct-answer-${questionId}" value="2">
-                    <input type="text" placeholder="Answer 3">
-                </div>
-                <div class="option-input-group">
-                    <input type="radio" name="correct-answer-${questionId}" value="3">
-                    <input type="text" placeholder="Answer 4">
-                </div>
-            </div>
-            
-            <div class="fill-blank-editor" style="display: none;">
-                <input type="text" class="fill-blank-answer" placeholder="Enter the exact correct answer">
-            </div>
-        `;
-        
+        questionCard.innerHTML = `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><select class="question-type-select"><option value="mc" selected>Multiple Choice</option><option value="fill">Fill-in-the-Blank</option></select><button class="delete-question-btn">Delete Question</button></div><textarea class="question-text" placeholder="Enter your question here..."></textarea><textarea class="explanation-input" placeholder="Enter the EXPLANATION for this question..."></textarea><img class="question-gif-preview" src="" alt="GIF Preview" style="display: none;"><button class="add-gif-btn">Add GIF</button><div class="options-editor"><div class="option-input-group"><input type="radio" name="correct-answer-${questionId}" value="0" checked><input type="text" placeholder="Answer 1 (Correct)"></div><div class="option-input-group"><input type="radio" name="correct-answer-${questionId}" value="1"><input type="text" placeholder="Answer 2"></div><div class="option-input-group"><input type="radio" name="correct-answer-${questionId}" value="2"><input type="text" placeholder="Answer 3"></div><div class="option-input-group"><input type="radio" name="correct-answer-${questionId}" value="3"><input type="text" placeholder="Answer 4"></div></div><div class="fill-blank-editor" style="display: none;"><input type="text" class="fill-blank-answer" placeholder="Enter the exact correct answer"></div>`;
         const questionTypeSelect = questionCard.querySelector('.question-type-select');
         const optionsEditor = questionCard.querySelector('.options-editor');
         const fillBlankEditor = questionCard.querySelector('.fill-blank-editor');
-
         questionTypeSelect.onchange = () => {
             if (questionTypeSelect.value === 'mc') {
                 optionsEditor.style.display = 'block';
@@ -946,7 +814,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 fillBlankEditor.style.display = 'block';
             }
         };
-
         questionCard.querySelector('.add-gif-btn').onclick = () => {
             activeGiphyQuestionCard = questionCard; 
             editorContainer.style.display = 'none';
@@ -955,37 +822,28 @@ document.addEventListener('DOMContentLoaded', () => {
         questionCard.querySelector('.delete-question-btn').onclick = () => {
             questionCard.remove();
         };
-
         questionListContainer.appendChild(questionCard);
     }
-    
     addQuestionBtn.onclick = createNewQuestionEditor;
-
-    // --- Save Quiz Logic (With Recommendation ID) ---
     saveQuizBtn.onclick = () => {
         const user = auth.currentUser;
         if (!user) { 
             showToast("Your session expired. Please log in again.", "error");
             return;
         }
-    
         const title = quizTitleInput.value.trim();
         const recommendId = document.getElementById('quiz-recommend-id-input').value.trim();
-    
         if (title.length < 3) {
             showToast("Please enter a quiz title (at least 3 characters).", "error");
             return;
         }
-    
         const questionCards = questionListContainer.querySelectorAll('.question-editor-card');
         if (questionCards.length === 0) {
             showToast("Please add at least one question.", "error");
             return;
         }
-        
         saveQuizBtn.disabled = true; 
         saveQuizBtn.textContent = "Saving...";
-    
         let newQuiz = {
             title: title,
             author: user.displayName || 'Anonymous', 
@@ -993,55 +851,48 @@ document.addEventListener('DOMContentLoaded', () => {
             likeCount: 0, 
             likedBy: [],
             type: 'quiz',
-            recommendedStudyGuideId: recommendId || null, // Save the ID
+            recommendedStudyGuideId: recommendId || null,
             questions: []
         };
-    
         let allValid = true;
-        
         questionCards.forEach(card => {
             const questionText = card.querySelector('.question-text').value.trim();
             const explanation = card.querySelector('.explanation-input').value.trim();
             const imageUrl = card.dataset.imageUrl || null;
             const questionType = card.querySelector('.question-type-select').value;
-            
-            if (questionText.length < 5 || explanation.length < 5) allValid = false;
-            
+            if (questionText.length < 5 || explanation.length < 5) {
+                // *** This is the check from your previous question ***
+                // You can change "5" to "1" if you want to allow shorter questions
+                allValid = false;
+            }
             let questionData = {
                 question: questionText,
                 explanation: explanation,
                 imageUrl: imageUrl,
                 questionType: questionType
             };
-    
             if (questionType === 'mc') {
                 const optionInputs = card.querySelectorAll('.option-input-group input[type="text"]');
                 const correctInput = card.querySelector('.option-input-group input[type="radio"]:checked');
                 const options = [];
                 optionInputs.forEach(input => options.push(input.value.trim()));
-                
                 if (options.some(opt => opt.length === 0)) allValid = false; 
                 if (!correctInput) allValid = false; 
-                
                 questionData.options = options;
                 questionData.correct_answer_index = parseInt(correctInput.value, 10);
-                
             } else if (questionType === 'fill') {
                 const answer = card.querySelector('.fill-blank-answer').value.trim();
                 if (answer.length === 0) allValid = false;
-                
                 questionData.answer = answer;
             }
             newQuiz.questions.push(questionData);
         });
-    
         if (!allValid) {
-            showToast("Please fill in all questions, answers, and explanations.", "error");
+            showToast("Please fill in all questions, answers, and explanations (min 5 chars).", "error");
             saveQuizBtn.disabled = false;
             saveQuizBtn.textContent = "Save Quiz";
             return;
         }
-        
         db.collection("quizzes").add(newQuiz).then((docRef) => {
             showToast(`Quiz "${title}" saved successfully!`, "success");
             closeEditorBtn.click(); 
@@ -1053,26 +904,22 @@ document.addEventListener('DOMContentLoaded', () => {
             saveQuizBtn.textContent = "Save Quiz";
         });
     };
+    // --- End Quiz Editor ---
 
-    // --- Study Guide Editor Logic (Unchanged) ---
+
+    // --- Study Guide Editor Logic (UPDATED) ---
     let flashcardEditorId = 0;
     function createNewFlashcardEditor() {
         const cardId = flashcardEditorId++;
         const flashcardCard = document.createElement('div');
         flashcardCard.className = 'flashcard-editor-card';
-        flashcardCard.innerHTML = `
-            <textarea class="flashcard-term" placeholder="Term (Front of card)"></textarea>
-            <textarea class="flashcard-definition" placeholder="Definition (Back of card)"></textarea>
-            <button class="delete-flashcard-btn">Delete Card</button>
-        `;
+        flashcardCard.innerHTML = `<textarea class="flashcard-term" placeholder="Term (Front of card)"></textarea><textarea class="flashcard-definition" placeholder="Definition (Back of card)"></textarea><button class="delete-flashcard-btn">Delete Card</button>`;
         flashcardCard.querySelector('.delete-flashcard-btn').onclick = () => {
             flashcardCard.remove();
         };
         flashcardListContainer.appendChild(flashcardCard);
     }
-    
     addFlashcardBtn.onclick = createNewFlashcardEditor;
-
     saveStudyGuideBtn.onclick = () => {
         const user = auth.currentUser;
         if (!user) {
@@ -1089,20 +936,17 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("Please add at least one flashcard.", "error");
             return;
         }
-        
         saveStudyGuideBtn.disabled = true;
         saveStudyGuideBtn.textContent = "Saving...";
-
         let newStudyGuide = {
             title: title,
             author: user.displayName || 'Anonymous', 
             authorUID: user.uid, 
             likeCount: 0, 
             likedBy: [],
-            type: 'study', // NEW: Define content type
+            type: 'study',
             flashcards: []
         };
-        
         let allValid = true;
         flashcardCards.forEach(card => {
             const term = card.querySelector('.flashcard-term').value.trim();
@@ -1110,14 +954,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (term.length === 0 || definition.length === 0) allValid = false;
             newStudyGuide.flashcards.push({ term, definition });
         });
-
         if (!allValid) {
             showToast("Please fill in all flashcard terms and definitions.", "error");
             saveStudyGuideBtn.disabled = false;
             saveStudyGuideBtn.textContent = "Save Study Guide";
             return;
         }
-        
         db.collection("quizzes").add(newStudyGuide).then((docRef) => {
             showToast(`Study Guide "${title}" saved successfully!`, "success");
             closeStudyEditorBtn.click();
@@ -1129,32 +971,28 @@ document.addEventListener('DOMContentLoaded', () => {
             saveStudyGuideBtn.textContent = "Save Study Guide";
         });
     };
+    // --- End Study Guide Editor ---
     
-    // --- Study Guide Player Logic (Unchanged) ---
+    // --- Study Guide Player Logic (UPDATED) ---
     function startStudySession(studyGuide, guideId) {
         currentFlashcards = studyGuide.flashcards;
         currentFlashcardIndex = 0;
         
-        studyPlayerContainer.style.display = 'flex';
+        showView('study'); // *** NEW ***
         studyPlayerTitle.textContent = studyGuide.title;
         
         displayFlashcard();
     }
-    
     function displayFlashcard() {
         if (currentFlashcards.length === 0) return;
-        
         studyFlashcard.classList.remove('is-flipped');
-        
         const card = currentFlashcards[currentFlashcardIndex];
         flashcardFrontText.textContent = card.term;
         flashcardBackText.textContent = card.definition;
-        
         studyCardCount.textContent = `${currentFlashcardIndex + 1} / ${currentFlashcards.length}`;
         studyPrevBtn.disabled = currentFlashcardIndex === 0;
         studyNextBtn.disabled = currentFlashcardIndex === currentFlashcards.length - 1;
     }
-    
     studyPrevBtn.onclick = () => {
         if (currentFlashcardIndex > 0) {
             currentFlashcardIndex--;
@@ -1167,24 +1005,23 @@ document.addEventListener('DOMContentLoaded', () => {
             displayFlashcard();
         }
     };
+    // --- End Study Player ---
+
 
     // --- GIPHY Search Functions (Unchanged) ---
     async function searchGiphy() {
         const searchTerm = giphySearchBar.value.trim();
         if (searchTerm.length < 2) return;
         giphyResultsGrid.innerHTML = '<div class="loader"></div>';
-        
         try {
             const response = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${searchTerm}&limit=12&rating=g`);
             const data = await response.json();
-            
             giphyResultsGrid.innerHTML = '';
             data.data.forEach(gif => {
                 const img = document.createElement('img');
                 img.src = gif.images.fixed_height.url;
                 img.dataset.fullUrl = gif.images.original.url;
                 img.className = 'giphy-item';
-                
                 img.onclick = () => {
                     if (activeGiphyQuestionCard) {
                         const preview = activeGiphyQuestionCard.querySelector('.question-gif-preview');
@@ -1205,53 +1042,35 @@ document.addEventListener('DOMContentLoaded', () => {
     giphySearchBar.onkeyup = (e) => {
         if (e.key === 'Enter') searchGiphy();
     };
+    // --- End GIPHY ---
 
 
-    // --- Load "Shared Quizzes" (Unchanged) ---
+    // --- Load/Like/Manage/Delete Content (Unchanged) ---
     function loadSharedQuizzes(searchTerm = "") {
         quizList.innerHTML = '<div class="loader"></div>';
-
         let query = db.collection("quizzes").orderBy("likeCount", "desc");
-        
         if (searchTerm) {
             query = query.where("title", ">=", searchTerm)
                          .where("title", "<=", searchTerm + '\uf8ff');
         }
-
         query.get().then((querySnapshot) => {
             quizList.innerHTML = ''; 
-            
             if (querySnapshot.empty) {
                 quizList.innerHTML = `<p>No content found. Be the first to create one!</p>`;
                 return;
             }
-            
             const user = auth.currentUser;
             const uid = user ? user.uid : null;
-
             querySnapshot.forEach((doc) => {
                 const content = doc.data();
                 const contentId = doc.id;
-                
                 const quizCard = document.createElement('div');
                 quizCard.className = 'quiz-card';
-                
                 const isStudyGuide = content.type === 'study';
-                
-                quizCard.innerHTML = `
-                    <div class="quiz-card-title ${isStudyGuide ? 'study' : 'quiz'}">
-                        ${isStudyGuide ? '📚' : '❓'} ${content.title}
-                    </div>
-                    <div class="quiz-card-footer">
-                        <span class="quiz-card-author">by ${content.author}</span>
-                        <button class="like-btn" data-id="${contentId}">❤️ ${content.likeCount || 0}</button>
-                    </div>
-                `;
-
+                quizCard.innerHTML = `<div class="quiz-card-title ${isStudyGuide ? 'study' : 'quiz'}">${isStudyGuide ? '📚' : '❓'} ${content.title}</div><div class="quiz-card-footer"><span class="quiz-card-author">by ${content.author}</span><button class="like-btn" data-id="${contentId}">❤️ ${content.likeCount || 0}</button></div>`;
                 if (uid && content.likedBy && content.likedBy.includes(uid)) {
                     quizCard.querySelector('.like-btn').classList.add('liked');
                 }
-
                 quizCard.querySelector('.quiz-card-title').onclick = () => {
                     if (isStudyGuide) {
                         startStudySession(content, contentId);
@@ -1259,12 +1078,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         startCustomQuiz(content, contentId); 
                     }
                 };
-
                 quizCard.querySelector('.like-btn').onclick = (e) => {
                     e.stopPropagation(); 
                     likeQuiz(contentId, e.target);
                 };
-
                 quizList.appendChild(quizCard);
             });
         }).catch(err => {
@@ -1272,28 +1089,21 @@ document.addEventListener('DOMContentLoaded', () => {
             quizList.innerHTML = '<p>Could not load content. Check console.</p>';
         });
     }
-    
-    // --- Like Quiz (Unchanged) ---
     function likeQuiz(quizId, buttonElement) {
         const user = auth.currentUser;
         if (!user) {
             showToast("You must be logged in to like content.", "error");
             return;
         }
-        
         const quizRef = db.collection("quizzes").doc(quizId);
-        
         db.runTransaction((transaction) => {
             return transaction.get(quizRef).then((doc) => {
                 if (!doc.exists) throw "Content not found!";
-                
                 const data = doc.data();
                 const likedBy = data.likedBy || [];
                 let newLikeCount = data.likeCount || 0;
                 let didLike = false; 
-
                 const userIndex = likedBy.indexOf(user.uid);
-                
                 if (userIndex > -1) {
                     newLikeCount--;
                     likedBy.splice(userIndex, 1);
@@ -1303,14 +1113,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     likedBy.push(user.uid); 
                     didLike = true;
                 }
-
                 if (newLikeCount < 0) newLikeCount = 0;
-
                 transaction.update(quizRef, { 
                     likeCount: newLikeCount,
                     likedBy: likedBy 
                 });
-                
                 return { newLikeCount, didLike };
             });
         }).then((result) => {
@@ -1329,56 +1136,38 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("Error liking content.", "error");
         });
     }
-
-    // --- Manage & Delete Logic (Unchanged) ---
     function loadManageList(user) {
         myQuizListContainer.innerHTML = '<div class="loader"></div>'; 
-        
         db.collection("quizzes").where("authorUID", "==", user.uid).get().then((querySnapshot) => {
             myQuizListContainer.innerHTML = ''; 
             if (querySnapshot.empty) {
                 myQuizListContainer.innerHTML = '<p>You haven\'t created any content yet!</p>';
                 return;
             }
-
             querySnapshot.forEach((doc) => {
                 const content = doc.data();
                 const contentId = doc.id; 
                 const isStudyGuide = content.type === 'study';
-
                 const quizCard = document.createElement('div');
                 quizCard.className = 'manage-quiz-card';
-                
                 let resultsButton = '';
                 if (!isStudyGuide) {
                     resultsButton = `<button class="results-quiz-btn" data-id="${contentId}" data-title="${content.title}">Results</button>`;
                 }
-                
-                quizCard.innerHTML = `
-                    <h4>${isStudyGuide ? '📚' : '❓'} ${content.title}</h4>
-                    <div class="buttons-wrapper">
-                        ${resultsButton}
-                        <button class="share-quiz-btn" data-id="${contentId}">Share</button>
-                        <button class="delete-quiz-btn" data-id="${contentId}">Delete</button>
-                    </div>
-                `;
-
+                quizCard.innerHTML = `<h4>${isStudyGuide ? '📚' : '❓'} ${content.title}</h4><div class="buttons-wrapper">${resultsButton}<button class="share-quiz-btn" data-id="${contentId}">Share</button><button class="delete-quiz-btn" data-id="${contentId}">Delete</button></div>`;
                 if (!isStudyGuide) {
                     quizCard.querySelector('.results-quiz-btn').onclick = (e) => {
                         showQuizResults(e.target.dataset.id, e.target.dataset.title);
                     };
                 }
-
                 quizCard.querySelector('.share-quiz-btn').onclick = (e) => {
                     navigator.clipboard.writeText(e.target.dataset.id).then(() => {
                         showToast(`Content ID copied to clipboard!`, "success");
                     });
                 };
-
                 quizCard.querySelector('.delete-quiz-btn').onclick = (e) => {
                     deleteQuiz(e.target.dataset.id, isStudyGuide);
                 };
-
                 myQuizListContainer.appendChild(quizCard);
             });
         }).catch(err => {
@@ -1386,14 +1175,11 @@ document.addEventListener('DOMContentLoaded', () => {
             myQuizListContainer.innerHTML = '<p>Could not load your content.</p>';
         });
     }
-
     function deleteQuiz(quizId, isStudyGuide) {
         if (!confirm("Are you sure you want to delete this? This cannot be undone.")) {
             return; 
         }
-        
         const deletePromises = [];
-        
         if (!isStudyGuide) {
             const attemptsPromise = db.collection("quiz_attempts").where("quizId", "==", quizId).get().then((snapshot) => {
                 const batch = db.batch();
@@ -1402,7 +1188,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             deletePromises.push(attemptsPromise);
         }
-        
         Promise.all(deletePromises).then(() => {
             return db.collection("quizzes").doc(quizId).delete();
         }).then(() => {
@@ -1413,8 +1198,10 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("Could not delete content.", "error");
         });
     }
+    // --- End Content Logic ---
 
-    // --- Initialization (*** UPDATED ***) ---
+
+    // --- Initialization (UPDATED) ---
     function init() {
         // --- Sidebar Listeners ---
         sidebarHomeBtn.onclick = (e) => {
@@ -1435,7 +1222,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.classList.remove('dark-mode');
             darkModeToggle.textContent = '🌙';
         }
-
         darkModeToggle.onclick = () => {
             if (document.body.classList.contains('dark-mode')) {
                 document.body.classList.remove('dark-mode');
@@ -1458,7 +1244,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Search Bar Event Listener (now only affects library view)
         searchBar.addEventListener('keyup', () => {
-            loadSharedQuizzes(searchBar.value.trim());
+            // Only load if the library view is active
+            if (libraryView.style.display === 'block') {
+                loadSharedQuizzes(searchBar.value.trim());
+            }
         });
 
         // Add event listeners for the nav links
@@ -1468,7 +1257,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const category = link.dataset.category;
                 
                 if (category === 'home') {
-                    // This button is now just for show, but we can keep it
                     showView('home');
                 } else if (category) {
                     startApiQuiz(category, 10, 'any'); 

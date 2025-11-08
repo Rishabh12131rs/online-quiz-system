@@ -79,7 +79,7 @@ header {
 #dark-mode-toggle { font-size: 1.5rem; background: none; padding: 0 10px; }
 #user-display { display: flex; align-items: center; gap: 10px; }
 
-/* --- *** NEW: Page Layout & Sidebar *** --- */
+/* --- *** UPDATED: Page Layout & Sidebar *** --- */
 .page-container {
     display: flex;
 }
@@ -313,20 +313,15 @@ main {
     gap: 10px;
 }
 
-/* --- Quiz Player --- */
+/* --- *** UPDATED: Quiz Player View *** --- */
 #quiz-app-container {
-    /* This is now a modal, so we style it like one */
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--bg-light);
-    z-index: 950; /* Below header, above content */
-    display: none; /* Controlled by JS */
-    padding: 20px 4vw;
-    box-sizing: border-box;
-    overflow-y: auto;
+    /* No longer a modal */
+    background: var(--bg-white);
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    padding: 20px;
+    max-width: 900px;
+    margin: 0 auto; /* Center it in the main content area */
 }
 #quiz-controls {
     display: flex;
@@ -497,7 +492,17 @@ body.dark-mode .explanation-box {
     padding-top: 20px;
 }
 
-/* --- Study Guide Player (Flashcard) --- */
+/* --- *** UPDATED: Study Guide Player View *** --- */
+#study-player-container {
+    /* No longer a modal */
+    background: var(--bg-white);
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    padding: 20px;
+    max-width: 700px;
+    margin: 0 auto; /* Center it */
+}
+
 .flashcard-player {
     perspective: 1000px;
     width: 100%;
@@ -624,9 +629,7 @@ footer {
     border-top: 1px solid var(--border-color);
 }
 
-/* --- *** UPDATED STYLES *** --- */
-
-/* Style for the new input in the quiz editor */
+/* --- Recommendation Box Styles --- */
 #quiz-meta-form {
     flex-wrap: wrap; /* Allow items to wrap */
 }
@@ -645,7 +648,6 @@ footer {
     font-family: 'Montserrat', sans-serif;
 }
 
-/* Style for the recommendation box on the results screen */
 .recommendation-box {
     margin-top: 30px;
     padding: 20px;

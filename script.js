@@ -92,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const questionListContainer = document.getElementById('question-list-container');
     const saveQuizBtn = document.getElementById('save-quiz-btn');
     const quizTitleInput = document.getElementById('quiz-title-input');
+    // const manageQuizzesBtn = document.getElementById('manage-quizzes-btn'); // *** REMOVED - THIS CAUSED THE BUG ***
     const manageContainer = document.getElementById('manage-container'); // This is the old modal, now just for results
     const closeManageBtn = document.getElementById('close-manage-btn');
     
@@ -290,6 +291,9 @@ document.addEventListener('DOMContentLoaded', () => {
         studyTitleInput.value = '';
     };
     studyFlashcard.onclick = () => { studyFlashcard.classList.toggle('is-flipped'); };
+    
+    // *** REMOVED manageQuizzesBtn.onclick ***
+    
     closeManageBtn.onclick = () => { manageContainer.style.display = 'none'; };
     closeResultsBtn.onclick = () => { resultsContainer.style.display = 'none'; };
     closeGiphyBtn.onclick = () => {
@@ -370,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- End Auth Logic ---
     
 
-    // --- *** BUG FIX: New Join Logic *** ---
+    // --- *** FIXED: New Join Logic *** ---
     joinGameBtn.onclick = () => {
         const input = gamePinInput.value.trim();
         if (input.length === 4 && /^\d{4}$/.test(input)) {
@@ -1094,7 +1098,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // *** UPDATED: Reusable function ***
     function loadManageList(container) {
         const user = auth.currentUser;
         if (!user) return;
@@ -1170,7 +1173,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // --- *** NEW: LIVE GAME FUNCTIONS (RTDB) *** ---
+    // --- LIVE GAME FUNCTIONS (RTDB) ---
     
     // Step 1: Host clicks "Host Game"
     async function hostNewGame(quizId) {
@@ -1229,7 +1232,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Listen for new players joining
         const playersRef = rtdb.ref(`games/${pin}/players`);
-        playersRef.on('value', (snapshot) => {
+        currentGameRef = playersRef.on('value', (snapshot) => { // Assign to currentGameRef to detach later
             const players = snapshot.val() || {};
             hostLobbyPlayers.innerHTML = '';
             Object.values(players).forEach(player => {
@@ -1240,7 +1243,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
         
-        currentGameRef.onDisconnect().remove(); // Clean up if host closes tab
+        rtdb.ref(`games/${pin}`).onDisconnect().remove(); // Clean up if host closes tab
     }
     
     // Step 3: Player joins with PIN
@@ -1331,7 +1334,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        currentGameRef.update({
+        rtdb.ref(`games/${currentGamePin}`).update({
             gameState: 'question',
             currentQuestion: qIndex,
             answers: {} // Clear answers for new question
@@ -1340,7 +1343,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showView('game-host');
         gameHostLeaderboard.style.display = 'none';
         gameHostAnswers.style.display = 'grid';
-        gameHostNextBtn.style.display = 'none'; // Hide "Next" button
+        gameHostNextBtn.style.display = 'none'; 
 
         const q = hostQuizData.questions[qIndex];
         gameHostQCount.textContent = `Q ${qIndex + 1}/${hostQuizData.questions.length}`;
@@ -1361,11 +1364,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Start timer
         let qTimeLeft = 10;
         gameHostTimer.textContent = qTimeLeft;
-        const qTimer = setInterval(() => {
+        timerInterval = setInterval(() => { // Use global timerInterval
             qTimeLeft--;
             gameHostTimer.textContent = qTimeLeft;
             if (qTimeLeft <= 0) {
-                clearInterval(qTimer);
+                clearInterval(timerInterval);
                 hostShowResults();
             }
         }, 1000);
@@ -1373,9 +1376,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Step 7: Host shows results for the question
     async function hostShowResults() {
-        await currentGameRef.update({ gameState: 'results' });
+        clearInterval(timerInterval); // Stop the timer
+        await rtdb.ref(`games/${currentGamePin}`).update({ gameState: 'results' });
 
-        const qIndex = (await currentGameRef.child('currentQuestion').get()).val();
+        const qIndex = (await rtdb.ref(`games/${currentGamePin}/currentQuestion`).get()).val();
         const q = hostQuizData.questions[qIndex];
         const correctAnswerIndex = q.correct_answer_index;
         
@@ -1383,9 +1387,9 @@ document.addEventListener('DOMContentLoaded', () => {
         gameHostAnswers.querySelector(`[data-correct="true"]`).classList.add('correct');
         
         // Calculate scores
-        const answersSnapshot = await currentGameRef.child('answers').get();
+        const answersSnapshot = await rtdb.ref(`games/${currentGamePin}/answers`).get();
         const answers = answersSnapshot.val() || {};
-        const scoresRef = currentGameRef.child('scores');
+        const scoresRef = rtdb.ref(`games/${currentGamePin}/scores`);
         const scoresSnapshot = await scoresRef.get();
         const currentScores = scoresSnapshot.val() || {};
         
@@ -1393,7 +1397,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (answers[uid].answerIndex == correctAnswerIndex) {
                 const timeTaken = answers[uid].time; // e.g., 2.5 seconds
                 const points = Math.round(1000 - (timeTaken * 100)); // Max 1000, less if slow
-                currentScores[uid].score += points;
+                if(currentScores[uid]) {
+                    currentScores[uid].score += points;
+                }
             }
         }
         
@@ -1415,7 +1421,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Host "Next" button click
     gameHostNextBtn.onclick = async () => {
-        const qIndex = (await currentGameRef.child('currentQuestion').get()).val();
+        const qIndex = (await rtdb.ref(`games/${currentGamePin}/currentQuestion`).get()).val();
         sendQuestion(qIndex + 1); // This will handle "final results" if it's the last question
     };
     
@@ -1428,12 +1434,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function hostShowFinalResults() {
-        currentGameRef.update({ gameState: 'final' });
+        rtdb.ref(`games/${currentGamePin}`).update({ gameState: 'final' });
         gameHostQuestion.textContent = "Game Over!";
         gameHostAnswers.style.display = 'none';
         gameHostNextBtn.style.display = 'none';
         gameHostTimer.style.display = 'none';
         gameHostLeaderboard.style.display = 'block'; // Already showing
+        
+        // Clean up game after 30 seconds
+        setTimeout(() => {
+            if (currentGameRef) {
+                rtdb.ref(`games/${currentGamePin}`).remove();
+                currentGameRef = null;
+            }
+        }, 30000);
     }
 
     // Step 8: Player game view
@@ -1441,6 +1455,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (qIndex < 0) return;
         showView('game-player');
         gamePlayerStatus.textContent = `Question ${qIndex + 1}`;
+        gamePlayerAnswers.style.display = 'grid'; // Show answers
         
         // Reset/enable buttons
         gamePlayerAnswers.querySelectorAll('.player-answer-btn').forEach(btn => {
@@ -1477,23 +1492,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // Step 10: Player sees results
     function playerShowResults(gameData) {
         const myUid = auth.currentUser.uid;
+        if (!myUid) return; // Fix for race condition
+        
         const myAnswer = gameData.answers ? gameData.answers[myUid] : null;
-        const myCurrentScore = gameData.scores[myUid].score;
+        const myCurrentScore = gameData.scores[myUid] ? gameData.scores[myUid].score : 0;
         
         gamePlayerStatus.textContent = `Your score: ${myCurrentScore}`;
         
-        // Show if answer was right or wrong
-        // (This requires getting quiz data, which player doesn't have... simple for now)
         if (myAnswer) {
              gamePlayerAnswers.querySelector(`[data-index="${myAnswer.answerIndex}"]`).classList.add('selected');
+        } else {
+             gamePlayerStatus.textContent = `Time's up! Your score: ${myCurrentScore}`;
         }
     }
     
     // Step 11: Player sees final results
     function playerShowFinalResults(gameData) {
         const myUid = auth.currentUser.uid;
-        const myFinalScore = gameData.scores[myUid].score;
+        if(!myUid || !gameData.scores[myUid]) {
+            showView('home'); // Boot out if something went wrong
+            return;
+        }
         
+        const myFinalScore = gameData.scores[myUid].score;
         const sortedScores = Object.values(gameData.scores).sort((a, b) => b.score - a.score);
         const myRank = sortedScores.findIndex(p => p.name === auth.currentUser.displayName) + 1;
 
@@ -1506,7 +1527,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 5000);
     }
     
-
     // --- Initialization ---
     function init() {
         // --- Sidebar Listeners ---

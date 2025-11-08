@@ -15,8 +15,6 @@
     --error-light: #FADBD8;
     
     --bg-gradient: linear-gradient(180deg, var(--primary-light) 0%, var(--bg-white) 70%);
-
-    /* *** NEW: Static color for dark text on light backgrounds *** */
     --text-dark-static: #1A1A1A; 
 }
 
@@ -264,14 +262,16 @@ header {
     transform: scale(1.03);
 }
 
-/* --- Search Bar & Quiz List --- */
-.search-container {
+/* --- *** NEW: Filter/Search Container *** --- */
+.filter-container {
+    display: flex;
+    gap: 20px;
     padding: 0 4vw;
     margin: 30px auto 0 auto;
     max-width: 800px;
 }
 #search-bar {
-    width: 100%;
+    flex-grow: 1;
     box-sizing: border-box; /* Important */
     padding: 16px 24px;
     font-size: 1.2rem;
@@ -283,7 +283,18 @@ header {
     box-shadow: 0 4px 15px rgba(0,0,0,0.06);
     transition: border-color 0.2s, box-shadow 0.2s;
 }
-#search-bar:focus {
+#category-filter {
+    font-size: 1.2rem;
+    padding: 16px 24px;
+    border-radius: 30px;
+    border: 2px solid var(--border-color);
+    outline: none;
+    background: var(--bg-white);
+    color: var(--text-dark);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    cursor: pointer;
+}
+#search-bar:focus, #category-filter:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 4px var(--primary-light);
 }
@@ -384,6 +395,7 @@ footer {
     .features-row { gap: 26px; }
     .hero-heading { font-size: 2.8rem; }
     .hero-subheading { font-size: 1.1rem; }
+    .filter-container { flex-direction: column; }
 }
 @media (max-width: 650px) {
     header, .features-row, .quiz-list, .subject-nav {
@@ -622,7 +634,6 @@ footer {
     text-align: center;
     font-weight: 700;
 }
-/* *** NEW: Style for nav buttons *** */
 #quiz-navigation button {
     background: var(--bg-light);
     border: 2px solid var(--border-color);
@@ -686,13 +697,13 @@ footer {
 .option-btn.correct {
     background: var(--success-light);
     border-color: var(--success);
-    color: var(--text-dark-static); /* *** FIX: Use static dark text *** */
+    color: var(--text-dark-static); /* FIX: Use static dark text */
     font-weight: 700;
 }
 .option-btn.incorrect {
     background: var(--error-light);
     border-color: var(--error);
-    color: var(--text-dark-static); /* *** FIX: Use static dark text *** */
+    color: var(--text-dark-static); /* FIX: Use static dark text */
     opacity: 0.9;
 }
 
@@ -705,15 +716,27 @@ footer {
     gap: 15px;
     margin-bottom: 20px;
     align-items: center;
+    flex-wrap: wrap; /* Allow wrapping */
 }
 #quiz-meta-form input {
     flex-grow: 1;
+    min-width: 200px; /* Ensure input doesn't get too small */
     font-size: 1.2rem;
     padding: 12px;
     border: 2px solid var(--border-color);
     border-radius: 10px;
     background: var(--bg-white);
     color: var(--text-dark);
+}
+/* *** NEW: Style for category select in editor *** */
+#quiz-meta-form select {
+    font-size: 1.2rem;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-white);
+    color: var(--text-dark);
+    cursor: pointer;
 }
 #quiz-meta-form button {
     margin-top: 0; 
@@ -745,6 +768,14 @@ footer {
     background: var(--bg-white);
     color: var(--text-dark);
 }
+/* *** NEW: Explanation Textbox Style *** */
+.explanation-editor {
+    margin-top: 10px;
+}
+.explanation-editor textarea {
+    min-height: 80px;
+}
+
 /* --- GIPHY Button & Preview --- */
 .add-gif-btn {
     background: #000;

@@ -17,7 +17,6 @@
         <div class="logo-nav">
             <img src="https://i.imgur.com/4M34hi2.png" class="quizhub-logo">
             <span class="site-title">QuizHub</span>
-            <button class="header-back-btn" id="header-back-btn" style="display: none;">&larr; Back</button>
         </div>
         <div class="pin-auth">
             <span class="pin-label">Join Game? ID:</span>
@@ -29,11 +28,7 @@
             <button class="my-results-btn" id="my-results-btn" style="display: none;">My Results</button>
 
             <div id="user-display" style="display: none;">
-                <div class="profile-icon" id="profile-icon">
-                    <span>👤</span>
-                    <div class="profile-tooltip" id="welcome-user-tooltip">
-                        </div>
-                </div>
+                <span id="welcome-user"></span>
                 <button class="sign-btn" id="logout-btn">Logout</button>
             </div>
         </div>
@@ -58,8 +53,20 @@
             </div>
         </section>
 
-        <div class="search-container">
+        <div class="filter-container">
             <input type="search" id="search-bar" placeholder="Search for quizzes by title...">
+            <select id="category-filter">
+                <option value="all">All Categories</option>
+                <option value="general_knowledge">General Knowledge</option>
+                <option value="competitive_exam">Competitive Exam</option>
+                <option value="history">History</option>
+                <option value="geography">Geography</option>
+                <option value="science">Science</option>
+                <option value="film_and_tv">Film & TV</option>
+                <option value="music">Music</option>
+                <option value="sport">Sports</option>
+                <option value="other">Other</option>
+            </select>
         </div>
         
         <h3 class="section-title">Shared Quizzes</h3>
@@ -172,6 +179,18 @@
             <h2>Quiz Editor</h2>
             <div id="quiz-meta-form">
                 <input type="text" id="quiz-title-input" placeholder="Enter Quiz Title">
+                <select id="quiz-category-select">
+                    <option value="other">Select Category</option>
+                    <option value="general_knowledge">General Knowledge</option>
+                    <option value="competitive_exam">Competitive Exam</option>
+                    <option value="history">History</option>
+                    <option value="geography">Geography</option>
+                    <option value="science">Science</option>
+                    <option value="film_and_tv">Film & TV</option>
+                    <option value="music">Music</option>
+                    <option value="sport">Sports</option>
+                    <option value="other">Other</option>
+                </select>
                 <button id="add-question-btn" class="card-btn">Add New Question</button>
             </div>
             

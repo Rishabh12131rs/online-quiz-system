@@ -25,9 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const authContainer = document.getElementById('auth-container');
     const quizAppContainer = document.getElementById('quiz-app-container');
 
-    // *** NEW: Header Back Button ***
-    const headerBackBtn = document.getElementById('header-back-btn');
-
     // Auth Elements
     const loginTab = document.getElementById('login-tab');
     const signupTab = document.getElementById('signup-tab');
@@ -41,8 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginErr = document.getElementById('login-error');
     const signupErr = document.getElementById('signup-error');
     const userDisplay = document.getElementById('user-display');
-    // *** FIX: Corrected to use the ID from your new HTML ***
-    const welcomeUserTooltip = document.getElementById('welcome-user-tooltip'); 
+    
+    // *** FIX: This element 'welcome-user' exists in your HTML ***
+    const welcomeUser = document.getElementById('welcome-user'); 
+    
     const logoutBtn = document.getElementById('logout-btn');
     const googleSignInBtn = document.getElementById('google-signin-btn');
 
@@ -89,6 +88,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const manageContainer = document.getElementById('manage-container');
     const closeManageBtn = document.getElementById('close-manage-btn');
     const myQuizListContainer = document.getElementById('my-quiz-list-container');
+    
+    // *** NEW: Editor Category ***
+    const quizCategorySelect = document.getElementById('quiz-category-select');
+    const categoryFilter = document.getElementById('category-filter');
 
     // Results Modal Elements
     const resultsContainer = document.getElementById('results-container');
@@ -158,96 +161,86 @@ document.addEventListener('DOMContentLoaded', () => {
         errorElement.textContent = message;
     }
 
-    // --- *** UPDATED: Page Navigation System *** ---
-    const allPages = [mainContent, authContainer, quizAppContainer, editorContainer, manageContainer, resultsContainer, myResultsContainer, giphyContainer, forgotPasswordContainer];
-
-    function showPage(pageToShow) {
-        allPages.forEach(page => page.style.display = 'none');
-        
-        if (pageToShow === mainContent) {
-            mainContent.style.display = 'block';
-            if (headerBackBtn) headerBackBtn.style.display = 'none'; // Hide back button
-        } else {
-            pageToShow.style.display = 'flex'; // All other pages are overlays/modals
-            if (headerBackBtn) headerBackBtn.style.display = 'block'; // Show back button
-        }
-        
-        if (pageToShow === authContainer || pageToShow === forgotPasswordContainer) {
-            if (headerBackBtn) headerBackBtn.style.display = 'none';
-        }
-    }
-
-    function goHome() {
-        showPage(mainContent);
-        loadSharedQuizzes(searchBar.value);
-    }
-    // --- End of Page Navigation System ---
-
-
     // --- MAIN AUTHENTICATION LISTENER ---
     auth.onAuthStateChanged(user => {
         if (user) {
+            mainContent.style.display = 'block'; 
+            authContainer.style.display = 'none'; 
             userDisplay.style.display = 'flex';
             myResultsBtn.style.display = 'block'; 
             
-            // *** FIX: Correctly finds and sets the tooltip text ***
-            if (welcomeUserTooltip) {
-                welcomeUserTooltip.textContent = user.displayName || 'User'; 
-            }
+            // *** FIX: This now correctly targets the 'welcome-user' span ***
+            welcomeUser.textContent = `Hello, ${user.displayName || 'User'}`; 
             
-            goHome(); // Show the main page
+            loadSharedQuizzes(); // Load quizzes
         } else {
-            showPage(authContainer); // Show the login modal
+            mainContent.style.display = 'none'; 
+            authContainer.style.display = 'flex'; 
             userDisplay.style.display = 'none';
             myResultsBtn.style.display = 'none'; 
-            if (welcomeUserTooltip) {
-                welcomeUserTooltip.textContent = ''; 
-            }
+            welcomeUser.textContent = '';
         }
     });
 
-    // --- Page/Modal Toggling (Now uses showPage) ---
+    // --- Page/Modal Toggling ---
     playQuizBtn.onclick = () => {
-        showPage(quizAppContainer);
+        mainContent.style.display = 'none';
+        quizAppContainer.style.display = 'flex'; // *** FIX: Use 'flex' for overlay ***
         quizControls.style.display = 'flex'; 
         quizNav.style.display = 'none'; 
         quizArea.innerHTML = "Click 'Start Quiz' to begin!"; 
         showLeaderboard(); 
     };
-    closeQuizBtn.onclick = goHome;
+    closeQuizBtn.onclick = () => {
+        mainContent.style.display = 'block';
+        quizAppContainer.style.display = 'none';
+        loadSharedQuizzes(searchBar.value, categoryFilter.value); 
+    };
 
-    createQuizBtn.onclick = () => showPage(editorContainer);
-    closeEditorBtn.onclick = goHome;
+    createQuizBtn.onclick = () => {
+        mainContent.style.display = 'none';
+        editorContainer.style.display = 'flex'; // *** FIX: Use 'flex' for overlay ***
+    };
+    closeEditorBtn.onclick = () => {
+        mainContent.style.display = 'block';
+        editorContainer.style.display = 'none';
+        questionListContainer.innerHTML = ''; 
+        quizTitleInput.value = '';
+        loadSharedQuizzes(searchBar.value, categoryFilter.value);
+    };
     
     manageQuizzesBtn.onclick = () => {
         const user = auth.currentUser;
         if (!user) return; 
         
-        showPage(manageContainer);
+        editorContainer.style.display = 'none'; 
+        manageContainer.style.display = 'flex'; // *** FIX: Use 'flex' for overlay ***
         loadManageList(user); 
     };
     closeManageBtn.onclick = () => {
-        showPage(editorContainer); // Go back to editor
+        editorContainer.style.display = 'flex'; // *** FIX: Go back to editor ***
+        manageContainer.style.display = 'none';
     };
 
     closeResultsBtn.onclick = () => {
-        showPage(manageContainer); // Go back to manage modal
+        manageContainer.style.display = 'flex'; 
+        resultsContainer.style.display = 'none';
     };
 
     myResultsBtn.onclick = () => {
-        showPage(myResultsContainer);
+        mainContent.style.display = 'none';
+        myResultsContainer.style.display = 'flex'; // *** FIX: Use 'flex' for overlay ***
         loadMyResults();
     };
-    closeMyResultsBtn.onclick = goHome;
+    closeMyResultsBtn.onclick = () => {
+        mainContent.style.display = 'block';
+        myResultsContainer.style.display = 'none';
+    };
     
     closeGiphyBtn.onclick = () => {
-        showPage(editorContainer); // Go back to editor
+        giphyContainer.style.display = 'none';
+        editorContainer.style.display = 'flex'; // Show editor again
     };
-
-    // *** NEW: Header Back Button Click ***
-    if (headerBackBtn) {
-        headerBackBtn.onclick = goHome;
-    }
 
     // --- FIREBASE AUTHENTICATION LOGIC ---
     loginTab.onclick = () => {
@@ -321,13 +314,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Forgot Password Logic
-    forgotPasswordLink.onclick = (e) => {
-        e.preventDefault();
-        showPage(forgotPasswordContainer);
+    forgotPasswordLink.onclick = () => {
+        authContainer.style.display = 'none';
+        forgotPasswordContainer.style.display = 'flex'; // *** FIX: Use 'flex' for overlay ***
     };
-    backToLoginLink.onclick = (e) => {
-        e.preventDefault();
-        showPage(authContainer);
+    backToLoginLink.onclick = () => {
+        authContainer.style.display = 'flex'; // *** FIX: Use 'flex' for overlay ***
+        forgotPasswordContainer.style.display = 'none';
     };
     forgotPasswordForm.onsubmit = (e) => {
         e.preventDefault();
@@ -336,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
         auth.sendPasswordResetEmail(email)
             .then(() => {
                 showToast("Password reset email sent!", "success");
-                showPage(authContainer); // Go back to login
+                backToLoginLink.click(); 
             })
             .catch((error) => {
                 showFriendlyError(error, forgotError); 
@@ -348,7 +341,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function startApiQuiz(category, count, difficulty) { 
         currentQuizId = `api_${category}_${difficulty}`; 
         
-        showPage(quizAppContainer); 
+        mainContent.style.display = 'none';
+        quizAppContainer.style.display = 'flex'; // *** FIX: Use 'flex' for overlay ***
 
         quizControls.style.display = 'none';
         quizArea.innerHTML = '<div class="loader"></div>'; 
@@ -359,6 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentIndex = 0;
 
         // --- NEW API URL (FOR INDIA) ---
+        // This API (the-trivia-api.com) allows filtering by region
         let apiUrl = `https://the-trivia-api.com/v2/questions?limit=${count}&region=IN&categories=${category}`;
         if (difficulty && difficulty !== "any") {
             apiUrl += `&difficulties=${difficulty}`;
@@ -370,14 +365,11 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(data => {
                 // *** NEW: Handle new data format ***
                 questions = data.map(q => {
-                    // Combine answers and identify the correct one
                     const options = [...q.incorrectAnswers, q.correctAnswer];
-                    // Shuffle the combined options
                     options.sort(() => Math.random() - 0.5); 
                     
                     return {
-                        // FIX: The question is nested inside a 'text' property
-                        question: q.question.text, 
+                        question: q.question.text, // The question is nested
                         correct_answer: q.correctAnswer, // Store the correct answer string
                         options: options // Store the shuffled options
                     };
@@ -413,7 +405,8 @@ document.addEventListener('DOMContentLoaded', () => {
         score = 0;
         currentIndex = 0;
         
-        showPage(quizAppContainer);
+        mainContent.style.display = 'none';
+        quizAppContainer.style.display = 'flex'; // *** FIX: Use 'flex' for overlay ***
         quizControls.style.display = 'none'; 
         quizNav.style.display = 'grid'; // Use grid
         
@@ -516,7 +509,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const q = questions[currentIndex];
                 // *** FIX: Handle all quiz formats for correct answer ***
-                let correctAnswerText = q.correct_answer || q.options[q.correct_answer_index];
+                let correctAnswerText = q.correct_answer || (q.options ? q.options[q.correct_answer_index] : 'Error');
 
                 document.getElementById('feedback').innerHTML = `<span style="color:red;">Time's up! Correct was: ${decodeHTML(correctAnswerText)}</span>`;
                 disableOptions();
@@ -546,7 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const q = questions[currentIndex];
             // *** FIX: Handle all quiz formats for correct answer ***
-            let correctAnswerText = q.correct_answer || q.options[q.correct_answer_index];
+            let correctAnswerText = q.correct_answer || (q.options ? q.options[q.correct_answer_index] : 'Error');
 
             feedbackDiv.innerHTML = `<span style="color:red;">Wrong! Correct was: ${decodeHTML(correctAnswerText)}</span>`;
             
@@ -581,6 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // prevBtn.onclick removed
 
     function decodeHTML(html) {
+        if (!html) return '';
         const txt = document.createElement('textarea');
         txt.innerHTML = html;
         return txt.value;
@@ -651,8 +645,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function showQuizResults(quizId, quizTitle) {
         resultsQuizTitle.textContent = `Results for: ${quizTitle}`;
         quizResultsListContainer.innerHTML = '<div class="loader"></div>';
-        showPage(resultsContainer); // Show results modal
-    
+        manageContainer.style.display = 'none'; 
+        resultsContainer.style.display = 'flex'; 
+
         db.collection("quiz_attempts")
           .where("quizId", "==", quizId) 
           .orderBy("score", "desc") 
@@ -785,7 +780,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         questionCard.querySelector('.add-gif-btn').onclick = () => {
             activeGiphyQuestionCard = questionCard; 
-            showPage(giphyContainer);
+            editorContainer.style.display = 'none';
+            giphyContainer.style.display = 'flex';
             giphyResultsGrid.innerHTML = '';
             giphySearchBar.value = '';
         };
@@ -822,7 +818,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         preview.style.display = 'block';
                         activeGiphyQuestionCard.dataset.imageUrl = img.dataset.fullUrl; // Store the URL
                     }
-                    showPage(editorContainer); // Go back to editor
+                    editorContainer.style.display = 'flex'; // Go back to editor
+                    giphyContainer.style.display = 'none';
                 };
                 
                 giphyResultsGrid.appendChild(img);
@@ -906,7 +903,7 @@ document.addEventListener('DOMContentLoaded', () => {
         db.collection("quizzes").add(newQuiz).then((docRef) => {
             showToast(`Quiz "${title}" saved successfully!`, "success");
             console.log("Quiz saved with ID: ", docRef.id);
-            goHome(); 
+            closeEditorBtn.click(); 
         }).catch((error) => {
             console.error("Error adding document: ", error);
             showToast("Error saving quiz. Check the console.", "error");
@@ -1166,7 +1163,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const category = link.dataset.category;
                 
                 if (category === 'home') {
-                    goHome();
+                    // *** REVERTED this logic back ***
+                    if (mainContent.style.display === 'none') {
+                        mainContent.style.display = 'block';
+                        quizAppContainer.style.display = 'none';
+                        editorContainer.style.display = 'none';
+                        manageContainer.style.display = 'none';
+                        resultsContainer.style.display = 'none';
+                        myResultsContainer.style.display = 'none';
+                        loadSharedQuizzes(searchBar.value);
+                    }
                 } else if (category) {
                     startApiQuiz(category, 10, 'any'); 
                 }

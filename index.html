@@ -17,6 +17,7 @@
         <div class="logo-nav">
             <img src="https://i.imgur.com/4M34hi2.png" class="quizhub-logo">
             <span class="site-title">QuizHub</span>
+            <button class="header-back-btn" id="header-back-btn" style="display: none;">&larr; Back</button>
         </div>
         <div class="pin-auth">
             <span class="pin-label">Join Game? ID:</span>
@@ -28,7 +29,11 @@
             <button class="my-results-btn" id="my-results-btn" style="display: none;">My Results</button>
 
             <div id="user-display" style="display: none;">
-                <span id="welcome-user"></span>
+                <div class="profile-icon" id="profile-icon">
+                    <span>👤</span>
+                    <div class="profile-tooltip" id="welcome-user-tooltip">
+                        </div>
+                </div>
                 <button class="sign-btn" id="logout-btn">Logout</button>
             </div>
         </div>
@@ -63,14 +68,14 @@
 
         <nav class="subject-nav">
             <a href="#" data-category="home"><span class="nav-icon">🏠</span><div>Start</div></a>
-            <a href="#" data-category="25"><span class="nav-icon">🎨</span><div>Art</div></a>
-            <a href="#" data-category="11"><span class="nav-icon">⭐</span><div>Entertainment</div></a>
-            <a href="#" data-category="22"><span class="nav-icon">🌍</span><div>Geography</div></a>
-            <a href="#" data-category="23"><span class="nav-icon">🏛️</span><div>History</div></a>
-            <a href="#" data-category="9"><span class="nav-icon">💬</span><div>Languages</div></a> 
-            <a href="#" data-category="17"><span class="nav-icon">🧬</span><div>Science</div></a>
-            <a href="#" data-category="21"><span class="nav-icon">🏀</span><div>Sports</div></a>
-            <a href="#" data-category="9"><span class="nav-icon">❓</span><div>Trivia</div></a> 
+            <a href="#" data-category="arts_and_literature"><span class="nav-icon">🎨</span><div>Art</div></a>
+            <a href="#" data-category="film_and_tv"><span class="nav-icon">⭐</span><div>Entertainment</div></a>
+            <a href="#" data-category="geography"><span class="nav-icon">🌍</span><div>Geography</div></a>
+            <a href="#" data-category="history"><span class="nav-icon">🏛️</span><div>History</div></a>
+            <a href="#" data-category="language"><span class="nav-icon">💬</span><div>Languages</div></a> 
+            <a href="#" data-category="science"><span class="nav-icon">🧬</span><div>Science</div></a>
+            <a href="#" data-category="sport_and_leisure"><span class="nav-icon">🏀</span><div>Sports</div></a>
+            <a href="#" data-category="general_knowledge"><span class="nav-icon">❓</span><div>Trivia</div></a> 
         </nav>
     </main>
 
@@ -116,44 +121,49 @@
         </div>
     </div>
 
-    <div id="quiz-app-container" style="display: none;">
-        <button id="close-quiz-btn" class="close-btn">X Back to Home</button>
-        <div id="quiz-controls">
-            <select id="quiz-category">
-                <option value="9">General Knowledge</option>
-                <option value="11">Film</option>
-                <option value="12">Music</option>
-                <option value="17">Science & Nature</option>
-                <option value="21">Sports</option>
-                <option value="23">History</option>
-            </select>
-            
-            <select id="quiz-difficulty">
-                <option value="any">Any Difficulty</option>
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-            </select>
+    <div id="quiz-app-container" class="modal-overlay" style="display: none;">
+        <div class="modal-content" id="quiz-modal-content">
+            <button id="close-quiz-btn" class="close-btn">X</button>
+            <div id="quiz-controls">
+                <select id="quiz-category">
+                    <option value="general_knowledge">General Knowledge</option>
+                    <option value="film_and_tv">Film & TV</option>
+                    <option value="music">Music</option>
+                    <option value="science">Science</option>
+                    <option value="sport_and_leisure">Sports</option>
+                    <option value="history">History</option>
+                    <option value="geography">Geography</option>
+                    <option value="arts_and_literature">Art & Literature</option>
+                    <option value="language">Language</option>
+                </select>
+                
+                <select id="quiz-difficulty">
+                    <option value="any">Any Difficulty</option>
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
 
-            <select id="quiz-count">
-                <option value="5">5 Questions</option>
-                <option value="10">10 Questions</option>
-                <option value="15">15 Questions</option>
-            </select>
-            <button id="startQuizBtn">Start Quiz</button>
+                <select id="quiz-count">
+                    <option value="5">5 Questions</option>
+                    <option value="10">10 Questions</option>
+                    <option value="15">15 Questions</option>
+                </select>
+                <button id="startQuizBtn">Start Quiz</button>
+            </div>
+
+            <div id="quiz-area">Click 'Start Quiz' to begin!</div>
+
+            <div id="timer-display" style="display: none;">10</div>
+
+            <div id="quiz-navigation" style="display: none;">
+                <span></span> <span id="questionNum">Q1</span>
+                <button id="nextBtn">Next</button>
+                <span id="scoreLabel">Score: 0</span>
+            </div>
+
+            <div id="leaderboard"></div>
         </div>
-
-        <div id="quiz-area">Click 'Start Quiz' to begin!</div>
-
-        <div id="timer-display" style="display: none;">10</div>
-
-        <div id="quiz-navigation" style="display: none;">
-            <span></span> <span id="questionNum">Q1</span>
-            <button id="nextBtn">Next</button>
-            <span id="scoreLabel">Score: 0</span>
-        </div>
-
-        <div id="leaderboard"></div>
     </div>
 
     <div id="editor-container" class="modal-overlay" style="display: none;">
@@ -166,7 +176,7 @@
             </div>
             
             <div id="question-list-container">
-                </div>
+            </div>
 
             <div id="editor-controls">
                 <button id="save-quiz-btn" class="sign-btn">Save Quiz</button>
@@ -176,12 +186,12 @@
     </div>
 
     <div id="manage-container" class="modal-overlay" style="display: none;">
-        <div class="modal-content" id="manage-modal-content">
+        <div class_content" id="manage-modal-content">
             <button id="close-manage-btn" class="close-btn">X</button>
             <h2>Manage My Quizzes</h2>
             
             <div id="my-quiz-list-container">
-                </div>
+            </div>
         </div>
     </div>
 
@@ -191,7 +201,7 @@
             <h2 id="results-quiz-title">Quiz Results</h2>
             
             <div id="quiz-results-list-container">
-                </div>
+            </div>
         </div>
     </div>
 
@@ -201,7 +211,7 @@
             <h2>My Past Results</h2>
             
             <div id="my-results-list-container">
-                </div>
+            </div>
         </div>
     </div>
 
@@ -214,7 +224,7 @@
                 <button id="giphy-search-btn">Search</button>
             </div>
             <div id="giphy-results-grid">
-                </div>
+            </div>
         </div>
     </div>
 

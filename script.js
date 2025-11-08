@@ -22,7 +22,8 @@ const auth = firebase.auth();
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- Element References ---
-    const mainContent = document.getElementById('main-content');
+    const pageContainer = document.getElementById('page-container'); // *** NEW ***
+    const mainContent = document.getElementById('main-content'); // This is now the content area
     const authContainer = document.getElementById('auth-container');
     const quizAppContainer = document.getElementById('quiz-app-container');
 
@@ -72,6 +73,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const quizList = document.querySelector('.quiz-list'); 
     const searchBar = document.getElementById('search-bar'); 
     const myResultsBtn = document.getElementById('my-results-btn');
+
+    // --- *** NEW: Sidebar and View Elements *** ---
+    const sidebarHomeBtn = document.getElementById('sidebar-home-btn');
+    const sidebarLibraryBtn = document.getElementById('sidebar-library-btn');
+    const homeView = document.getElementById('home-view');
+    const libraryView = document.getElementById('library-view');
 
     // Quiz Editor Elements
     const createQuizBtn = document.getElementById('create-quiz-btn');
@@ -129,9 +136,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const darkModeToggle = document.getElementById('dark-mode-toggle');
 
     // --- App State ---
-    let questions = []; // Holds API or custom quiz questions
+    let questions = []; 
     let currentQuizId = null; 
-    let currentQuizObject = null; // *** UPDATED ***
+    let currentQuizObject = null; 
     let currentIndex = 0;
     let score = 0;
     let timerInterval; 
@@ -179,27 +186,51 @@ document.addEventListener('DOMContentLoaded', () => {
         errorElement.textContent = message;
     }
 
-    // --- MAIN AUTHENTICATION LISTENER ---
+    // --- *** NEW: View Switching Logic *** ---
+    function showView(viewName) {
+        // Hide all main views
+        homeView.style.display = 'none';
+        libraryView.style.display = 'none';
+        
+        // Deactivate all sidebar links
+        sidebarHomeBtn.classList.remove('active');
+        sidebarLibraryBtn.classList.remove('active');
+
+        // Show the requested view
+        if (viewName === 'home') {
+            homeView.style.display = 'block';
+            sidebarHomeBtn.classList.add('active');
+        } else if (viewName === 'library') {
+            libraryView.style.display = 'block';
+            sidebarLibraryBtn.classList.add('active');
+            // Load quizzes *only* when we switch to this view
+            loadSharedQuizzes(searchBar.value);
+        }
+    }
+
+    // --- MAIN AUTHENTICATION LISTENER (*** UPDATED ***) ---
     auth.onAuthStateChanged(user => {
         if (user) {
-            mainContent.style.display = 'block'; 
-            authContainer.style.display = 'none'; 
+            pageContainer.style.display = 'flex'; // Show the main app
+            authContainer.style.display = 'none'; // Hide the login form
             userDisplay.style.display = 'flex';
-            myResultsBtn.style.display = 'block'; // Show "My Results"
+            myResultsBtn.style.display = 'block'; 
             welcomeUser.textContent = `Hello, ${user.displayName || 'User'}`; 
-            loadSharedQuizzes(); // Load quizzes
+            
+            // Default to home view on login
+            showView('home'); 
         } else {
-            mainContent.style.display = 'none'; 
-            authContainer.style.display = 'flex'; 
+            pageContainer.style.display = 'none'; // Hide the main app
+            authContainer.style.display = 'flex'; // Show the login form
             userDisplay.style.display = 'none';
-            myResultsBtn.style.display = 'none'; // Hide "My Results"
+            myResultsBtn.style.display = 'none'; 
             welcomeUser.textContent = '';
         }
     });
 
-    // --- Page/Modal Toggling ---
+    // --- Page/Modal Toggling (*** UPDATED ***) ---
     playQuizBtn.onclick = () => {
-        mainContent.style.display = 'none';
+        // This is now a full-page modal
         quizAppContainer.style.display = 'block';
         quizControls.style.display = 'flex'; 
         quizNav.style.display = 'none'; 
@@ -207,30 +238,26 @@ document.addEventListener('DOMContentLoaded', () => {
         showLeaderboard(); 
     };
     closeQuizBtn.onclick = () => {
-        mainContent.style.display = 'block';
+        // Return to the main app layout
         quizAppContainer.style.display = 'none';
-        loadSharedQuizzes(searchBar.value); 
+        showView('home'); // Go back to home view
     };
 
     createQuizBtn.onclick = () => {
-        mainContent.style.display = 'none';
         editorContainer.style.display = 'flex';
     };
     closeEditorBtn.onclick = () => {
-        mainContent.style.display = 'block';
         editorContainer.style.display = 'none';
         questionListContainer.innerHTML = ''; 
         quizTitleInput.value = '';
-        loadSharedQuizzes(searchBar.value);
+        // Don't need to load quizzes, just close the modal
     };
     
     // --- NEW: Study Guide Editor Toggling ---
     createStudyGuideBtn.onclick = () => {
-        mainContent.style.display = 'none';
         studyEditorContainer.style.display = 'flex';
     };
     closeStudyEditorBtn.onclick = () => {
-        mainContent.style.display = 'block';
         studyEditorContainer.style.display = 'none';
         flashcardListContainer.innerHTML = '';
         studyTitleInput.value = '';
@@ -238,7 +265,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- NEW: Study Player Toggling ---
     closeStudyPlayerBtn.onclick = () => {
-        mainContent.style.display = 'block';
         studyPlayerContainer.style.display = 'none';
     };
     studyFlashcard.onclick = () => {
@@ -249,28 +275,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const user = auth.currentUser;
         if (!user) return; 
         
-        editorContainer.style.display = 'none'; 
-        manageContainer.style.display = 'flex'; 
+        editorContainer.style.display = 'none'; // Close editor
+        manageContainer.style.display = 'flex'; // Open manager
         loadManageList(user); 
     };
     closeManageBtn.onclick = () => {
-        mainContent.style.display = 'block'; 
         manageContainer.style.display = 'none';
-        loadSharedQuizzes(searchBar.value); 
     };
 
     closeResultsBtn.onclick = () => {
-        manageContainer.style.display = 'flex'; 
+        manageContainer.style.display = 'flex'; // Go back to manager
         resultsContainer.style.display = 'none';
     };
 
     myResultsBtn.onclick = () => {
-        mainContent.style.display = 'none';
         myResultsContainer.style.display = 'flex';
         loadMyResults();
     };
     closeMyResultsBtn.onclick = () => {
-        mainContent.style.display = 'block';
         myResultsContainer.style.display = 'none';
     };
     
@@ -279,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editorContainer.style.display = 'flex'; // Show editor again
     };
 
-    // --- FIREBASE AUTHENTICATION LOGIC ---
+    // --- FIREBASE AUTHENTICATION LOGIC (Unchanged) ---
     loginTab.onclick = () => {
         loginTab.classList.add('active');
         signupTab.classList.remove('active');
@@ -350,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
         auth.signOut().catch(err => console.error("Sign out error", err));
     };
 
-    // Forgot Password Logic
+    // Forgot Password Logic (Unchanged)
     forgotPasswordLink.onclick = () => {
         authContainer.style.display = 'none';
         forgotPasswordContainer.style.display = 'flex';
@@ -373,13 +395,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     };
 
-    // --- Quiz Logic ---
+    // --- Quiz Logic (*** UPDATED ***) ---
     function startApiQuiz(category, count, difficulty) { 
         currentQuizId = `api_${category}_${difficulty}`; 
         currentQuizObject = null; // API quizzes don't have recommendations
         
-        mainContent.style.display = 'none';
-        quizAppContainer.style.display = 'block';
+        quizAppContainer.style.display = 'block'; // Show the quiz player modal
         quizControls.style.display = 'none';
         quizArea.innerHTML = '<div class="loader"></div>'; 
         quizNav.style.display = 'none';
@@ -428,7 +449,6 @@ document.addEventListener('DOMContentLoaded', () => {
         startApiQuiz(category, count, difficulty); 
     };
 
-    // *** UPDATED ***
     function startCustomQuiz(quizObject, quizId) {
         questions = quizObject.questions;
         currentQuizId = quizId; 
@@ -437,15 +457,14 @@ document.addEventListener('DOMContentLoaded', () => {
         score = 0;
         currentIndex = 0;
         
-        mainContent.style.display = 'none';
-        quizAppContainer.style.display = 'block';
+        quizAppContainer.style.display = 'block'; // Show quiz player modal
         quizControls.style.display = 'none'; 
         quizNav.style.display = 'flex'; 
         
         showQuestion(); 
     }
 
-    // --- NEW: Join Logic (Handles Quizzes and Study Guides) ---
+    // --- Join Logic (Handles Quizzes and Study Guides) ---
     joinQuizBtn.onclick = () => {
         const contentId = quizIdInput.value.trim();
         if (contentId.length < 10) { 
@@ -473,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     
-    // *** UPDATED ***
+    // --- Show Question Logic (With Recommendations) ---
     function showQuestion() {
         clearInterval(timerInterval);
         
@@ -550,7 +569,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
         let questionHtml = '';
         
-        // --- NEW: Check question type ---
         if (q.questionType === 'fill') {
             // Render Fill-in-the-Blank
             questionHtml = `
@@ -563,7 +581,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Render Multiple Choice (default)
             let options = q.options || [];
             questionHtml = options.map(opt => {
-                // Determine correct answer
                 let isCorrect;
                 if (q.correct_answer) { // API format
                     isCorrect = decodeHTML(opt) === decodeHTML(q.correct_answer);
@@ -721,7 +738,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return txt.value;
     }
 
-    // --- LEADERBOARD & RESULTS LOGIC ---
+    // --- LEADERBOARD & RESULTS LOGIC (Unchanged) ---
     function saveQuizAttempt(username, uid, quizId, score) {
         if (!uid || !quizId) return; 
         
@@ -944,7 +961,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     addQuestionBtn.onclick = createNewQuestionEditor;
 
-    // *** UPDATED ***
+    // --- Save Quiz Logic (With Recommendation ID) ---
     saveQuizBtn.onclick = () => {
         const user = auth.currentUser;
         if (!user) { 
@@ -953,7 +970,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     
         const title = quizTitleInput.value.trim();
-        // --- NEW: Get the recommended ID ---
         const recommendId = document.getElementById('quiz-recommend-id-input').value.trim();
     
         if (title.length < 3) {
@@ -977,7 +993,7 @@ document.addEventListener('DOMContentLoaded', () => {
             likeCount: 0, 
             likedBy: [],
             type: 'quiz',
-            recommendedStudyGuideId: recommendId || null, // <-- ADD THIS LINE
+            recommendedStudyGuideId: recommendId || null, // Save the ID
             questions: []
         };
     
@@ -1038,7 +1054,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // --- NEW: Study Guide Editor Logic ---
+    // --- Study Guide Editor Logic (Unchanged) ---
     let flashcardEditorId = 0;
     function createNewFlashcardEditor() {
         const cardId = flashcardEditorId++;
@@ -1102,7 +1118,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // Save to the *same* "quizzes" collection, but with type 'study'
         db.collection("quizzes").add(newStudyGuide).then((docRef) => {
             showToast(`Study Guide "${title}" saved successfully!`, "success");
             closeStudyEditorBtn.click();
@@ -1115,12 +1130,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     
-    // --- NEW: Study Guide Player Logic ---
+    // --- Study Guide Player Logic (Unchanged) ---
     function startStudySession(studyGuide, guideId) {
         currentFlashcards = studyGuide.flashcards;
         currentFlashcardIndex = 0;
         
-        mainContent.style.display = 'none';
         studyPlayerContainer.style.display = 'flex';
         studyPlayerTitle.textContent = studyGuide.title;
         
@@ -1130,7 +1144,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function displayFlashcard() {
         if (currentFlashcards.length === 0) return;
         
-        // Reset flip
         studyFlashcard.classList.remove('is-flipped');
         
         const card = currentFlashcards[currentFlashcardIndex];
@@ -1155,7 +1168,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- GIPHY Search Functions ---
+    // --- GIPHY Search Functions (Unchanged) ---
     async function searchGiphy() {
         const searchTerm = giphySearchBar.value.trim();
         if (searchTerm.length < 2) return;
@@ -1194,7 +1207,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 
-    // --- Load and Display "Shared Quizzes" (from Firebase) ---
+    // --- Load "Shared Quizzes" (Unchanged) ---
     function loadSharedQuizzes(searchTerm = "") {
         quizList.innerHTML = '<div class="loader"></div>';
 
@@ -1223,7 +1236,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const quizCard = document.createElement('div');
                 quizCard.className = 'quiz-card';
                 
-                // NEW: Check content type
                 const isStudyGuide = content.type === 'study';
                 
                 quizCard.innerHTML = `
@@ -1240,7 +1252,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     quizCard.querySelector('.like-btn').classList.add('liked');
                 }
 
-                // NEW: Handle click for either quiz or study guide
                 quizCard.querySelector('.quiz-card-title').onclick = () => {
                     if (isStudyGuide) {
                         startStudySession(content, contentId);
@@ -1262,6 +1273,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    // --- Like Quiz (Unchanged) ---
     function likeQuiz(quizId, buttonElement) {
         const user = auth.currentUser;
         if (!user) {
@@ -1318,7 +1330,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Load "Manage My Quizzes" List (from Firebase) ---
+    // --- Manage & Delete Logic (Unchanged) ---
     function loadManageList(user) {
         myQuizListContainer.innerHTML = '<div class="loader"></div>'; 
         
@@ -1337,7 +1349,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const quizCard = document.createElement('div');
                 quizCard.className = 'manage-quiz-card';
                 
-                // NEW: Don't show results for study guides
                 let resultsButton = '';
                 if (!isStudyGuide) {
                     resultsButton = `<button class="results-quiz-btn" data-id="${contentId}" data-title="${content.title}">Results</button>`;
@@ -1376,7 +1387,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Delete Quiz Function (uses Firebase) ---
     function deleteQuiz(quizId, isStudyGuide) {
         if (!confirm("Are you sure you want to delete this? This cannot be undone.")) {
             return; 
@@ -1384,7 +1394,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const deletePromises = [];
         
-        // If it's a quiz, delete attempts. Study guides don't have attempts.
         if (!isStudyGuide) {
             const attemptsPromise = db.collection("quiz_attempts").where("quizId", "==", quizId).get().then((snapshot) => {
                 const batch = db.batch();
@@ -1394,7 +1403,6 @@ document.addEventListener('DOMContentLoaded', () => {
             deletePromises.push(attemptsPromise);
         }
         
-        // After other deletions are done (or if none), delete the main content
         Promise.all(deletePromises).then(() => {
             return db.collection("quizzes").doc(quizId).delete();
         }).then(() => {
@@ -1406,9 +1414,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Initialization ---
+    // --- Initialization (*** UPDATED ***) ---
     function init() {
-        // Dark Mode Logic
+        // --- Sidebar Listeners ---
+        sidebarHomeBtn.onclick = (e) => {
+            e.preventDefault();
+            showView('home');
+        };
+        sidebarLibraryBtn.onclick = (e) => {
+            e.preventDefault();
+            showView('library');
+        };
+
+        // --- Dark Mode Logic ---
         const theme = localStorage.getItem('theme');
         if (theme === 'dark') {
             document.body.classList.add('dark-mode');
@@ -1430,13 +1448,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
+        // Auth listener (onAuthStateChanged) handles all initial loading
+        
         // Setup initial auth tab state
         loginTab.classList.add('active');
         signupTab.classList.remove('active');
         loginForm.style.display = 'flex';
         signupForm.style.display = 'none';
         
-        // Search Bar Event Listener
+        // Search Bar Event Listener (now only affects library view)
         searchBar.addEventListener('keyup', () => {
             loadSharedQuizzes(searchBar.value.trim());
         });
@@ -1448,16 +1468,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const category = link.dataset.category;
                 
                 if (category === 'home') {
-                    // Hide all modals and show main content
-                    manageContainer.style.display = 'none';
-                    editorContainer.style.display = 'none';
-                    studyEditorContainer.style.display = 'none';
-                    quizAppContainer.style.display = 'none';
-                    studyPlayerContainer.style.display = 'none';
-                    resultsContainer.style.display = 'none';
-                    myResultsContainer.style.display = 'none';
-                    mainContent.style.display = 'block'; 
-                    loadSharedQuizzes(searchBar.value);
+                    // This button is now just for show, but we can keep it
+                    showView('home');
                 } else if (category) {
                     startApiQuiz(category, 10, 'any'); 
                 }

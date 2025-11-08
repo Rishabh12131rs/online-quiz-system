@@ -34,53 +34,67 @@
         </div>
     </header>
 
-    <main id="main-content" style="display: none;">
-
-        <section class="hero-section">
-            <h1 class="hero-heading">Welcome to QuizHub</h1>
-            <p class="hero-subheading">Create, play, and share quizzes in seconds.</p>
-            <div class="features-row">
-                <div class="card-home card-create">
-                    <h2>Create a quiz</h2>
-                    <p>Build a quiz with multiple choice or fill-in-the-blank questions.</p>
-                    <button class="card-btn" id="create-quiz-btn">Quiz editor</button>
-                </div>
-                <div class="card-home card-study">
-                    <h2>Create a Study Guide</h2>
-                    <p>Make flashcard sets for users to learn from.</p>
-                    <button class="card-btn" id="create-study-guide-btn">Study Guide editor</button>
-                </div>
-                <div class="card-home card-ai">
-                    <h2>Play a quiz</h2>
-                    <p>Test your knowledge with trivia from any category.</p>
-                    <button class="card-btn" id="play-quiz-btn">Play Trivia</button>
-                </div>
-            </div>
-        </section>
-
-        <div class="search-container">
-            <input type="search" id="search-bar" placeholder="Search for quizzes and study guides by title...">
-        </div>
+    <div class="page-container" id="page-container" style="display: none;">
         
-        <h3 class="section-title">Shared Quizzes & Study Guides</h3>
-        <div class="quiz-list">
+        <nav class="sidebar-nav">
+            <a href="#" id="sidebar-home-btn" class="sidebar-link active">
+                <span class="nav-icon">🏠</span> Home
+            </a>
+            <a href="#" id="sidebar-library-btn" class="sidebar-link">
+                <span class="nav-icon">📚</span> My Library
+            </a>
+            </nav>
+
+        <main id="main-content">
+            
+            <div id="home-view">
+                <section class="hero-section">
+                    <h1 class="hero-heading">Welcome to QuizHub</h1>
+                    <p class="hero-subheading">Create, play, and share quizzes in seconds.</p>
+                    <div class="features-row">
+                        <div class="card-home card-create">
+                            <h2>Create a quiz</h2>
+                            <p>Build a quiz with multiple choice or fill-in-the-blank questions.</p>
+                            <button class="card-btn" id="create-quiz-btn">Quiz editor</button>
+                        </div>
+                        <div class="card-home card-study">
+                            <h2>Create a Study Guide</h2>
+                            <p>Make flashcard sets for users to learn from.</p>
+                            <button class="card-btn" id="create-study-guide-btn">Study Guide editor</button>
+                        </div>
+                        <div class="card-home card-ai">
+                            <h2>Play a quiz</h2>
+                            <p>Test your knowledge with trivia from any category.</p>
+                            <button class="card-btn" id="play-quiz-btn">Play Trivia</button>
+                        </div>
+                    </div>
+                </section>
+                
+                <nav class="subject-nav">
+                    <a href="#" data-category="home"><span class="nav-icon">🏠</span><div>Start</div></a>
+                    <a href="#" data-category="25"><span class="nav-icon">🎨</span><div>Art</div></a>
+                    <a href="#" data-category="11"><span class="nav-icon">⭐</span><div>Entertainment</div></a>
+                    <a href="#" data-category="22"><span class="nav-icon">🌍</span><div>Geography</div></a>
+                    <a href="#" data-category="23"><span class="nav-icon">🏛️</span><div>History</div></a>
+                    <a href="#" data-category="9"><span class="nav-icon">💬</span><div>Languages</div></a> 
+                    <a href="#" data-category="17"><span class="nav-icon">🧬</span><div>Science</div></a>
+                    <a href="#" data-category="21"><span class="nav-icon">🏀</span><div>Sports</div></a>
+                    <a href="#" data-category="9"><span class="nav-icon">❓</span><div>Trivia</div></a> 
+                </nav>
             </div>
 
-        <nav class="subject-nav">
-            <a href="#" data-category="home"><span class="nav-icon">🏠</span><div>Start</div></a>
-            <a href="#" data-category="25"><span class="nav-icon">🎨</span><div>Art</div></a>
-            <a href="#" data-category="11"><span class="nav-icon">⭐</span><div>Entertainment</div></a>
-            <a href="#" data-category="22"><span class="nav-icon">🌍</span><div>Geography</div></a>
-            <a href="#" data-category="23"><span class="nav-icon">🏛️</span><div>History</div></a>
-            <a href="#" data-category="9"><span class="nav-icon">💬</span><div>Languages</div></a> 
-            <a href="#" data-category="17"><span class="nav-icon">🧬</span><div>Science</div></a>
-            <a href="#" data-category="21"><span class="nav-icon">🏀</span><div>Sports</div></a>
-            <a href="#" data-category="9"><span class="nav-icon">❓</span><div>Trivia</div></a> 
-        </nav>
-    </main>
+            <div id="library-view" style="display: none;">
+                <div class="search-container">
+                    <input type="search" id="search-bar" placeholder="Search for quizzes and study guides by title...">
+                </div>
+                
+                <h3 class="section-title">Shared Quizzes & Study Guides</h3>
+                <div class="quiz-list">
+                    </div>
+            </div>
 
-    <div id="auth-container" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
+        </main>
+    </div> <div id="auth-container" class="modal-overlay" style="display: flex;"> <div class="modal-content">
             <div class="auth-tabs">
                 <button id="login-tab" class="active">Login</button>
                 <button id="signup-tab">Sign Up</button>

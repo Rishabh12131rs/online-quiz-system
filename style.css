@@ -83,7 +83,7 @@ header {
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* --- Hero Welcome/Search Section --- */
+/* --- *** NEW: Hero Welcome/Search Section *** --- */
 .hero-welcome {
     background: #00c6a9; /* Examveda's green */
     color: white;
@@ -118,6 +118,7 @@ header {
     font-size: 1.1rem;
     padding: 0 20px;
     background: transparent;
+    color: var(--text-dark); /* Ensure text is visible */
 }
 .search-box button {
     background: var(--primary);
@@ -141,6 +142,7 @@ header {
     background: var(--bg-white);
     border: 1px solid var(--border-color);
     border-radius: 5px;
+    height: fit-content; /* Make sidebar only as tall as its content */
 }
 .sidebar h3 {
     font-size: 1.2rem;
@@ -153,21 +155,47 @@ header {
     padding: 0;
     margin: 0;
 }
-.sidebar li a {
-    display: block;
-    padding: 12px 15px;
-    text-decoration: none;
-    color: var(--text-dark);
+/* *** NEW: Topic Links Wrapper *** */
+.topic-links-wrapper {
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+.topic-links-wrapper span {
     font-weight: 500;
+    color: var(--text-dark);
+}
+.topic-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+.topic-buttons button {
+    flex: 1;
+    border: none;
+    padding: 8px;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
     transition: background 0.2s;
 }
-.sidebar li a:hover {
+.topic-practice-btn {
     background: var(--primary-light);
+    color: var(--primary);
 }
-.sidebar li a.active {
+.topic-test-btn {
+    background: var(--bg-light);
+    color: var(--text-light);
+    border: 1px solid var(--border-color);
+}
+.topic-practice-btn:hover {
     background: var(--primary);
     color: white;
 }
+.topic-test-btn:hover {
+    background: var(--text-light);
+    color: white;
+}
+
 
 .content {
     flex-grow: 1; 
@@ -206,7 +234,6 @@ header {
 .practice-option:hover {
     background: var(--primary-light);
 }
-/* Style for after an answer is revealed */
 .practice-option.correct {
     background: var(--bg-green-light);
     border-color: var(--success);
@@ -379,6 +406,89 @@ header {
     font-size: 15px;
 }
 
+/* --- *** NEW: Mock Test Modal Styles *** --- */
+.mock-test-modal {
+    max-width: 800px;
+    width: 90%;
+}
+.mock-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+.mock-header h3 {
+    margin: 0;
+}
+#mock-timer {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--error);
+}
+#mock-test-area {
+    min-height: 300px;
+}
+#mock-question-text {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+#mock-options-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.mock-option {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 15px;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+    background: var(--bg-white);
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s, border-color 0.2s;
+}
+.mock-option:hover {
+    background: var(--primary-light);
+    border-color: var(--primary);
+}
+/* Style for the *selected* option */
+.mock-option.selected {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+#mock-test-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+#mock-test-nav button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+#mock-finish-btn {
+    background: var(--success);
+}
+#mock-test-results {
+    text-align: center;
+}
+
 /* --- Toast Notification --- */
 #toast-notification {
     position: fixed;
@@ -410,7 +520,7 @@ header {
 }
 
 /* --- Loader (for sidebar) --- */
-#topic-list .loader, #question-list .loader {
+#topic-list .loader, #question-list .loader, #mock-test-area .loader {
     border: 4px solid var(--bg-light);
     border-top: 4px solid var(--primary);
     border-radius: 50%;
@@ -419,7 +529,7 @@ header {
     animation: spin 1s linear infinite;
     margin: 20px auto;
 }
-#question-list .loader {
+#question-list .loader, #mock-test-area .loader {
     width: 40px;
     height: 40px;
 }

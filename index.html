@@ -116,47 +116,49 @@
         </div>
     </div>
 
-    <div id="quiz-app-container" style="display: none;">
-        <button id="close-quiz-btn" class="close-btn">X Back to Home</button>
-        <div id="quiz-controls">
-            <select id="quiz-category">
-                <option value="general_knowledge">General Knowledge</option>
-                <option value="film_and_tv">Film & TV</option>
-                <option value="music">Music</option>
-                <option value="science">Science</option>
-                <option value="sport_and_leisure">Sports</option>
-                <option value="history">History</option>
-                <option value="geography">Geography</option>
-                <option value="arts_and_literature">Art & Literature</option>
-                <option value="language">Language</option>
-            </select>
-            
-            <select id="quiz-difficulty">
-                <option value="any">Any Difficulty</option>
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-            </select>
+    <div id="quiz-app-container" class="modal-overlay" style="display: none;">
+        <div class="modal-content" id="quiz-modal-content">
+            <button id="close-quiz-btn" class="close-btn">X</button>
+            <div id="quiz-controls">
+                <select id="quiz-category">
+                    <option value="general_knowledge">General Knowledge</option>
+                    <option value="film_and_tv">Film & TV</option>
+                    <option value="music">Music</option>
+                    <option value="science">Science</option>
+                    <option value="sport_and_leisure">Sports</option>
+                    <option value="history">History</option>
+                    <option value="geography">Geography</option>
+                    <option value="arts_and_literature">Art & Literature</option>
+                    <option value="language">Language</option>
+                </select>
+                
+                <select id="quiz-difficulty">
+                    <option value="any">Any Difficulty</option>
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
 
-            <select id="quiz-count">
-                <option value="5">5 Questions</option>
-                <option value="10">10 Questions</option>
-                <option value="15">15 Questions</option>
-            </select>
-            <button id="startQuizBtn">Start Quiz</button>
+                <select id="quiz-count">
+                    <option value="5">5 Questions</option>
+                    <option value="10">10 Questions</option>
+                    <option value="15">15 Questions</option>
+                </select>
+                <button id="startQuizBtn">Start Quiz</button>
+            </div>
+
+            <div id="quiz-area">Click 'Start Quiz' to begin!</div>
+
+            <div id="timer-display" style="display: none;">10</div>
+
+            <div id="quiz-navigation" style="display: none;">
+                <span></span> <span id="questionNum">Q1</span>
+                <button id="nextBtn">Next</button>
+                <span id="scoreLabel">Score: 0</span>
+            </div>
+
+            <div id="leaderboard"></div>
         </div>
-
-        <div id="quiz-area">Click 'Start Quiz' to begin!</div>
-
-        <div id="timer-display" style="display: none;">10</div>
-
-        <div id="quiz-navigation" style="display: none;">
-            <span></span> <span id="questionNum">Q1</span>
-            <button id="nextBtn">Next</button>
-            <span id="scoreLabel">Score: 0</span>
-        </div>
-
-        <div id="leaderboard"></div>
     </div>
 
     <div id="editor-container" class="modal-overlay" style="display: none;">

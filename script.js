@@ -39,11 +39,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const signupErr = document.getElementById('signup-error');
     const userDisplay = document.getElementById('user-display');
     
-    // *** This was the error, it's 'welcome-user' in your HTML but you changed it to a tooltip.
-    // I've put back the original 'welcome-user' ID to fix the crash.
-    // Please check your HTML to ensure this ID exists.
-    // Based on your new HTML, this ID is GONE. I will use the tooltip ID instead.
-    const welcomeUserTooltip = document.getElementById('welcome-user-tooltip'); 
+    // *** FIX: This element 'welcome-user' exists in your HTML ***
+    const welcomeUser = document.getElementById('welcome-user'); 
     
     const logoutBtn = document.getElementById('logout-btn');
     const googleSignInBtn = document.getElementById('google-signin-btn');
@@ -159,35 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         errorElement.textContent = message;
     }
-    
-    // --- *** RE-IMPLEMENTED: Page Navigation System *** ---
-    const allPages = [mainContent, authContainer, quizAppContainer, editorContainer, manageContainer, resultsContainer, myResultsContainer, giphyContainer, forgotPasswordContainer];
-
-    // This function will find your *new* back button from your HTML
-    const newHeaderBackBtn = document.getElementById('header-back-btn');
-
-    function showPage(pageToShow) {
-        allPages.forEach(page => page.style.display = 'none');
-        
-        if (pageToShow === mainContent) {
-            mainContent.style.display = 'block';
-            if (newHeaderBackBtn) newHeaderBackBtn.style.display = 'none'; // Hide back button
-        } else {
-            pageToShow.style.display = 'flex'; // All other pages are overlays/modals
-            if (newHeaderBackBtn) newHeaderBackBtn.style.display = 'block'; // Show back button
-        }
-        
-        if (pageToShow === authContainer || pageToShow === forgotPasswordContainer) {
-            if (newHeaderBackBtn) newHeaderBackBtn.style.display = 'none';
-        }
-    }
-
-    function goHome() {
-        showPage(mainContent);
-        loadSharedQuizzes(searchBar.value);
-    }
-    // --- End of Page Navigation System ---
-
 
     // --- MAIN AUTHENTICATION LISTENER ---
     auth.onAuthStateChanged(user => {
@@ -195,68 +163,80 @@ document.addEventListener('DOMContentLoaded', () => {
             mainContent.style.display = 'block'; 
             authContainer.style.display = 'none'; 
             userDisplay.style.display = 'flex';
-            myResultsBtn.style.display = 'block'; 
+            myResultsBtn.style.display = 'block'; // Show "My Results"
             
-            // *** FIX: Find the new tooltip ID from your HTML ***
-            const userTooltip = document.getElementById('welcome-user-tooltip');
-            if (userTooltip) {
-                userTooltip.textContent = user.displayName || 'User'; 
-            }
+            // *** FIX: This now correctly targets the 'welcome-user' span ***
+            welcomeUser.textContent = `Hello, ${user.displayName || 'User'}`; 
             
             loadSharedQuizzes(); // Load quizzes
         } else {
-            showPage(authContainer); // Show the login modal
+            mainContent.style.display = 'none'; 
+            authContainer.style.display = 'flex'; 
             userDisplay.style.display = 'none';
-            myResultsBtn.style.display = 'none'; 
-            const userTooltip = document.getElementById('welcome-user-tooltip');
-            if (userTooltip) {
-                userTooltip.textContent = ''; 
-            }
+            myResultsBtn.style.display = 'none'; // Hide "My Results"
+            welcomeUser.textContent = '';
         }
     });
 
     // --- Page/Modal Toggling ---
     playQuizBtn.onclick = () => {
-        showPage(quizAppContainer); // Use new nav system
+        mainContent.style.display = 'none';
+        quizAppContainer.style.display = 'flex'; // *** FIX: Use 'flex' for overlay ***
         quizControls.style.display = 'flex'; 
         quizNav.style.display = 'none'; 
         quizArea.innerHTML = "Click 'Start Quiz' to begin!"; 
         showLeaderboard(); 
     };
-    closeQuizBtn.onclick = goHome; // Use new nav system
+    closeQuizBtn.onclick = () => {
+        mainContent.style.display = 'block';
+        quizAppContainer.style.display = 'none';
+        loadSharedQuizzes(searchBar.value); 
+    };
 
-    createQuizBtn.onclick = () => showPage(editorContainer); // Use new nav system
-    closeEditorBtn.onclick = goHome; // Use new nav system
+    createQuizBtn.onclick = () => {
+        mainContent.style.display = 'none';
+        editorContainer.style.display = 'flex'; // *** FIX: Use 'flex' for overlay ***
+    };
+    closeEditorBtn.onclick = () => {
+        mainContent.style.display = 'block';
+        editorContainer.style.display = 'none';
+        questionListContainer.innerHTML = ''; 
+        quizTitleInput.value = '';
+        loadSharedQuizzes(searchBar.value);
+    };
     
     manageQuizzesBtn.onclick = () => {
         const user = auth.currentUser;
         if (!user) return; 
         
-        showPage(manageContainer); // Use new nav system
+        editorContainer.style.display = 'none'; 
+        manageContainer.style.display = 'flex'; // *** FIX: Use 'flex' for overlay ***
         loadManageList(user); 
     };
     closeManageBtn.onclick = () => {
-        showPage(editorContainer); // Go back to editor
+        editorContainer.style.display = 'flex'; // *** FIX: Go back to editor ***
+        manageContainer.style.display = 'none';
     };
 
     closeResultsBtn.onclick = () => {
-        showPage(manageContainer); // Go back to manage modal
+        manageContainer.style.display = 'flex'; 
+        resultsContainer.style.display = 'none';
     };
 
     myResultsBtn.onclick = () => {
-        showPage(myResultsContainer);
+        mainContent.style.display = 'none';
+        myResultsContainer.style.display = 'flex'; // *** FIX: Use 'flex' for overlay ***
         loadMyResults();
     };
-    closeMyResultsBtn.onclick = goHome;
+    closeMyResultsBtn.onclick = () => {
+        mainContent.style.display = 'block';
+        myResultsContainer.style.display = 'none';
+    };
     
     closeGiphyBtn.onclick = () => {
-        showPage(editorContainer); // Go back to editor
+        giphyContainer.style.display = 'none';
+        editorContainer.style.display = 'flex'; // Show editor again
     };
-
-    // *** NEW: Header Back Button Click ***
-    if (headerBackBtn) {
-        headerBackBtn.onclick = goHome;
-    }
 
     // --- FIREBASE AUTHENTICATION LOGIC ---
     loginTab.onclick = () => {
@@ -330,13 +310,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Forgot Password Logic
-    forgotPasswordLink.onclick = (e) => {
-        e.preventDefault();
-        showPage(forgotPasswordContainer);
+    forgotPasswordLink.onclick = () => {
+        authContainer.style.display = 'none';
+        forgotPasswordContainer.style.display = 'flex'; // *** FIX: Use 'flex' for overlay ***
     };
-    backToLoginLink.onclick = (e) => {
-        e.preventDefault();
-        showPage(authContainer);
+    backToLoginLink.onclick = () => {
+        authContainer.style.display = 'flex'; // *** FIX: Use 'flex' for overlay ***
+        forgotPasswordContainer.style.display = 'none';
     };
     forgotPasswordForm.onsubmit = (e) => {
         e.preventDefault();
@@ -345,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
         auth.sendPasswordResetEmail(email)
             .then(() => {
                 showToast("Password reset email sent!", "success");
-                showPage(authContainer); // Go back to login
+                backToLoginLink.click(); 
             })
             .catch((error) => {
                 showFriendlyError(error, forgotError); 
@@ -355,10 +335,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- *** UPDATED: Quiz Logic for new API *** ---
 
     function startApiQuiz(category, count, difficulty) { 
-        // Create an ID for saving results
         currentQuizId = `api_${category}_${difficulty}`; 
         
-        showPage(quizAppContainer); 
+        mainContent.style.display = 'none';
+        quizAppContainer.style.display = 'flex'; // *** FIX: Use 'flex' for overlay ***
 
         quizControls.style.display = 'none';
         quizArea.innerHTML = '<div class="loader"></div>'; 
@@ -379,16 +359,23 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(res => res.json())
             .then(data => {
                 // *** NEW: Handle new data format ***
-                questions = data.map(q => ({
-                    question: q.question.text, // The question is nested
-                    correct_answer: q.correctAnswer,
-                    incorrect_answers: q.incorrectAnswers
-                }));
+                questions = data.map(q => {
+                    // Combine answers and identify the correct one
+                    const options = [...q.incorrectAnswers, q.correctAnswer];
+                    // Shuffle the combined options
+                    options.sort(() => Math.random() - 0.5); 
+                    
+                    return {
+                        question: q.question.text, // The question is nested
+                        correct_answer: q.correctAnswer, // Store the correct answer string
+                        options: options // Store the shuffled options
+                    };
+                });
                 // --- END OF NEW DATA FORMAT ---
                 
                 if (questions.length > 0) {
                     showQuestion();
-                    quizNav.style.display = 'grid'; // Use grid
+                    quizNav.style.display = 'flex';
                 } else {
                     quizArea.innerHTML = 'Could not load questions. Try a different category/difficulty.';
                     quizControls.style.display = 'flex';
@@ -415,9 +402,10 @@ document.addEventListener('DOMContentLoaded', () => {
         score = 0;
         currentIndex = 0;
         
-        showPage(quizAppContainer);
+        mainContent.style.display = 'none';
+        quizAppContainer.style.display = 'flex'; // *** FIX: Use 'flex' for overlay ***
         quizControls.style.display = 'none'; 
-        quizNav.style.display = 'grid'; // Use grid
+        quizNav.style.display = 'flex'; 
         
         showQuestion(); 
     }
@@ -466,35 +454,27 @@ document.addEventListener('DOMContentLoaded', () => {
         let questionText, options, correctAnswer, imageUrl;
         
         // *** UPDATED: Logic to handle BOTH API formats and Custom Quizzes ***
-        if (q.correctAnswer) { 
-            // This is a NEW API (The Trivia API) quiz
-            questionText = q.question.text;
-            options = [...q.incorrectAnswers, q.correctAnswer];
-            correctAnswer = q.correctAnswer;
-            options.sort(() => Math.random() - 0.5); 
-            imageUrl = null;
-        }
-        else if (q.incorrect_answers) { 
-            // This is an OLD API (OpenTDB) quiz
-            questionText = q.question;
-            options = [...q.incorrect_answers, q.correct_answer];
-            correctAnswer = q.correct_answer;
-            options.sort(() => Math.random() - 0.5); 
-            imageUrl = null;
-        } else { 
+        if (q.options && q.correct_answer_index !== undefined) { 
             // This is our Custom Quiz
             questionText = q.question;
             options = [...q.options]; 
             correctAnswer = q.options[q.correct_answer_index];
             imageUrl = q.imageUrl; 
+        } else { 
+            // This is an API quiz (New or Old)
+            questionText = q.question;
+            options = q.options ? [...q.options] : [...q.incorrect_answers, q.correct_answer];
+            correctAnswer = q.correct_answer || q.correctAnswer;
+            if(!q.options) options.sort(() => Math.random() - 0.5); // Shuffle if it's the old API format
+            imageUrl = null;
         }
+        // --- END OF NEW LOGIC ---
 
         let imageHtml = '';
         if (imageUrl) {
             imageHtml = `<img src="${imageUrl}" alt="Quiz Image" class="quiz-question-image">`;
         }
-        
-        // *** FIX: Added backticks (`) ***
+
         let html = `<div class="question-block">${imageHtml}<h4>Q${currentIndex + 1}: ${decodeHTML(questionText)}</h4>`;
         options.forEach((opt) => {
             const isCorrect = decodeHTML(opt) === decodeHTML(correctAnswer);
@@ -528,19 +508,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 const q = questions[currentIndex];
                 // *** FIX: Handle all quiz formats for correct answer ***
                 let correctAnswerText;
-                if (q.correctAnswer) { // New API
-                    correctAnswerText = q.correctAnswer;
-                } else if (q.correct_answer) { // Old API
+                if (q.correct_answer) { // Old API
                     correctAnswerText = q.correct_answer;
+                } else if (q.correctAnswer) { // New API
+                    correctAnswerText = q.correctAnswer;
                 } else { // Custom Quiz
                     correctAnswerText = q.options[q.correct_answer_index];
                 }
-                
-                // *** FIX: Added backticks (`) ***
+
                 document.getElementById('feedback').innerHTML = `<span style="color:red;">Time's up! Correct was: ${decodeHTML(correctAnswerText)}</span>`;
                 disableOptions();
                 
-                // *** FIX: Added quotes ('.') ***
                 const correctButton = document.querySelector('.option-btn[data-correct="true"]');
                 if (correctButton) {
                     correctButton.classList.add('correct');
@@ -559,7 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isCorrect) {
             selectedButton.classList.add('correct'); 
-            feedbackDiv.innerHTML = `<span style="color:green;">Correct!</span>`; // *** FIX: Added backticks (`) ***
+            feedbackDiv.innerHTML = `<span style="color:green;">Correct!</span>`;
             score++;
         } else {
             selectedButton.classList.add('incorrect'); 
@@ -567,18 +545,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const q = questions[currentIndex];
             // *** FIX: Handle all quiz formats for correct answer ***
             let correctAnswerText;
-            if (q.correctAnswer) { // New API
-                correctAnswerText = q.correctAnswer;
-            } else if (q.correct_answer) { // Old API
+            if (q.correct_answer) { // Old API
                 correctAnswerText = q.correct_answer;
+            } else if (q.correctAnswer) { // New API
+                correctAnswerText = q.correctAnswer;
             } else { // Custom Quiz
                 correctAnswerText = q.options[q.correct_answer_index];
             }
 
-            // *** FIX: Added backticks (`) ***
             feedbackDiv.innerHTML = `<span style="color:red;">Wrong! Correct was: ${decodeHTML(correctAnswerText)}</span>`;
             
-            // *** FIX: Added quotes ('.') ***
             const correctButton = document.querySelector('.option-btn[data-correct="true"]');
             if (correctButton) {
                 correctButton.classList.add('correct');
@@ -597,7 +573,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateControls() {
         // prevBtn removed
         nextBtn.disabled = currentIndex >= questions.length; 
-        // *** FIX: Added backticks (`) ***
         questionNum.textContent = `Q${currentIndex + 1}/${questions.length}`;
         scoreLabel.textContent = 'Score: ' + score;
     }
@@ -835,7 +810,6 @@ document.addEventListener('DOMContentLoaded', () => {
         giphyResultsGrid.innerHTML = '<div class="loader"></div>';
         
         try {
-            // *** FIX: Added backticks (`) ***
             const response = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${searchTerm}&limit=12&rating=g`);
             const data = await response.json();
             
@@ -843,7 +817,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data.data.forEach(gif => {
                 const img = document.createElement('img');
                 img.src = gif.images.fixed_height.url;
-                img.dataset.fullUrl = gif.images.original.url; 
+                img.dataset.fullUrl = gif.images.original.url; // Save the full URL
                 img.className = 'giphy-item';
                 
                 img.onclick = () => {
@@ -851,7 +825,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const preview = activeGiphyQuestionCard.querySelector('.question-gif-preview');
                         preview.src = img.src;
                         preview.style.display = 'block';
-                        activeGiphyQuestionCard.dataset.imageUrl = img.dataset.fullUrl; 
+                        activeGiphyQuestionCard.dataset.imageUrl = img.dataset.fullUrl; // Store the URL
                     }
                     showPage(editorContainer); // Go back to editor
                 };
@@ -935,7 +909,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         db.collection("quizzes").add(newQuiz).then((docRef) => {
-            // *** FIX: Added backticks (`) ***
             showToast(`Quiz "${title}" saved successfully!`, "success");
             console.log("Quiz saved with ID: ", docRef.id);
             goHome(); 
@@ -1034,10 +1007,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const userIndex = likedBy.indexOf(user.uid);
                 
                 if (userIndex > -1) {
+                    // *** User has already liked, so UNLIKE ***
                     newLikeCount--;
                     likedBy.splice(userIndex, 1);
                     didLike = false;
                 } else {
+                    // *** User has not liked, so LIKE ***
                     newLikeCount++;
                     likedBy.push(user.uid); 
                     didLike = true;
@@ -1055,7 +1030,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }).then((result) => {
             if (result !== undefined) {
                 console.log("Like count updated to", result.newLikeCount);
-                // *** FIX: Added backticks (`) ***
                 buttonElement.textContent = `❤️ ${result.newLikeCount}`;
                 
                 if (result.didLike) {

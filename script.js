@@ -250,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
         playerLobbyView.style.display = 'none';
         gameHostView.style.display = 'none';
         gamePlayerView.style.display = 'none';
-        finalLeaderboardView.style.display = 'none'; // *** NEW ***
+        finalLeaderboardView.style.display = 'none'; 
 
         // Detach any active game listeners if we're leaving a game
         if (playerGameListener) {
@@ -303,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gameHostView.style.display = 'block';
         } else if (viewName === 'game-player') {
             gamePlayerView.style.display = 'block';
-        } else if (viewName === 'final-leaderboard') { // *** NEW ***
+        } else if (viewName === 'final-leaderboard') { 
             finalLeaderboardView.style.display = 'block';
         }
     }
@@ -1405,7 +1405,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
     
-    // Step 7: Host shows results for the question (*** UPDATED ***)
+    // Step 7: Host shows results for the question
     async function hostShowResults() {
         clearInterval(timerInterval); 
         
@@ -1413,16 +1413,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const q = hostQuizData.questions[qIndex];
         const correctAnswerIndex = q.correct_answer_index;
         
-        // *** NEW: Write the correct answer to RTDB for players to see ***
         await rtdb.ref(`games/${currentGamePin}`).update({ 
             gameState: 'results',
             correctAnswer: correctAnswerIndex 
         });
         
-        // Reveal correct answer on host screen
         gameHostAnswers.querySelector(`[data-correct="true"]`).classList.add('correct');
         
-        // Calculate scores
         const answersSnapshot = await rtdb.ref(`games/${currentGamePin}/answers`).get();
         const answers = answersSnapshot.val() || {};
         const scoresRef = rtdb.ref(`games/${currentGamePin}/scores`);
@@ -1441,12 +1438,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         await scoresRef.set(currentScores); 
         
-        // Show leaderboard
         displayHostLeaderboard(currentScores);
         gameHostLeaderboard.style.display = 'block';
         gameHostAnswers.style.display = 'none';
         
-        // Show "Next" button
         gameHostNextBtn.style.display = 'block';
         if (qIndex + 1 >= hostQuizData.questions.length) {
             gameHostNextBtn.textContent = "Show Final Results";
@@ -1477,7 +1472,6 @@ document.addEventListener('DOMContentLoaded', () => {
         gameHostTimer.style.display = 'none';
         gameHostLeaderboard.style.display = 'block'; 
         
-        // Clean up game after a minute (gives players time to see)
         setTimeout(() => {
             if (currentGameRef) {
                 rtdb.ref(`games/${currentGamePin}`).remove();
@@ -1486,25 +1480,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 60000);
     }
 
-    // Step 8: Player game view (*** UPDATED ***)
+    // Step 8: Player game view
     function playerShowQuestion(qIndex) {
         if (qIndex < 0) return;
         showView('game-player');
         gamePlayerStatus.textContent = `Question ${qIndex + 1}`;
         gamePlayerAnswers.style.display = 'grid'; 
-        playerFeedbackView.style.display = 'none'; // *** NEW: Hide feedback screen ***
+        playerFeedbackView.style.display = 'none'; 
         
-        // Reset/enable buttons
         gamePlayerAnswers.querySelectorAll('.player-answer-btn').forEach(btn => {
             btn.disabled = false;
             btn.classList.remove('selected', 'reveal-correct', 'reveal-wrong');
         });
         
-        // Store time when question started
         gamePlayerAnswers.dataset.startTime = new Date().getTime();
     }
 
-    // Step 9: Player selects an answer (Unchanged)
+    // Step 9: Player selects an answer
     gamePlayerAnswers.querySelectorAll('.player-answer-btn').forEach(btn => {
         btn.onclick = () => {
             const answerIndex = btn.dataset.index;
@@ -1522,33 +1514,30 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     });
     
-    // Step 10: Player sees results (*** UPDATED ***)
+    // Step 10: Player sees results
     function playerShowResults(gameData) {
         const myUid = auth.currentUser.uid;
         if (!myUid) return;
         
         const myAnswer = gameData.answers ? gameData.answers[myUid] : null;
         const myCurrentScore = gameData.scores[myUid] ? gameData.scores[myUid].score : 0;
-        const correctAnswer = gameData.correctAnswer; // Get correct answer from host
+        const correctAnswer = gameData.correctAnswer; 
         
         let points = 0;
         let isCorrect = false;
 
-        // Show feedback overlay
         playerFeedbackView.style.display = 'flex';
         
         if (myAnswer && myAnswer.answerIndex == correctAnswer) {
-            // Correct!
             isCorrect = true;
             const timeTaken = myAnswer.time;
-            points = Math.round(1000 - (timeTaken * 100)); // This is an estimate, the real score is on the server
+            points = Math.round(1000 - (timeTaken * 100)); 
             
             playerFeedbackView.className = 'player-feedback-overlay correct';
             playerFeedbackText.textContent = "Correct!";
             playerPointsEarned.textContent = `+${points} points`;
             
         } else {
-            // Incorrect or no answer
             isCorrect = false;
             playerFeedbackView.className = 'player-feedback-overlay incorrect';
             playerFeedbackText.textContent = "Incorrect!";
@@ -1558,7 +1547,6 @@ document.addEventListener('DOMContentLoaded', () => {
         playerTotalScore.textContent = myCurrentScore;
         gamePlayerStatus.textContent = `Your total score: ${myCurrentScore}`;
         
-        // Disable all buttons and show correct/wrong
         gamePlayerAnswers.querySelectorAll('.player-answer-btn').forEach(btn => {
             btn.disabled = true;
             const btnIndex = btn.dataset.index;
@@ -1566,16 +1554,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (btnIndex == correctAnswer) {
                 btn.classList.add('reveal-correct');
             } else if (btnIndex == (myAnswer ? myAnswer.answerIndex : null)) {
-                // This was their wrong answer, keep it selected
                 btn.classList.add('selected');
             } else {
-                // This was a wrong answer they didn't pick
                 btn.classList.add('reveal-wrong'); 
             }
         });
     }
     
-    // Step 11: Player sees final results (*** UPDATED ***)
+    // Step 11: Player sees final results
     function playerShowFinalResults(gameData) {
         const myUid = auth.currentUser.uid;
         if(!myUid || !gameData.scores[myUid]) {
@@ -1585,7 +1571,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const sortedScores = Object.values(gameData.scores).sort((a, b) => b.score - a.score);
         
-        // Show the new view
         showView('final-leaderboard');
         
         // 1st Place
@@ -1623,7 +1608,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         });
         
-        // Detach listener
         if (playerGameListener) {
             playerGameListener.off(); 
             playerGameListener = null;

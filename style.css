@@ -187,7 +187,6 @@ main {
 .quiz-card-title.exam {
     border-left: 5px solid var(--exam);
 }
-
 .quiz-card-footer {
     display: flex;
     justify-content: space-between;
@@ -817,7 +816,7 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
 .player-answer-btn[data-index="2"] { background-color: #ffc107; }
 .player-answer-btn[data-index="3"] { background-color: #28a745; }
 
-/* --- *** NEW: Player Feedback Overlay *** --- */
+/* --- Player Feedback Overlay --- */
 .player-feedback-overlay {
     position: absolute;
     top: 0;
@@ -927,7 +926,7 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
     margin: 0 5px;
 }
 
-/* --- *** NEW: Final Leaderboard View *** --- */
+/* --- Final Leaderboard View --- */
 .podium {
     display: flex;
     justify-content: center;

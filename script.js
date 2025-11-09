@@ -99,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const questionListContainer = document.getElementById('question-list-container');
     const saveQuizBtn = document.getElementById('save-quiz-btn');
     const quizTitleInput = document.getElementById('quiz-title-input');
+    // *** REMOVED BAD REFERENCES that caused the crash ***
     
     // --- Study Guide Editor Elements ---
     const createStudyGuideBtn = document.getElementById('create-study-guide-btn');
@@ -149,7 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Live Game View Elements ---
     const hostLobbyView = document.getElementById('host-lobby-view');
-    // ... (all other game elements) ...
     const hostLobbyTitle = document.getElementById('host-lobby-title');
     const hostLobbyPin = document.getElementById('host-lobby-pin');
     const hostStartGameBtn = document.getElementById('host-start-game-btn');
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebarHomeBtn.classList.remove('active');
         sidebarLibraryBtn.classList.remove('active');
         sidebarDashboardBtn.classList.remove('active');
-        sidebarAdminBtn.classList.remove('active'); // *** NEW ***
+        sidebarAdminBtn.classList.remove('active'); 
 
         // Show the requested view
         if (viewName === 'home') {
@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
             welcomeUser.textContent = `Hello, ${user.displayName || 'User'}`; 
             showView('home'); 
 
-            // *** NEW: Show Admin button if user is admin ***
+            // Show Admin button if user is admin
             if (user.uid === ADMIN_UID) {
                 sidebarAdminBtn.style.display = 'flex';
             } else {
@@ -318,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     studyFlashcard.onclick = () => { studyFlashcard.classList.toggle('is-flipped'); };
     
-    // *** REMOVED closeManageBtn.onclick ***
+    // *** REMOVED BAD ONCLICK LISTENERS THAT CAUSED THE CRASH ***
     
     closeResultsBtn.onclick = () => { resultsContainer.style.display = 'none'; };
     closeGiphyBtn.onclick = () => {
@@ -1486,36 +1486,37 @@ document.addEventListener('DOMContentLoaded', () => {
             showView('home');
         }, 5000);
     }
-
+    
     // --- *** NEW: ADMIN PANEL FUNCTIONS *** ---
-    function loadAdminDropdowns() {
+    async function loadAdminDropdowns() {
         // 1. Populate Exams
         const examSelect = document.getElementById('admin-exam-select');
-        db.collection("exams").get().then(snapshot => {
-            examSelect.innerHTML = '<option value="">-- Select Exam --</option>';
-            snapshot.forEach(doc => {
-                examSelect.innerHTML += `<option value="${doc.id}">${doc.data().name}</option>`;
-            });
+        const examSnapshot = await db.collection("exams").get();
+        examSelect.innerHTML = '<option value="">-- Select Exam --</option>';
+        examSnapshot.forEach(doc => {
+            examSelect.innerHTML += `<option value="${doc.id}">${doc.data().name}</option>`;
         });
 
         // 2. Populate Subjects based on Exam
-        examSelect.onchange = () => {
+        examSelect.onchange = async () => {
             const examId = examSelect.value;
             const subjectSelect = document.getElementById('admin-subject-select');
+            const topicSelect = document.getElementById('admin-topic-select');
             if (!examId) {
                 subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+                topicSelect.innerHTML = '<option value="">-- Select Topic --</option>';
                 return;
             }
-            db.collection("exams").doc(examId).collection("subjects").get().then(snapshot => {
-                subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
-                snapshot.forEach(doc => {
-                    subjectSelect.innerHTML += `<option value="${doc.id}" data-exam-id="${examId}">${doc.data().name}</option>`;
-                });
+            const subjectSnapshot = await db.collection("exams").doc(examId).collection("subjects").get();
+            subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+            subjectSnapshot.forEach(doc => {
+                subjectSelect.innerHTML += `<option value="${doc.id}" data-exam-id="${examId}">${doc.data().name}</option>`;
             });
+            topicSelect.innerHTML = '<option value="">-- Select Topic --</option>'; // Clear topics
         };
 
         // 3. Populate Topics based on Subject
-        adminSubjectSelect.onchange = () => {
+        adminSubjectSelect.onchange = async () => {
             const selectedOption = adminSubjectSelect.options[adminSubjectSelect.selectedIndex];
             const subjectId = selectedOption.value;
             const examId = selectedOption.dataset.examId;
@@ -1524,11 +1525,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 topicSelect.innerHTML = '<option value="">-- Select Topic --</option>';
                 return;
             }
-            db.collection("exams").doc(examId).collection("subjects").doc(subjectId).collection("topics").get().then(snapshot => {
-                topicSelect.innerHTML = '<option value="">-- Select Topic --</option>';
-                snapshot.forEach(doc => {
-                    topicSelect.innerHTML += `<option value="${doc.id}" data-exam-id="${examId}" data-subject-id="${subjectId}">${doc.data().name}</option>`;
-                });
+            const topicSnapshot = await db.collection("exams").doc(examId).collection("subjects").doc(subjectId).collection("topics").get();
+            topicSelect.innerHTML = '<option value="">-- Select Topic --</option>';
+            topicSnapshot.forEach(doc => {
+                topicSelect.innerHTML += `<option value="${doc.id}" data-exam-id="${examId}" data-subject-id="${subjectId}">${doc.data().name}</option>`;
             });
         };
     }
@@ -1605,7 +1605,6 @@ document.addEventListener('DOMContentLoaded', () => {
             addExamQuestionForm.reset();
         }).catch(err => showToast(err.message, "error"));
     };
-
     
     // --- Initialization ---
     function init() {

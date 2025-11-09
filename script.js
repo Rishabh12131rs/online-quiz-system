@@ -23,7 +23,7 @@ const rtdb = firebase.database(); // INITIALIZE REALTIME DATABASE
 // 1. Log in to your site
 // 2. Open the console (F12) and type: firebase.auth().currentUser.uid
 // 3. Copy the ID and paste it here
-const ADMIN_UID = "REPLACE_THIS_WITH_YOUR_FIREBASE_USER_ID";
+const ADMIN_UID = "NTSIsVxii9gKezQqQ3RYpQB2jTT2";
 
 
 document.addEventListener('DOMContentLoaded', () => {

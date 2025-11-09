@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarHomeBtn = document.getElementById('sidebar-home-btn');
     const sidebarLibraryBtn = document.getElementById('sidebar-library-btn');
     const sidebarDashboardBtn = document.getElementById('sidebar-dashboard-btn');
-    const sidebarAdminBtn = document.getElementById('sidebar-admin-btn'); // *** NEW ***
+    const sidebarAdminBtn = document.getElementById('sidebar-admin-btn'); 
     const homeView = document.getElementById('home-view');
     const libraryView = document.getElementById('library-view');
     const dashboardView = document.getElementById('dashboard-view');
@@ -99,7 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const questionListContainer = document.getElementById('question-list-container');
     const saveQuizBtn = document.getElementById('save-quiz-btn');
     const quizTitleInput = document.getElementById('quiz-title-input');
-    // *** REMOVED BAD REFERENCES that caused the crash ***
     
     // --- Study Guide Editor Elements ---
     const createStudyGuideBtn = document.getElementById('create-study-guide-btn');
@@ -137,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toast = document.getElementById('toast-notification');
     const darkModeToggle = document.getElementById('dark-mode-toggle');
 
-    // --- *** NEW: Admin Panel Elements *** ---
+    // --- Admin Panel Elements ---
     const adminContainer = document.getElementById('admin-container');
     const closeAdminBtn = document.getElementById('close-admin-btn');
     const addExamForm = document.getElementById('add-exam-form');
@@ -318,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     studyFlashcard.onclick = () => { studyFlashcard.classList.toggle('is-flipped'); };
     
-    // *** REMOVED BAD ONCLICK LISTENERS THAT CAUSED THE CRASH ***
+    // *** BUG FIX: REMOVED ALL REFERENCES TO "manageContainer" and "closeManageBtn" ***
     
     closeResultsBtn.onclick = () => { resultsContainer.style.display = 'none'; };
     closeGiphyBtn.onclick = () => {
@@ -641,7 +640,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateControls() {
         nextBtn.disabled = currentIndex >= questions.length; 
         questionNum.textContent = `Q${currentIndex + 1}/${questions.length}`;
-        scoreLabel.textContent = 'Score: ' + score;
+        scoreLabel.textContent = 'Score: 'L + score;
     }
     nextBtn.onclick = function () {
         if (currentIndex < questions.length) { 
@@ -1493,7 +1492,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const examSelect = document.getElementById('admin-exam-select');
         const examSnapshot = await db.collection("exams").get();
         examSelect.innerHTML = '<option value="">-- Select Exam --</option>';
-        examSnapshot.forEach(doc => {
+        snapshot.forEach(doc => {
             examSelect.innerHTML += `<option value="${doc.id}">${doc.data().name}</option>`;
         });
 
@@ -1605,6 +1604,7 @@ document.addEventListener('DOMContentLoaded', () => {
             addExamQuestionForm.reset();
         }).catch(err => showToast(err.message, "error"));
     };
+
     
     // --- Initialization ---
     function init() {
@@ -1612,12 +1612,12 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebarHomeBtn.onclick = (e) => { e.preventDefault(); showView('home'); };
         sidebarLibraryBtn.onclick = (e) => { e.preventDefault(); showView('library'); };
         sidebarDashboardBtn.onclick = (e) => { e.preventDefault(); showView('dashboard'); };
-        sidebarAdminBtn.onclick = (e) => { // *** NEW ***
+        sidebarAdminBtn.onclick = (e) => { 
             e.preventDefault();
             adminContainer.style.display = 'flex';
             loadAdminDropdowns();
         };
-        closeAdminBtn.onclick = () => { // *** NEW ***
+        closeAdminBtn.onclick = () => { 
             adminContainer.style.display = 'none';
         };
 

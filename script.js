@@ -75,17 +75,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const scoreLabel = document.getElementById('scoreLabel');
     const timerDisplay = document.getElementById('timer-display');
     
-    // Main Page Elements
-    const quizList = document.querySelector('.quiz-list'); 
+    // --- *** UPDATED: Main Page & Library Elements *** ---
+    const communityQuizList = document.getElementById('community-quiz-list'); 
     const searchBar = document.getElementById('search-bar'); 
-
-    // --- Sidebar and View Elements ---
-    const sidebarHomeBtn = document.getElementById('sidebar-home-btn');
-    const sidebarLibraryBtn = document.getElementById('sidebar-library-btn');
-    const sidebarDashboardBtn = document.getElementById('sidebar-dashboard-btn');
-    const sidebarAdminBtn = document.getElementById('sidebar-admin-btn'); 
-    const homeView = document.getElementById('home-view');
-    const libraryView = document.getElementById('library-view'); // *** RENAMED in HTML, will rename here for clarity ***
     const communityContentView = document.getElementById('community-content-view');
     const libraryHomeView = document.getElementById('library-home-view');
     const examPrepView = document.getElementById('exam-prep-view');
@@ -94,6 +86,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const navCommunityBtn = document.getElementById('nav-community-btn');
     const navExamPrepBtn = document.getElementById('nav-exam-prep-btn');
 
+    // --- Sidebar and View Elements ---
+    const sidebarHomeBtn = document.getElementById('sidebar-home-btn');
+    const sidebarLibraryBtn = document.getElementById('sidebar-library-btn');
+    const sidebarDashboardBtn = document.getElementById('sidebar-dashboard-btn');
+    const sidebarAdminBtn = document.getElementById('sidebar-admin-btn'); 
+    const homeView = document.getElementById('home-view');
     const dashboardView = document.getElementById('dashboard-view');
     const dashboardWelcome = document.getElementById('dashboard-welcome');
     const dashboardMyResultsList = document.getElementById('dashboard-my-results-list');
@@ -222,9 +220,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function showView(viewName) {
         // Hide all main views
         homeView.style.display = 'none';
-        libraryHomeView.style.display = 'none'; // NEW
-        communityContentView.style.display = 'none'; // NEW (renamed from libraryView)
-        examPrepView.style.display = 'none'; // NEW
+        libraryHomeView.style.display = 'none';
+        communityContentView.style.display = 'none';
+        examPrepView.style.display = 'none';
         quizAppContainer.style.display = 'none';
         studyPlayerContainer.style.display = 'none';
         dashboardView.style.display = 'none';
@@ -257,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (viewName === 'home') {
             homeView.style.display = 'block';
             sidebarHomeBtn.classList.add('active');
-        } else if (viewName === 'library') { // This is now the chooser page
+        } else if (viewName === 'library-home') { // This is the new hub
             libraryHomeView.style.display = 'block';
             sidebarLibraryBtn.classList.add('active');
         } else if (viewName === 'community') { // The list of user-made quizzes
@@ -413,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- End Auth Logic ---
     
 
-    // --- FIXED: New Join Logic ---
+    // --- Join Logic ---
     joinGameBtn.onclick = () => {
         const input = gamePinInput.value.trim();
         if (input.length === 4 && /^\d{4}$/.test(input)) {
@@ -774,7 +772,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     const attempt = doc.data();
                     attempts.push(attempt);
                     if (!attempt.quizId.startsWith('api_')) {
-                        titlePromises.push(db.collection('quizzes').doc(attempt.quizId).get());
+                        // Check if it's an exam quiz or community quiz
+                        if (attempt.quizId.includes('/')) { // Exam quiz
+                            titlePromises.push(Promise.resolve({ data: () => ({ title: "Exam Quiz" }) })); // Placeholder
+                        } else { // Community quiz
+                            titlePromises.push(db.collection('quizzes').doc(attempt.quizId).get());
+                        }
                     } else {
                         titlePromises.push(Promise.resolve(null));
                     }
@@ -1049,16 +1052,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Load/Like/Manage/Delete Content ---
     function loadSharedQuizzes(searchTerm = "") {
-        quizList.innerHTML = '<div class="loader"></div>';
+        communityQuizList.innerHTML = '<div class="loader"></div>'; // Use new list
         let query = db.collection("quizzes").orderBy("likeCount", "desc");
         if (searchTerm) {
             query = query.where("title", ">=", searchTerm)
                          .where("title", "<=", searchTerm + '\uf8ff');
         }
         query.get().then((querySnapshot) => {
-            quizList.innerHTML = ''; 
+            communityQuizList.innerHTML = ''; 
             if (querySnapshot.empty) {
-                quizList.innerHTML = `<p>No content found. Be the first to create one!</p>`;
+                communityQuizList.innerHTML = `<p>No content found. Be the first to create one!</p>`;
                 return;
             }
             const user = auth.currentUser;
@@ -1084,11 +1087,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     e.stopPropagation(); 
                     likeQuiz(contentId, e.target);
                 };
-                quizList.appendChild(quizCard);
+                communityQuizList.appendChild(quizCard);
             });
         }).catch(err => {
             console.error(err);
-            quizList.innerHTML = '<p>Could not load content. Check console.</p>';
+            communityQuizList.innerHTML = '<p>Could not load content. Check console.</p>';
         });
     }
     function likeQuiz(quizId, buttonElement) {
@@ -1626,13 +1629,138 @@ document.addEventListener('DOMContentLoaded', () => {
             addExamQuestionForm.reset();
         }).catch(err => showToast(err.message, "error"));
     };
+    // --- End Admin Panel ---
+    
+    // --- *** NEW: Exam Browser Logic *** ---
+    
+    // This is the main function for the exam prep view
+    // It can show exams, subjects, topics, or question sets
+    async function loadExamBrowser(path = 'exams', breadcrumbHistory = []) {
+        showView('exam-prep');
+        examBrowserList.innerHTML = '<div class="loader"></div>';
+        
+        // 1. Build Breadcrumbs
+        let currentTitle = "Exam Prep";
+        if (breadcrumbHistory.length > 0) {
+            currentTitle = breadcrumbHistory[breadcrumbHistory.length - 1].name;
+        }
+        examBrowserTitle.textContent = currentTitle;
+        
+        examBreadcrumbs.innerHTML = ''; // Clear old breadcrumbs
+        const homeLink = document.createElement('a');
+        homeLink.href = "#";
+        homeLink.textContent = "Exam Prep";
+        homeLink.onclick = (e) => {
+            e.preventDefault();
+            loadExamBrowser(); // Go to top level
+        };
+        examBreadcrumbs.appendChild(homeLink);
 
+        breadcrumbHistory.forEach((crumb, index) => {
+            examBreadcrumbs.innerHTML += `<span>/</span>`;
+            const crumbLink = document.createElement('a');
+            crumbLink.href = "#";
+            crumbLink.textContent = crumb.name;
+            crumbLink.onclick = (e) => {
+                e.preventDefault();
+                // Load the path for the crumb they clicked
+                loadExamBrowser(crumb.path, breadcrumbHistory.slice(0, index + 1));
+            };
+            examBreadcrumbs.appendChild(crumbLink);
+        });
+
+        // 2. Fetch Data from Firestore
+        let query;
+        if (path.endsWith('/questions')) {
+            // We are at the question level. We just show one "Quiz"
+            examBrowserList.innerHTML = '';
+            const card = createBrowseCard("Start Quiz", "exam", "Click to start the practice test for this topic.", () => {
+                startExamQuiz(path); // Start the quiz
+            });
+            examBrowserList.appendChild(card);
+            return;
+        }
+
+        // Otherwise, we are browsing exams, subjects, or topics
+        query = db.collection(path);
+        
+        try {
+            const snapshot = await query.get();
+            examBrowserList.innerHTML = '';
+            if (snapshot.empty) {
+                examBrowserList.innerHTML = '<p>No content found in this section.</p>';
+                return;
+            }
+
+            snapshot.forEach(doc => {
+                const item = doc.data();
+                const itemId = doc.id;
+                const newPath = `${path}/${itemId}/${item.name === 'Algebra' ? 'questions' : 'subjects'}`; // HACK: This needs to be better
+                
+                // Determine next step
+                let nextCollectionName = 'subjects'; // Default
+                if (path === 'exams') nextCollectionName = 'subjects';
+                else if (path.includes('/subjects/')) nextCollectionName = 'topics';
+                else if (path.includes('/topics/')) nextCollectionName = 'questions';
+
+                const newFullPath = `${path}/${itemId}/${nextCollectionName}`;
+                
+                const card = createBrowseCard(item.name, "exam", `Browse ${item.name}`, () => {
+                    const newCrumbHistory = [...breadcrumbHistory, { name: item.name, path: newFullPath }];
+                    loadExamBrowser(newFullPath, newCrumbHistory);
+                });
+                examBrowserList.appendChild(card);
+            });
+
+        } catch (err) {
+            console.error("Error loading exam browser: ", err);
+            examBrowserList.innerHTML = '<p>Error loading content.</p>';
+        }
+    }
+    
+    // Helper to create cards for the exam browser
+    function createBrowseCard(title, type, text, onClick) {
+        const card = document.createElement('div');
+        card.className = 'quiz-card';
+        card.innerHTML = `<div class="quiz-card-title ${type}">${title}</div>`;
+        if(text) {
+            card.innerHTML += `<div class="quiz-card-footer">${text}</div>`;
+        }
+        card.onclick = onClick;
+        return card;
+    }
+
+    // Function to start an Exam Quiz
+    async function startExamQuiz(collectionPath) {
+        examBrowserList.innerHTML = '<div class="loader"></div>';
+        const snapshot = await db.collection(collectionPath).get();
+        const examQuestions = [];
+        snapshot.forEach(doc => {
+            examQuestions.push(doc.data());
+        });
+
+        if (examQuestions.length === 0) {
+            showToast("No questions found for this topic.", "error");
+            loadExamBrowser(); // Go back home
+            return;
+        }
+        
+        // Create a temporary "quiz object" to pass to the player
+        const examQuizObject = {
+            title: document.getElementById('exam-browser-title').textContent,
+            questions: examQuestions,
+            type: 'exam' // This isn't a user quiz
+        };
+        
+        // Use the existing quiz player
+        startCustomQuiz(examQuizObject, collectionPath);
+    }
     
     // --- Initialization ---
     function init() {
         // --- Sidebar Listeners ---
         sidebarHomeBtn.onclick = (e) => { e.preventDefault(); showView('home'); };
-        sidebarLibraryBtn.onclick = (e) => { e.preventDefault(); showView('library'); };
+        sidebarLibraryBtn.onclick = (e) => { e.preventDefault(); showView('library-home'); }; // *** UPDATED ***
         sidebarDashboardBtn.onclick = (e) => { e.preventDefault(); showView('dashboard'); };
         sidebarAdminBtn.onclick = (e) => { 
             e.preventDefault();

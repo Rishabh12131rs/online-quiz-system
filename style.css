@@ -5,6 +5,7 @@
     --secondary: #6c757d;
     --success: #28a745;
     --error: #dc3545;
+    --exam: #9c27b0; /* New Exam color */
     --bg-white: #FFFFFF;
     --bg-light: #f8f9fa;
     --bg-dark: #212529;
@@ -182,7 +183,7 @@ main {
 .quiz-card-title.quiz { border-left: 5px solid var(--primary); }
 /* --- NEW: Exam Card Style --- */
 .quiz-card-title.exam {
-    border-left: 5px solid #9c27b0; /* A purple color for exams */
+    border-left: 5px solid var(--exam);
 }
 
 .quiz-card-footer {
@@ -845,6 +846,7 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
     font-size: 1.2rem;
     font-weight: 700;
     margin-bottom: 20px;
+    color: var(--text-dark);
 }
 .exam-breadcrumbs a {
     text-decoration: none;
@@ -855,4 +857,5 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
 }
 .exam-breadcrumbs span {
     color: var(--secondary);
+    margin: 0 5px;
 }

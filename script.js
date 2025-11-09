@@ -23,7 +23,7 @@ const rtdb = firebase.database(); // INITIALIZE REALTIME DATABASE
 // 1. Log in to your site
 // 2. Open the console (F12) and type: firebase.auth().currentUser.uid
 // 3. Copy the ID and paste it here
-const ADMIN_UID = "NTSIsVxii9gKezQqQ3RYpQB2jTT2";
+const ADMIN_UID = "REPLACE_THIS_WITH_YOUR_FIREBASE_USER_ID";
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -85,7 +85,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarDashboardBtn = document.getElementById('sidebar-dashboard-btn');
     const sidebarAdminBtn = document.getElementById('sidebar-admin-btn'); 
     const homeView = document.getElementById('home-view');
-    const libraryView = document.getElementById('library-view');
+    const libraryView = document.getElementById('library-view'); // *** RENAMED in HTML, will rename here for clarity ***
+    const communityContentView = document.getElementById('community-content-view');
+    const libraryHomeView = document.getElementById('library-home-view');
+    const examPrepView = document.getElementById('exam-prep-view');
+    const examBreadcrumbs = document.getElementById('exam-breadcrumbs');
+    const examBrowserList = document.getElementById('exam-browser-list');
+    const navCommunityBtn = document.getElementById('nav-community-btn');
+    const navExamPrepBtn = document.getElementById('nav-exam-prep-btn');
+
     const dashboardView = document.getElementById('dashboard-view');
     const dashboardWelcome = document.getElementById('dashboard-welcome');
     const dashboardMyResultsList = document.getElementById('dashboard-my-results-list');
@@ -214,7 +222,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function showView(viewName) {
         // Hide all main views
         homeView.style.display = 'none';
-        libraryView.style.display = 'none';
+        libraryHomeView.style.display = 'none'; // NEW
+        communityContentView.style.display = 'none'; // NEW (renamed from libraryView)
+        examPrepView.style.display = 'none'; // NEW
         quizAppContainer.style.display = 'none';
         studyPlayerContainer.style.display = 'none';
         dashboardView.style.display = 'none';
@@ -247,10 +257,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (viewName === 'home') {
             homeView.style.display = 'block';
             sidebarHomeBtn.classList.add('active');
-        } else if (viewName === 'library') {
-            libraryView.style.display = 'block';
+        } else if (viewName === 'library') { // This is now the chooser page
+            libraryHomeView.style.display = 'block';
             sidebarLibraryBtn.classList.add('active');
+        } else if (viewName === 'community') { // The list of user-made quizzes
+            communityContentView.style.display = 'block';
+            sidebarLibraryBtn.classList.add('active'); // Keep library active
             loadSharedQuizzes(searchBar.value);
+        } else if (viewName === 'exam-prep') { // The new exam browser
+            examPrepView.style.display = 'block';
+            sidebarLibraryBtn.classList.add('active'); // Keep library active
+            loadExamBrowser(); // Load the top-level exams
         } else if (viewName === 'dashboard') {
             dashboardView.style.display = 'block';
             sidebarDashboardBtn.classList.add('active');
@@ -316,9 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
         studyTitleInput.value = '';
     };
     studyFlashcard.onclick = () => { studyFlashcard.classList.toggle('is-flipped'); };
-    
-    // *** BUG FIX: REMOVED ALL REFERENCES TO "manageContainer" and "closeManageBtn" ***
-    
+        
     closeResultsBtn.onclick = () => { resultsContainer.style.display = 'none'; };
     closeGiphyBtn.onclick = () => {
         giphyContainer.style.display = 'none';
@@ -589,7 +604,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (correctButton) correctButton.classList.add('correct');
         }
         const explanationHtml = q.explanation ? `<div class="explanation-box">${q.explanation}</div>` : '';
-        document.getElementById('feedback').innerHTML = `<span style="color:red;">Time's up! Correct was: ${decodeHTML(correctAnswerText)}</span>${explanationHtml}`;
+        if(document.getElementById('feedback')) { // Check if feedback div exists
+            document.getElementById('feedback').innerHTML = `<span style="color:red;">Time's up! Correct was: ${decodeHTML(correctAnswerText)}</span>${explanationHtml}`;
+        }
     }
     function checkFillBlankAnswer() {
         clearInterval(timerInterval);
@@ -1626,6 +1643,16 @@ document.addEventListener('DOMContentLoaded', () => {
             adminContainer.style.display = 'none';
         };
 
+        // --- NEW: Library View Listeners ---
+        navCommunityBtn.onclick = (e) => {
+            e.preventDefault();
+            showView('community');
+        };
+        navExamPrepBtn.onclick = (e) => {
+            e.preventDefault();
+            showView('exam-prep');
+        };
+
         // --- Dark Mode Logic ---
         const theme = localStorage.getItem('theme');
         if (theme === 'dark') {
@@ -1657,7 +1684,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Search Bar Event Listener
         searchBar.addEventListener('keyup', () => {
-            if (libraryView.style.display === 'block') {
+            if (communityContentView.style.display === 'block') { // Check if it's the right view
                 loadSharedQuizzes(searchBar.value.trim());
             }
         });

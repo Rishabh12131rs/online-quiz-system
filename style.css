@@ -180,6 +180,11 @@ main {
 }
 .quiz-card-title.study { border-left: 5px solid var(--success); }
 .quiz-card-title.quiz { border-left: 5px solid var(--primary); }
+/* --- NEW: Exam Card Style --- */
+.quiz-card-title.exam {
+    border-left: 5px solid #9c27b0; /* A purple color for exams */
+}
+
 .quiz-card-footer {
     display: flex;
     justify-content: space-between;
@@ -256,7 +261,7 @@ main {
 }
 #editor-modal-content, #study-editor-modal-content,
 #results-modal-content, #giphy-modal-content,
-#admin-modal-content { /* Updated */
+#admin-modal-content { 
     max-width: 800px;
 }
 
@@ -833,4 +838,21 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
 }
 #admin-q-opt-1 {
     border-left: 4px solid var(--success);
+}
+
+/* --- *** NEW: Exam Prep View *** --- */
+.exam-breadcrumbs {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+.exam-breadcrumbs a {
+    text-decoration: none;
+    color: var(--primary);
+}
+.exam-breadcrumbs a:hover {
+    text-decoration: underline;
+}
+.exam-breadcrumbs span {
+    color: var(--secondary);
 }

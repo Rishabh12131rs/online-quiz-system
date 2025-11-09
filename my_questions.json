@@ -1,0 +1,14 @@
+[
+  {
+    "question": "If x + y = 10 and x - y = 2, what is the value of x?",
+    "options": ["6", "4", "8", "5"],
+    "correct_answer_index": 0,
+    "explanation": "Add the two equations: (x+y) + (x-y) = 10 + 2. This simplifies to 2x = 12, so x = 6."
+  },
+  {
+    "question": "What is 15% of 300?",
+    "options": ["30", "45", "50", "15"],
+    "correct_answer_index": 1,
+    "explanation": "15% is 0.15. So, 0.15 * 300 = 45."
+  }
+]

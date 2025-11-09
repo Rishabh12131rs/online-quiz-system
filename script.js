@@ -83,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const examPrepView = document.getElementById('exam-prep-view');
     const examBreadcrumbs = document.getElementById('exam-breadcrumbs');
     const examBrowserList = document.getElementById('exam-browser-list');
+    const examBrowserTitle = document.getElementById('exam-browser-title'); // *** THIS WAS THE MISSING VARIABLE ***
     const navCommunityBtn = document.getElementById('nav-community-btn');
     const navExamPrepBtn = document.getElementById('nav-exam-prep-btn');
 

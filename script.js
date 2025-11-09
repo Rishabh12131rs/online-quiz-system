@@ -19,6 +19,12 @@ const auth = firebase.auth();
 const rtdb = firebase.database(); // INITIALIZE REALTIME DATABASE
 // --- END OF FIREBASE SETUP ---
 
+// *** NEW: SET YOUR ADMIN UID HERE ***
+// 1. Log in to your site
+// 2. Open the console (F12) and type: firebase.auth().currentUser.uid
+// 3. Copy the ID and paste it here
+const ADMIN_UID = "REPLACE_THIS_WITH_YOUR_FIREBASE_USER_ID";
+
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -77,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarHomeBtn = document.getElementById('sidebar-home-btn');
     const sidebarLibraryBtn = document.getElementById('sidebar-library-btn');
     const sidebarDashboardBtn = document.getElementById('sidebar-dashboard-btn');
+    const sidebarAdminBtn = document.getElementById('sidebar-admin-btn'); // *** NEW ***
     const homeView = document.getElementById('home-view');
     const libraryView = document.getElementById('library-view');
     const dashboardView = document.getElementById('dashboard-view');
@@ -92,8 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const questionListContainer = document.getElementById('question-list-container');
     const saveQuizBtn = document.getElementById('save-quiz-btn');
     const quizTitleInput = document.getElementById('quiz-title-input');
-    // const manageContainer = document.getElementById('manage-container'); // *** REMOVED - THIS CAUSED THE BUG ***
-    // const closeManageBtn = document.getElementById('close-manage-btn'); // *** REMOVED - THIS CAUSED THE BUG ***
     
     // --- Study Guide Editor Elements ---
     const createStudyGuideBtn = document.getElementById('create-study-guide-btn');
@@ -131,8 +136,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const toast = document.getElementById('toast-notification');
     const darkModeToggle = document.getElementById('dark-mode-toggle');
 
+    // --- *** NEW: Admin Panel Elements *** ---
+    const adminContainer = document.getElementById('admin-container');
+    const closeAdminBtn = document.getElementById('close-admin-btn');
+    const addExamForm = document.getElementById('add-exam-form');
+    const addSubjectForm = document.getElementById('add-subject-form');
+    const addTopicForm = document.getElementById('add-topic-form');
+    const addExamQuestionForm = document.getElementById('add-exam-question-form');
+    const adminExamSelect = document.getElementById('admin-exam-select');
+    const adminSubjectSelect = document.getElementById('admin-subject-select');
+    const adminTopicSelect = document.getElementById('admin-topic-select');
+
     // --- Live Game View Elements ---
     const hostLobbyView = document.getElementById('host-lobby-view');
+    // ... (all other game elements) ...
     const hostLobbyTitle = document.getElementById('host-lobby-title');
     const hostLobbyPin = document.getElementById('host-lobby-pin');
     const hostStartGameBtn = document.getElementById('host-start-game-btn');
@@ -209,15 +226,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Detach any active game listeners if we're leaving a game
         if (playerGameListener) {
-            playerGameListener.off(); // Detach the RTDB listener
+            playerGameListener.off(); 
             playerGameListener = null;
             if(currentGamePin && auth.currentUser) {
-                rtdb.ref(`games/${currentGamePin}/players/${auth.currentUser.uid}`).remove(); // Remove self from game
+                rtdb.ref(`games/${currentGamePin}/players/${auth.currentUser.uid}`).remove(); 
             }
             currentGamePin = null;
         }
         if (currentGameRef) {
-            currentGameRef.off(); // Detach host listener
+            currentGameRef.off(); 
             currentGameRef = null;
         }
         
@@ -225,6 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebarHomeBtn.classList.remove('active');
         sidebarLibraryBtn.classList.remove('active');
         sidebarDashboardBtn.classList.remove('active');
+        sidebarAdminBtn.classList.remove('active'); // *** NEW ***
 
         // Show the requested view
         if (viewName === 'home') {
@@ -238,9 +256,9 @@ document.addEventListener('DOMContentLoaded', () => {
             dashboardView.style.display = 'block';
             sidebarDashboardBtn.classList.add('active');
             loadDashboard();
-        } else if (viewName === 'quiz') { // Solo API quiz
+        } else if (viewName === 'quiz') { 
             quizAppContainer.style.display = 'block';
-        } else if (viewName === 'study') { // Solo study
+        } else if (viewName === 'study') { 
             studyPlayerContainer.style.display = 'block';
         } else if (viewName === 'host-lobby') {
             hostLobbyView.style.display = 'block';
@@ -261,11 +279,20 @@ document.addEventListener('DOMContentLoaded', () => {
             userDisplay.style.display = 'flex';
             welcomeUser.textContent = `Hello, ${user.displayName || 'User'}`; 
             showView('home'); 
+
+            // *** NEW: Show Admin button if user is admin ***
+            if (user.uid === ADMIN_UID) {
+                sidebarAdminBtn.style.display = 'flex';
+            } else {
+                sidebarAdminBtn.style.display = 'none';
+            }
+
         } else {
             pageContainer.style.display = 'none'; 
             authContainer.style.display = 'flex'; 
             userDisplay.style.display = 'none';
             welcomeUser.textContent = '';
+            sidebarAdminBtn.style.display = 'none'; // Hide admin button on logout
         }
     });
 
@@ -1459,6 +1486,126 @@ document.addEventListener('DOMContentLoaded', () => {
             showView('home');
         }, 5000);
     }
+
+    // --- *** NEW: ADMIN PANEL FUNCTIONS *** ---
+    function loadAdminDropdowns() {
+        // 1. Populate Exams
+        const examSelect = document.getElementById('admin-exam-select');
+        db.collection("exams").get().then(snapshot => {
+            examSelect.innerHTML = '<option value="">-- Select Exam --</option>';
+            snapshot.forEach(doc => {
+                examSelect.innerHTML += `<option value="${doc.id}">${doc.data().name}</option>`;
+            });
+        });
+
+        // 2. Populate Subjects based on Exam
+        examSelect.onchange = () => {
+            const examId = examSelect.value;
+            const subjectSelect = document.getElementById('admin-subject-select');
+            if (!examId) {
+                subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+                return;
+            }
+            db.collection("exams").doc(examId).collection("subjects").get().then(snapshot => {
+                subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+                snapshot.forEach(doc => {
+                    subjectSelect.innerHTML += `<option value="${doc.id}" data-exam-id="${examId}">${doc.data().name}</option>`;
+                });
+            });
+        };
+
+        // 3. Populate Topics based on Subject
+        adminSubjectSelect.onchange = () => {
+            const selectedOption = adminSubjectSelect.options[adminSubjectSelect.selectedIndex];
+            const subjectId = selectedOption.value;
+            const examId = selectedOption.dataset.examId;
+            const topicSelect = document.getElementById('admin-topic-select');
+            if (!subjectId) {
+                topicSelect.innerHTML = '<option value="">-- Select Topic --</option>';
+                return;
+            }
+            db.collection("exams").doc(examId).collection("subjects").doc(subjectId).collection("topics").get().then(snapshot => {
+                topicSelect.innerHTML = '<option value="">-- Select Topic --</option>';
+                snapshot.forEach(doc => {
+                    topicSelect.innerHTML += `<option value="${doc.id}" data-exam-id="${examId}" data-subject-id="${subjectId}">${doc.data().name}</option>`;
+                });
+            });
+        };
+    }
+
+    addExamForm.onsubmit = (e) => {
+        e.preventDefault();
+        const examName = document.getElementById('admin-exam-name').value;
+        if (!examName) return;
+        db.collection("exams").add({ name: examName }).then(() => {
+            showToast("Exam created!", "success");
+            addExamForm.reset();
+            loadAdminDropdowns();
+        }).catch(err => showToast(err.message, "error"));
+    };
+
+    addSubjectForm.onsubmit = (e) => {
+        e.preventDefault();
+        const examId = document.getElementById('admin-exam-select').value;
+        const subjectName = document.getElementById('admin-subject-name').value;
+        if (!examId || !subjectName) return;
+        db.collection("exams").doc(examId).collection("subjects").add({ name: subjectName }).then(() => {
+            showToast("Subject created!", "success");
+            addSubjectForm.reset();
+            loadAdminDropdowns();
+        }).catch(err => showToast(err.message, "error"));
+    };
+    
+    addTopicForm.onsubmit = (e) => {
+        e.preventDefault();
+        const selectedOption = adminSubjectSelect.options[adminSubjectSelect.selectedIndex];
+        const subjectId = selectedOption.value;
+        const examId = selectedOption.dataset.examId;
+        const topicName = document.getElementById('admin-topic-name').value;
+        if (!examId || !subjectId || !topicName) return;
+        db.collection("exams").doc(examId).collection("subjects").doc(subjectId).collection("topics").add({ name: topicName }).then(() => {
+            showToast("Topic created!", "success");
+            addTopicForm.reset();
+            loadAdminDropdowns();
+        }).catch(err => showToast(err.message, "error"));
+    };
+    
+    addExamQuestionForm.onsubmit = (e) => {
+        e.preventDefault();
+        const selectedOption = adminTopicSelect.options[adminTopicSelect.selectedIndex];
+        const topicId = selectedOption.value;
+        const subjectId = selectedOption.dataset.subjectId;
+        const examId = selectedOption.dataset.examId;
+        
+        const questionText = document.getElementById('admin-q-text').value;
+        const explanation = document.getElementById('admin-q-explanation').value;
+        const options = [
+            document.getElementById('admin-q-opt-1').value,
+            document.getElementById('admin-q-opt-2').value,
+            document.getElementById('admin-q-opt-3').value,
+            document.getElementById('admin-q-opt-4').value,
+        ];
+
+        if (!topicId || !questionText || !explanation || options.some(o => !o)) {
+            showToast("Please fill all fields.", "error");
+            return;
+        }
+
+        const newQuestion = {
+            question: questionText,
+            explanation: explanation,
+            options: options,
+            correct_answer_index: 0, // Defaulting to Option 1 as correct
+            questionType: 'mc' // All exam questions are MC for now
+        };
+
+        db.collection("exams").doc(examId).collection("subjects").doc(subjectId).collection("topics").doc(topicId).collection("questions").add(newQuestion)
+        .then(() => {
+            showToast("Exam question added!", "success");
+            addExamQuestionForm.reset();
+        }).catch(err => showToast(err.message, "error"));
+    };
+
     
     // --- Initialization ---
     function init() {
@@ -1466,6 +1613,14 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebarHomeBtn.onclick = (e) => { e.preventDefault(); showView('home'); };
         sidebarLibraryBtn.onclick = (e) => { e.preventDefault(); showView('library'); };
         sidebarDashboardBtn.onclick = (e) => { e.preventDefault(); showView('dashboard'); };
+        sidebarAdminBtn.onclick = (e) => { // *** NEW ***
+            e.preventDefault();
+            adminContainer.style.display = 'flex';
+            loadAdminDropdowns();
+        };
+        closeAdminBtn.onclick = () => { // *** NEW ***
+            adminContainer.style.display = 'none';
+        };
 
         // --- Dark Mode Logic ---
         const theme = localStorage.getItem('theme');

@@ -255,8 +255,8 @@ main {
     padding: 5px;
 }
 #editor-modal-content, #study-editor-modal-content,
-#manage-modal-content, #results-modal-content,
-#giphy-modal-content {
+#results-modal-content, #giphy-modal-content,
+#admin-modal-content { /* Updated */
     max-width: 800px;
 }
 
@@ -274,12 +274,14 @@ main {
     border-bottom: 3px solid var(--primary);
 }
 .modal-content form { display: flex; flex-direction: column; gap: 15px; }
-.modal-content input {
+.modal-content input, .modal-content select, .modal-content textarea {
     padding: 12px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
     background: var(--bg-light);
     color: var(--text-dark);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1rem;
 }
 .error-msg { color: var(--error); text-align: center; margin: 0; }
 .form-link { color: var(--primary); text-decoration: none; text-align: center; }
@@ -793,3 +795,42 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
 .player-answer-btn[data-index="1"] { background-color: #007bff; }
 .player-answer-btn[data-index="2"] { background-color: #ffc107; }
 .player-answer-btn[data-index="3"] { background-color: #28a745; }
+
+/* --- *** NEW: Admin Panel Styles *** --- */
+#admin-modal-content {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+.admin-section {
+    background: var(--bg-light);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+}
+.admin-section h3 {
+    margin-top: 0;
+    font-family: 'Baloo 2', cursive;
+}
+.admin-section form {
+    display: grid;
+    gap: 10px;
+}
+/* Grid layouts for forms */
+#add-exam-form, #add-subject-form, #add-topic-form {
+    grid-template-columns: 1fr auto; /* Input field takes space, button fits content */
+}
+#add-exam-question-form {
+    grid-template-columns: 1fr 1fr;
+}
+/* Make textareas span full width */
+#add-exam-question-form textarea {
+    grid-column: 1 / -1; /* Span from first to last column */
+}
+#add-exam-question-form button {
+    grid-column: 1 / -1;
+    background: var(--success);
+}
+#admin-q-opt-1 {
+    border-left: 4px solid var(--success);
+}

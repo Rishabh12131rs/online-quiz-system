@@ -6,6 +6,9 @@
     --success: #28a745;
     --error: #dc3545;
     --exam: #9c27b0; /* New Exam color */
+    --gold: #ffd700;
+    --silver: #c0c0c0;
+    --bronze: #cd7f32;
     --bg-white: #FFFFFF;
     --bg-light: #f8f9fa;
     --bg-dark: #212529;
@@ -184,6 +187,7 @@ main {
 .quiz-card-title.exam {
     border-left: 5px solid var(--exam);
 }
+
 .quiz-card-footer {
     display: flex;
     justify-content: space-between;
@@ -673,6 +677,8 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
     padding: 30px;
     border-radius: 12px;
     box-shadow: var(--card-shadow);
+    position: relative; /* For feedback overlay */
+    overflow: hidden; /* For feedback overlay */
 }
 .game-pin-box {
     background: var(--bg-light);
@@ -795,10 +801,60 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
     transform: scale(1.05);
     box-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }
+/* Show correct/wrong on player screen */
+.player-answer-btn.reveal-correct {
+    opacity: 1;
+    transform: scale(1.05);
+    border: 10px solid var(--gold);
+}
+.player-answer-btn.reveal-wrong {
+    opacity: 0.3;
+    transform: scale(0.9);
+}
+
 .player-answer-btn[data-index="0"] { background-color: #dc3545; }
 .player-answer-btn[data-index="1"] { background-color: #007bff; }
 .player-answer-btn[data-index="2"] { background-color: #ffc107; }
 .player-answer-btn[data-index="3"] { background-color: #28a745; }
+
+/* --- *** NEW: Player Feedback Overlay *** --- */
+.player-feedback-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    transition: background-color 0.3s;
+}
+.player-feedback-overlay.correct {
+    background-color: rgba(40, 167, 69, 0.9); /* success */
+}
+.player-feedback-overlay.incorrect {
+    background-color: rgba(220, 53, 69, 0.9); /* error */
+}
+#player-feedback-text {
+    font-size: 3rem;
+    font-weight: 700;
+    margin: 0;
+}
+#player-points-earned {
+    font-size: 1.5rem;
+    margin: 10px 0;
+}
+.player-score-box {
+    margin-top: 20px;
+    background: rgba(0,0,0,0.2);
+    padding: 10px 20px;
+    border-radius: 8px;
+}
+.player-score-box span { font-size: 1rem; }
+.player-score-box h2 { font-size: 2rem; margin: 5px 0; }
+
 
 /* --- Admin Panel Styles --- */
 #admin-modal-content {
@@ -838,7 +894,6 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
 #admin-q-opt-1 {
     border-left: 4px solid var(--success);
 }
-/* --- NEW: Bulk Upload Form Styles --- */
 #bulk-upload-form {
     grid-template-columns: 1fr; /* Simple stack */
 }
@@ -853,7 +908,7 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
     background: var(--bg-white);
 }
 
-/* --- NEW: Exam Prep View --- */
+/* --- Exam Prep View --- */
 .exam-breadcrumbs {
     font-size: 1.2rem;
     font-weight: 700;
@@ -870,4 +925,63 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
 .exam-breadcrumbs span {
     color: var(--secondary);
     margin: 0 5px;
+}
+
+/* --- *** NEW: Final Leaderboard View *** --- */
+.podium {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 15px;
+    margin: 30px 0;
+    height: 250px;
+}
+.podium-place {
+    width: 30%;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 700;
+}
+.podium-place .podium-rank {
+    font-size: 2rem;
+    font-weight: 700;
+    background: rgba(0,0,0,0.1);
+    color: white;
+    width: 50px;
+    height: 50px;
+    line-height: 50px;
+    border-radius: 50%;
+    margin: 0 auto 10px;
+}
+.podium-place .podium-name {
+    font-size: 1.3rem;
+    word-wrap: break-word;
+}
+.podium-place .podium-score {
+    font-size: 1.1rem;
+}
+.podium-place.first {
+    background: var(--gold);
+    color: var(--text-dark);
+    height: 200px;
+}
+.podium-place.second {
+    background: var(--silver);
+    color: var(--text-dark);
+    height: 150px;
+}
+.podium-place.third {
+    background: var(--bronze);
+    color: white;
+    height: 100px;
+}
+.final-player-list {
+    max-width: 400px;
+    margin: 20px auto;
+    text-align: left;
+}
+#final-leaderboard-home-btn {
+    margin-top: 30px;
+    font-size: 1.2rem;
 }

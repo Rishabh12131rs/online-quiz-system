@@ -23,7 +23,7 @@ const rtdb = firebase.database(); // INITIALIZE REALTIME DATABASE
 // 1. Log in to your site
 // 2. Open the console (F12) and type: firebase.auth().currentUser.uid
 // 3. Copy the ID and paste it here
-const ADMIN_UID = "REPLACE_THIS_WITH_YOUR_FIREBASE_USER_ID";
+const ADMIN_UID = "NTSIsVxii9gKezQqQ3RYpQB2jTT2";
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -152,7 +152,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminExamSelect = document.getElementById('admin-exam-select');
     const adminSubjectSelect = document.getElementById('admin-subject-select');
     const adminTopicSelect = document.getElementById('admin-topic-select');
-    // *** NEW Bulk Upload Elements ***
     const bulkUploadForm = document.getElementById('bulk-upload-form');
     const bulkExamSelect = document.getElementById('bulk-exam-select');
     const bulkSubjectSelect = document.getElementById('bulk-subject-select');
@@ -179,6 +178,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const gamePlayerView = document.getElementById('game-player-view');
     const gamePlayerStatus = document.getElementById('game-player-status');
     const gamePlayerAnswers = document.getElementById('game-player-answers');
+    // *** NEW Feedback Elements ***
+    const playerFeedbackView = document.getElementById('player-feedback-view');
+    const playerFeedbackText = document.getElementById('player-feedback-text');
+    const playerPointsEarned = document.getElementById('player-points-earned');
+    const playerTotalScore = document.getElementById('player-total-score');
+    
+    // *** NEW Final Leaderboard Elements ***
+    const finalLeaderboardView = document.getElementById('final-leaderboard-view');
+    const podiumName1 = document.getElementById('podium-name-1');
+    const podiumScore1 = document.getElementById('podium-score-1');
+    const podiumName2 = document.getElementById('podium-name-2');
+    const podiumScore2 = document.getElementById('podium-score-2');
+    const podiumName3 = document.getElementById('podium-name-3');
+    const podiumScore3 = document.getElementById('podium-score-3');
+    const finalLeaderboardList = document.getElementById('final-leaderboard-list');
+    const finalLeaderboardHomeBtn = document.getElementById('final-leaderboard-home-btn');
+
 
     // --- App State ---
     let questions = []; 
@@ -227,9 +243,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function showView(viewName) {
         // Hide all main views
         homeView.style.display = 'none';
-        libraryHomeView.style.display = 'none'; // NEW
-        communityContentView.style.display = 'none'; // NEW (renamed from libraryView)
-        examPrepView.style.display = 'none'; // NEW
+        libraryHomeView.style.display = 'none'; 
+        communityContentView.style.display = 'none'; 
+        examPrepView.style.display = 'none'; 
         quizAppContainer.style.display = 'none';
         studyPlayerContainer.style.display = 'none';
         dashboardView.style.display = 'none';
@@ -237,6 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
         playerLobbyView.style.display = 'none';
         gameHostView.style.display = 'none';
         gamePlayerView.style.display = 'none';
+        finalLeaderboardView.style.display = 'none'; // *** NEW ***
 
         // Detach any active game listeners if we're leaving a game
         if (playerGameListener) {
@@ -262,17 +279,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (viewName === 'home') {
             homeView.style.display = 'block';
             sidebarHomeBtn.classList.add('active');
-        } else if (viewName === 'library-home') { // This is the new hub
+        } else if (viewName === 'library-home') { 
             libraryHomeView.style.display = 'block';
             sidebarLibraryBtn.classList.add('active');
-        } else if (viewName === 'community') { // The list of user-made quizzes
+        } else if (viewName === 'community') { 
             communityContentView.style.display = 'block';
-            sidebarLibraryBtn.classList.add('active'); // Keep library active
+            sidebarLibraryBtn.classList.add('active'); 
             loadSharedQuizzes(searchBar.value);
-        } else if (viewName === 'exam-prep') { // The new exam browser
+        } else if (viewName === 'exam-prep') { 
             examPrepView.style.display = 'block';
-            sidebarLibraryBtn.classList.add('active'); // Keep library active
-            loadExamBrowser(); // Load the top-level exams
+            sidebarLibraryBtn.classList.add('active'); 
+            loadExamBrowser(); 
         } else if (viewName === 'dashboard') {
             dashboardView.style.display = 'block';
             sidebarDashboardBtn.classList.add('active');
@@ -289,6 +306,8 @@ document.addEventListener('DOMContentLoaded', () => {
             gameHostView.style.display = 'block';
         } else if (viewName === 'game-player') {
             gamePlayerView.style.display = 'block';
+        } else if (viewName === 'final-leaderboard') { // *** NEW ***
+            finalLeaderboardView.style.display = 'block';
         }
     }
 
@@ -313,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
             authContainer.style.display = 'flex'; 
             userDisplay.style.display = 'none';
             welcomeUser.textContent = '';
-            sidebarAdminBtn.style.display = 'none'; // Hide admin button on logout
+            sidebarAdminBtn.style.display = 'none'; 
         }
     });
 
@@ -781,7 +800,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!attempt.quizId.startsWith('api_')) {
                         // Check if it's an exam quiz or community quiz
                         if (attempt.quizId.includes('/')) { // Exam quiz
-                            titlePromises.push(Promise.resolve({ data: () => ({ title: "Exam Quiz" }) })); // Placeholder
+                            // We can't easily get the title from the deep path, so we'll just label it
+                            titlePromises.push(Promise.resolve({ data: () => ({ title: "Exam Quiz" }) })); 
                         } else { // Community quiz
                             titlePromises.push(db.collection('quizzes').doc(attempt.quizId).get());
                         }
@@ -1388,19 +1408,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
     
-    // Step 7: Host shows results for the question
+    // Step 7: Host shows results for the question (*** UPDATED ***)
     async function hostShowResults() {
         clearInterval(timerInterval); 
-        await rtdb.ref(`games/${currentGamePin}`).update({ gameState: 'results' });
+        
         const qIndex = (await rtdb.ref(`games/${currentGamePin}/currentQuestion`).get()).val();
         const q = hostQuizData.questions[qIndex];
         const correctAnswerIndex = q.correct_answer_index;
+        
+        // *** NEW: Write the correct answer to RTDB for players to see ***
+        await rtdb.ref(`games/${currentGamePin}`).update({ 
+            gameState: 'results',
+            correctAnswer: correctAnswerIndex 
+        });
+        
+        // Reveal correct answer on host screen
         gameHostAnswers.querySelector(`[data-correct="true"]`).classList.add('correct');
+        
+        // Calculate scores
         const answersSnapshot = await rtdb.ref(`games/${currentGamePin}/answers`).get();
         const answers = answersSnapshot.val() || {};
         const scoresRef = rtdb.ref(`games/${currentGamePin}/scores`);
         const scoresSnapshot = await scoresRef.get();
         const currentScores = scoresSnapshot.val() || {};
+        
         for (const uid in answers) {
             if (answers[uid].answerIndex == correctAnswerIndex) {
                 const timeTaken = answers[uid].time; 
@@ -1410,10 +1441,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
+        
         await scoresRef.set(currentScores); 
+        
+        // Show leaderboard
         displayHostLeaderboard(currentScores);
         gameHostLeaderboard.style.display = 'block';
         gameHostAnswers.style.display = 'none';
+        
+        // Show "Next" button
         gameHostNextBtn.style.display = 'block';
         if (qIndex + 1 >= hostQuizData.questions.length) {
             gameHostNextBtn.textContent = "Show Final Results";
@@ -1443,28 +1479,35 @@ document.addEventListener('DOMContentLoaded', () => {
         gameHostNextBtn.style.display = 'none';
         gameHostTimer.style.display = 'none';
         gameHostLeaderboard.style.display = 'block'; 
+        
+        // Clean up game after a minute (gives players time to see)
         setTimeout(() => {
             if (currentGameRef) {
                 rtdb.ref(`games/${currentGamePin}`).remove();
                 currentGameRef = null;
             }
-        }, 30000);
+        }, 60000);
     }
 
-    // Step 8: Player game view
+    // Step 8: Player game view (*** UPDATED ***)
     function playerShowQuestion(qIndex) {
         if (qIndex < 0) return;
         showView('game-player');
         gamePlayerStatus.textContent = `Question ${qIndex + 1}`;
         gamePlayerAnswers.style.display = 'grid'; 
+        playerFeedbackView.style.display = 'none'; // *** NEW: Hide feedback screen ***
+        
+        // Reset/enable buttons
         gamePlayerAnswers.querySelectorAll('.player-answer-btn').forEach(btn => {
             btn.disabled = false;
-            btn.classList.remove('selected');
+            btn.classList.remove('selected', 'reveal-correct', 'reveal-wrong');
         });
+        
+        // Store time when question started
         gamePlayerAnswers.dataset.startTime = new Date().getTime();
     }
 
-    // Step 9: Player selects an answer
+    // Step 9: Player selects an answer (Unchanged)
     gamePlayerAnswers.querySelectorAll('.player-answer-btn').forEach(btn => {
         btn.onclick = () => {
             const answerIndex = btn.dataset.index;
@@ -1482,35 +1525,111 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     });
     
-    // Step 10: Player sees results
+    // Step 10: Player sees results (*** UPDATED ***)
     function playerShowResults(gameData) {
         const myUid = auth.currentUser.uid;
         if (!myUid) return;
+        
         const myAnswer = gameData.answers ? gameData.answers[myUid] : null;
         const myCurrentScore = gameData.scores[myUid] ? gameData.scores[myUid].score : 0;
-        gamePlayerStatus.textContent = `Your score: ${myCurrentScore}`;
-        if (myAnswer) {
-             gamePlayerAnswers.querySelector(`[data-index="${myAnswer.answerIndex}"]`).classList.add('selected');
+        const correctAnswer = gameData.correctAnswer; // Get correct answer from host
+        
+        let points = 0;
+        let isCorrect = false;
+
+        // Show feedback overlay
+        playerFeedbackView.style.display = 'flex';
+        
+        if (myAnswer && myAnswer.answerIndex == correctAnswer) {
+            // Correct!
+            isCorrect = true;
+            const timeTaken = myAnswer.time;
+            points = Math.round(1000 - (timeTaken * 100));
+            
+            playerFeedbackView.className = 'player-feedback-overlay correct';
+            playerFeedbackText.textContent = "Correct!";
+            playerPointsEarned.textContent = `+${points} points`;
+            
         } else {
-             gamePlayerStatus.textContent = `Time's up! Your score: ${myCurrentScore}`;
+            // Incorrect or no answer
+            isCorrect = false;
+            playerFeedbackView.className = 'player-feedback-overlay incorrect';
+            playerFeedbackText.textContent = "Incorrect!";
+            playerPointsEarned.textContent = "+0 points";
         }
+        
+        playerTotalScore.textContent = myCurrentScore;
+        gamePlayerStatus.textContent = `Your total score: ${myCurrentScore}`;
+        
+        // Disable all buttons and show correct/wrong
+        gamePlayerAnswers.querySelectorAll('.player-answer-btn').forEach(btn => {
+            btn.disabled = true;
+            const btnIndex = btn.dataset.index;
+            
+            if (btnIndex == correctAnswer) {
+                btn.classList.add('reveal-correct');
+            } else if (btnIndex == (myAnswer ? myAnswer.answerIndex : null)) {
+                btn.classList.add('reveal-wrong');
+            } else {
+                btn.classList.add('reveal-wrong'); // Fade out other wrong answers
+            }
+        });
     }
     
-    // Step 11: Player sees final results
+    // Step 11: Player sees final results (*** UPDATED ***)
     function playerShowFinalResults(gameData) {
         const myUid = auth.currentUser.uid;
         if(!myUid || !gameData.scores[myUid]) {
             showView('home'); 
             return;
         }
-        const myFinalScore = gameData.scores[myUid].score;
+        
         const sortedScores = Object.values(gameData.scores).sort((a, b) => b.score - a.score);
-        const myRank = sortedScores.findIndex(p => p.name === auth.currentUser.displayName) + 1;
-        gamePlayerStatus.textContent = `Game Over! You finished #${myRank} with ${myFinalScore} points!`;
-        gamePlayerAnswers.style.display = 'none';
-        setTimeout(() => {
-            showView('home');
-        }, 5000);
+        
+        // Show the new view
+        showView('final-leaderboard');
+        
+        // 1st Place
+        if(sortedScores[0]) {
+            podiumName1.textContent = sortedScores[0].name;
+            podiumScore1.textContent = sortedScores[0].score;
+        }
+        // 2nd Place
+        if(sortedScores[1]) {
+            podiumName2.textContent = sortedScores[1].name;
+            podiumScore2.textContent = sortedScores[1].score;
+            document.querySelector('.podium-place.second').style.display = 'block';
+        } else {
+            document.querySelector('.podium-place.second').style.display = 'none';
+        }
+        // 3rd Place
+        if(sortedScores[2]) {
+            podiumName3.textContent = sortedScores[2].name;
+            podiumScore3.textContent = sortedScores[2].score;
+            document.querySelector('.podium-place.third').style.display = 'block';
+        } else {
+            document.querySelector('.podium-place.third').style.display = 'none';
+        }
+
+        // Rest of the players
+        finalLeaderboardList.innerHTML = '';
+        sortedScores.slice(3).forEach((player, index) => {
+             finalLeaderboardList.innerHTML += `
+                <div class="my-result-card">
+                    <div>
+                        <span class="my-result-card-name">${index + 4}. ${player.name}</span>
+                    </div>
+                    <span class="my-result-card-score">${player.score}</span>
+                </div>
+            `;
+        });
+        
+        // Detach listener
+        if (playerGameListener) {
+            playerGameListener.off(); 
+            playerGameListener = null;
+        }
+        currentGamePin = null;
     }
     
     // --- Admin Panel Functions ---
@@ -1646,7 +1765,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }).catch(err => showToast(err.message, "error"));
     };
 
-    // --- *** NEW: Bulk Upload Logic *** ---
+    // --- Bulk Upload Logic ---
     bulkUploadForm.onsubmit = (e) => {
         e.preventDefault();
         
@@ -1680,6 +1799,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const batch = db.batch();
                 const collectionRef = db.collection("exams").doc(examId).collection("subjects").doc(subjectId).collection("topics").doc(topicId).collection("questions");
 
+                let validQuestions = 0;
                 questionsArray.forEach(q => {
                     // Validate each question object
                     if (!q.question || !q.options || q.correct_answer_index == null || !q.explanation) {
@@ -1695,10 +1815,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         explanation: q.explanation,
                         questionType: 'mc' // All bulk uploads are MC for now
                     });
+                    validQuestions++;
                 });
 
                 await batch.commit();
-                showToast(`Successfully uploaded ${questionsArray.length} questions!`, "success");
+                showToast(`Successfully uploaded ${validQuestions} questions!`, "success");
                 bulkUploadForm.reset();
 
             } catch (err) {
@@ -1710,7 +1831,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     
-    // --- *** NEW: Exam Browser Logic *** ---
+    // --- Exam Browser Logic ---
     async function loadExamBrowser(path = 'exams', breadcrumbHistory = []) {
         showView('exam-prep');
         examBrowserList.innerHTML = '<div class="loader"></div>';
@@ -1740,7 +1861,7 @@ document.addEventListener('DOMContentLoaded', () => {
             crumbLink.onclick = (e) => {
                 e.preventDefault();
                 // Load the path for the crumb they clicked
-                loadExamBrowser(crumb.path.substring(0, crumb.path.lastIndexOf('/')), breadcrumbHistory.slice(0, index + 1));
+                loadExamBrowser(crumb.path.substring(0, crumb.path.lastIndexOf('/')), breadcrumbHistory.slice(0, index));
             };
             examBreadcrumbs.appendChild(crumbLink);
         });
@@ -1836,12 +1957,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function init() {
         // --- Sidebar Listeners ---
         sidebarHomeBtn.onclick = (e) => { e.preventDefault(); showView('home'); };
-        sidebarLibraryBtn.onclick = (e) => { e.preventDefault(); showView('library-home'); }; // *** UPDATED ***
+        sidebarLibraryBtn.onclick = (e) => { e.preventDefault(); showView('library-home'); }; 
         sidebarDashboardBtn.onclick = (e) => { e.preventDefault(); showView('dashboard'); };
         sidebarAdminBtn.onclick = (e) => { 
             e.preventDefault();
             adminContainer.style.display = 'flex';
             loadAdminDropdowns();
+            loadAdminDropdowns(); // Load for both forms
         };
         closeAdminBtn.onclick = () => { 
             adminContainer.style.display = 'none';
@@ -1855,6 +1977,11 @@ document.addEventListener('DOMContentLoaded', () => {
         navExamPrepBtn.onclick = (e) => {
             e.preventDefault();
             showView('exam-prep');
+        };
+        // *** NEW: Final Leaderboard Home Button ***
+        finalLeaderboardHomeBtn.onclick = (e) => {
+            e.preventDefault();
+            showView('home');
         };
 
         // --- Dark Mode Logic ---

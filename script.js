@@ -579,8 +579,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let correctAnswerText;
         if (q.questionType === 'fill') {
             correctAnswerText = q.answer;
-            document.getElementById('fill-submit-btn').disabled = true;
-            document.getElementById('fill-answer-input').disabled = true;
+            if(document.getElementById('fill-submit-btn')) document.getElementById('fill-submit-btn').disabled = true;
+            if(document.getElementById('fill-answer-input')) document.getElementById('fill-answer-input').disabled = true;
         } else {
             if (q.correct_answer) { correctAnswerText = q.correct_answer; } 
             else { correctAnswerText = q.options[q.correct_answer_index]; }
@@ -640,7 +640,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateControls() {
         nextBtn.disabled = currentIndex >= questions.length; 
         questionNum.textContent = `Q${currentIndex + 1}/${questions.length}`;
-        scoreLabel.textContent = 'Score: 'L + score;
+        scoreLabel.textContent = 'Score: ' + score; // *** BUG FIX: Removed stray 'L' ***
     }
     nextBtn.onclick = function () {
         if (currentIndex < questions.length) { 
@@ -1488,48 +1488,53 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- *** NEW: ADMIN PANEL FUNCTIONS *** ---
     async function loadAdminDropdowns() {
-        // 1. Populate Exams
-        const examSelect = document.getElementById('admin-exam-select');
-        const examSnapshot = await db.collection("exams").get();
-        examSelect.innerHTML = '<option value="">-- Select Exam --</option>';
-        snapshot.forEach(doc => {
-            examSelect.innerHTML += `<option value="${doc.id}">${doc.data().name}</option>`;
-        });
+        try {
+            // 1. Populate Exams
+            const examSelect = document.getElementById('admin-exam-select');
+            const examSnapshot = await db.collection("exams").get();
+            examSelect.innerHTML = '<option value="">-- Select Exam --</option>';
+            examSnapshot.forEach(doc => {
+                examSelect.innerHTML += `<option value="${doc.id}">${doc.data().name}</option>`;
+            });
 
-        // 2. Populate Subjects based on Exam
-        examSelect.onchange = async () => {
-            const examId = examSelect.value;
-            const subjectSelect = document.getElementById('admin-subject-select');
-            const topicSelect = document.getElementById('admin-topic-select');
-            if (!examId) {
+            // 2. Populate Subjects based on Exam
+            examSelect.onchange = async () => {
+                const examId = examSelect.value;
+                const subjectSelect = document.getElementById('admin-subject-select');
+                const topicSelect = document.getElementById('admin-topic-select');
+                if (!examId) {
+                    subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+                    topicSelect.innerHTML = '<option value="">-- Select Topic --</option>';
+                    return;
+                }
+                const subjectSnapshot = await db.collection("exams").doc(examId).collection("subjects").get();
                 subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
-                topicSelect.innerHTML = '<option value="">-- Select Topic --</option>';
-                return;
-            }
-            const subjectSnapshot = await db.collection("exams").doc(examId).collection("subjects").get();
-            subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
-            subjectSnapshot.forEach(doc => {
-                subjectSelect.innerHTML += `<option value="${doc.id}" data-exam-id="${examId}">${doc.data().name}</option>`;
-            });
-            topicSelect.innerHTML = '<option value="">-- Select Topic --</option>'; // Clear topics
-        };
+                subjectSnapshot.forEach(doc => {
+                    subjectSelect.innerHTML += `<option value="${doc.id}" data-exam-id="${examId}">${doc.data().name}</option>`;
+                });
+                topicSelect.innerHTML = '<option value="">-- Select Topic --</option>'; // Clear topics
+            };
 
-        // 3. Populate Topics based on Subject
-        adminSubjectSelect.onchange = async () => {
-            const selectedOption = adminSubjectSelect.options[adminSubjectSelect.selectedIndex];
-            const subjectId = selectedOption.value;
-            const examId = selectedOption.dataset.examId;
-            const topicSelect = document.getElementById('admin-topic-select');
-            if (!subjectId) {
+            // 3. Populate Topics based on Subject
+            adminSubjectSelect.onchange = async () => {
+                const selectedOption = adminSubjectSelect.options[adminSubjectSelect.selectedIndex];
+                const subjectId = selectedOption.value;
+                const examId = selectedOption.dataset.examId;
+                const topicSelect = document.getElementById('admin-topic-select');
+                if (!subjectId) {
+                    topicSelect.innerHTML = '<option value="">-- Select Topic --</option>';
+                    return;
+                }
+                const topicSnapshot = await db.collection("exams").doc(examId).collection("subjects").doc(subjectId).collection("topics").get();
                 topicSelect.innerHTML = '<option value="">-- Select Topic --</option>';
-                return;
-            }
-            const topicSnapshot = await db.collection("exams").doc(examId).collection("subjects").doc(subjectId).collection("topics").get();
-            topicSelect.innerHTML = '<option value="">-- Select Topic --</option>';
-            topicSnapshot.forEach(doc => {
-                topicSelect.innerHTML += `<option value="${doc.id}" data-exam-id="${examId}" data-subject-id="${subjectId}">${doc.data().name}</option>`;
-            });
-        };
+                topicSnapshot.forEach(doc => {
+                    topicSelect.innerHTML += `<option value="${doc.id}" data-exam-id="${examId}" data-subject-id="${subjectId}">${doc.data().name}</option>`;
+                });
+            };
+        } catch (err) {
+            console.error("Error loading admin dropdowns: ", err);
+            showToast("Could not load admin data.", "error");
+        }
     }
 
     addExamForm.onsubmit = (e) => {

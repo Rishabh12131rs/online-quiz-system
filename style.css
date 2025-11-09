@@ -181,11 +181,9 @@ main {
 }
 .quiz-card-title.study { border-left: 5px solid var(--success); }
 .quiz-card-title.quiz { border-left: 5px solid var(--primary); }
-/* --- NEW: Exam Card Style --- */
 .quiz-card-title.exam {
     border-left: 5px solid var(--exam);
 }
-
 .quiz-card-footer {
     display: flex;
     justify-content: space-between;
@@ -840,8 +838,22 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
 #admin-q-opt-1 {
     border-left: 4px solid var(--success);
 }
+/* --- NEW: Bulk Upload Form Styles --- */
+#bulk-upload-form {
+    grid-template-columns: 1fr; /* Simple stack */
+}
+#bulk-upload-form select {
+    margin-bottom: 5px;
+}
+#bulk-upload-file {
+    font-size: 1rem;
+    padding: 10px;
+    border: 1px dashed var(--secondary);
+    border-radius: 4px;
+    background: var(--bg-white);
+}
 
-/* --- *** NEW: Exam Prep View *** --- */
+/* --- NEW: Exam Prep View --- */
 .exam-breadcrumbs {
     font-size: 1.2rem;
     font-weight: 700;

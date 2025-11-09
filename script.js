@@ -152,6 +152,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminExamSelect = document.getElementById('admin-exam-select');
     const adminSubjectSelect = document.getElementById('admin-subject-select');
     const adminTopicSelect = document.getElementById('admin-topic-select');
+    // *** NEW Bulk Upload Elements ***
+    const bulkUploadForm = document.getElementById('bulk-upload-form');
+    const bulkExamSelect = document.getElementById('bulk-exam-select');
+    const bulkSubjectSelect = document.getElementById('bulk-subject-select');
+    const bulkTopicSelect = document.getElementById('bulk-topic-select');
+    const bulkUploadFile = document.getElementById('bulk-upload-file');
+
 
     // --- Live Game View Elements ---
     const hostLobbyView = document.getElementById('host-lobby-view');
@@ -220,9 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function showView(viewName) {
         // Hide all main views
         homeView.style.display = 'none';
-        libraryHomeView.style.display = 'none';
-        communityContentView.style.display = 'none';
-        examPrepView.style.display = 'none';
+        libraryHomeView.style.display = 'none'; // NEW
+        communityContentView.style.display = 'none'; // NEW (renamed from libraryView)
+        examPrepView.style.display = 'none'; // NEW
         quizAppContainer.style.display = 'none';
         studyPlayerContainer.style.display = 'none';
         dashboardView.style.display = 'none';
@@ -1506,51 +1513,60 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 5000);
     }
     
-    // --- *** NEW: ADMIN PANEL FUNCTIONS *** ---
+    // --- Admin Panel Functions ---
     async function loadAdminDropdowns() {
         try {
             // 1. Populate Exams
-            const examSelect = document.getElementById('admin-exam-select');
+            const examSelects = [adminExamSelect, bulkExamSelect];
             const examSnapshot = await db.collection("exams").get();
-            examSelect.innerHTML = '<option value="">-- Select Exam --</option>';
-            examSnapshot.forEach(doc => {
-                examSelect.innerHTML += `<option value="${doc.id}">${doc.data().name}</option>`;
+            
+            examSelects.forEach(select => {
+                select.innerHTML = '<option value="">-- Select Exam --</option>';
+                examSnapshot.forEach(doc => {
+                    select.innerHTML += `<option value="${doc.id}">${doc.data().name}</option>`;
+                });
             });
 
             // 2. Populate Subjects based on Exam
-            examSelect.onchange = async () => {
-                const examId = examSelect.value;
-                const subjectSelect = document.getElementById('admin-subject-select');
-                const topicSelect = document.getElementById('admin-topic-select');
-                if (!examId) {
+            [adminExamSelect, bulkExamSelect].forEach(select => {
+                select.onchange = async () => {
+                    const examId = select.value;
+                    const subjectSelect = (select.id === 'admin-exam-select') ? adminSubjectSelect : bulkSubjectSelect;
+                    const topicSelect = (select.id === 'admin-exam-select') ? adminTopicSelect : bulkTopicSelect;
+                    
+                    if (!examId) {
+                        subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+                        topicSelect.innerHTML = '<option value="">-- Select Topic --</option>';
+                        return;
+                    }
+                    const subjectSnapshot = await db.collection("exams").doc(examId).collection("subjects").get();
                     subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+                    subjectSnapshot.forEach(doc => {
+                        subjectSelect.innerHTML += `<option value="${doc.id}" data-exam-id="${examId}">${doc.data().name}</option>`;
+                    });
                     topicSelect.innerHTML = '<option value="">-- Select Topic --</option>';
-                    return;
-                }
-                const subjectSnapshot = await db.collection("exams").doc(examId).collection("subjects").get();
-                subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
-                subjectSnapshot.forEach(doc => {
-                    subjectSelect.innerHTML += `<option value="${doc.id}" data-exam-id="${examId}">${doc.data().name}</option>`;
-                });
-                topicSelect.innerHTML = '<option value="">-- Select Topic --</option>'; // Clear topics
-            };
+                };
+            });
 
             // 3. Populate Topics based on Subject
-            adminSubjectSelect.onchange = async () => {
-                const selectedOption = adminSubjectSelect.options[adminSubjectSelect.selectedIndex];
-                const subjectId = selectedOption.value;
-                const examId = selectedOption.dataset.examId;
-                const topicSelect = document.getElementById('admin-topic-select');
-                if (!subjectId) {
+            [adminSubjectSelect, bulkSubjectSelect].forEach(select => {
+                select.onchange = async () => {
+                    const selectedOption = select.options[select.selectedIndex];
+                    const subjectId = selectedOption.value;
+                    const examId = selectedOption.dataset.examId;
+                    const topicSelect = (select.id === 'admin-subject-select') ? adminTopicSelect : bulkTopicSelect;
+                    
+                    if (!subjectId) {
+                        topicSelect.innerHTML = '<option value="">-- Select Topic --</option>';
+                        return;
+                    }
+                    const topicSnapshot = await db.collection("exams").doc(examId).collection("subjects").doc(subjectId).collection("topics").get();
                     topicSelect.innerHTML = '<option value="">-- Select Topic --</option>';
-                    return;
-                }
-                const topicSnapshot = await db.collection("exams").doc(examId).collection("subjects").doc(subjectId).collection("topics").get();
-                topicSelect.innerHTML = '<option value="">-- Select Topic --</option>';
-                topicSnapshot.forEach(doc => {
-                    topicSelect.innerHTML += `<option value="${doc.id}" data-exam-id="${examId}" data-subject-id="${subjectId}">${doc.data().name}</option>`;
-                });
-            };
+                    topicSnapshot.forEach(doc => {
+                        topicSelect.innerHTML += `<option value="${doc.id}" data-exam-id="${examId}" data-subject-id="${subjectId}">${doc.data().name}</option>`;
+                    });
+                };
+            });
         } catch (err) {
             console.error("Error loading admin dropdowns: ", err);
             showToast("Could not load admin data.", "error");
@@ -1619,8 +1635,8 @@ document.addEventListener('DOMContentLoaded', () => {
             question: questionText,
             explanation: explanation,
             options: options,
-            correct_answer_index: 0, // Defaulting to Option 1 as correct
-            questionType: 'mc' // All exam questions are MC for now
+            correct_answer_index: 0, 
+            questionType: 'mc' 
         };
 
         db.collection("exams").doc(examId).collection("subjects").doc(subjectId).collection("topics").doc(topicId).collection("questions").add(newQuestion)
@@ -1629,12 +1645,72 @@ document.addEventListener('DOMContentLoaded', () => {
             addExamQuestionForm.reset();
         }).catch(err => showToast(err.message, "error"));
     };
-    // --- End Admin Panel ---
+
+    // --- *** NEW: Bulk Upload Logic *** ---
+    bulkUploadForm.onsubmit = (e) => {
+        e.preventDefault();
+        
+        const selectedOption = bulkTopicSelect.options[bulkTopicSelect.selectedIndex];
+        if (!selectedOption || !selectedOption.value) {
+            showToast("Please select an exam, subject, and topic.", "error");
+            return;
+        }
+        
+        const topicId = selectedOption.value;
+        const subjectId = selectedOption.dataset.subjectId;
+        const examId = selectedOption.dataset.examId;
+        
+        const file = bulkUploadFile.files[0];
+        if (!file) {
+            showToast("Please select a .json file to upload.", "error");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                const questionsArray = JSON.parse(event.target.result);
+                if (!Array.isArray(questionsArray)) {
+                    throw new Error("JSON file must be an array.");
+                }
+
+                showToast(`Uploading ${questionsArray.length} questions...`, "");
+
+                // Use a BATCH write for performance
+                const batch = db.batch();
+                const collectionRef = db.collection("exams").doc(examId).collection("subjects").doc(subjectId).collection("topics").doc(topicId).collection("questions");
+
+                questionsArray.forEach(q => {
+                    // Validate each question object
+                    if (!q.question || !q.options || q.correct_answer_index == null || !q.explanation) {
+                        console.warn("Skipping invalid question object: ", q);
+                        return; // Skip this question
+                    }
+                    
+                    const newQuestionRef = collectionRef.doc(); // Create a new doc with auto-ID
+                    batch.set(newQuestionRef, {
+                        question: q.question,
+                        options: q.options,
+                        correct_answer_index: q.correct_answer_index,
+                        explanation: q.explanation,
+                        questionType: 'mc' // All bulk uploads are MC for now
+                    });
+                });
+
+                await batch.commit();
+                showToast(`Successfully uploaded ${questionsArray.length} questions!`, "success");
+                bulkUploadForm.reset();
+
+            } catch (err) {
+                console.error("Error reading or parsing file: ", err);
+                showToast(`Error: ${err.message}`, "error");
+            }
+        };
+        reader.readAsText(file);
+    };
+
     
     // --- *** NEW: Exam Browser Logic *** ---
-    
-    // This is the main function for the exam prep view
-    // It can show exams, subjects, topics, or question sets
     async function loadExamBrowser(path = 'exams', breadcrumbHistory = []) {
         showView('exam-prep');
         examBrowserList.innerHTML = '<div class="loader"></div>';
@@ -1664,7 +1740,7 @@ document.addEventListener('DOMContentLoaded', () => {
             crumbLink.onclick = (e) => {
                 e.preventDefault();
                 // Load the path for the crumb they clicked
-                loadExamBrowser(crumb.path, breadcrumbHistory.slice(0, index + 1));
+                loadExamBrowser(crumb.path.substring(0, crumb.path.lastIndexOf('/')), breadcrumbHistory.slice(0, index + 1));
             };
             examBreadcrumbs.appendChild(crumbLink);
         });
@@ -1674,7 +1750,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (path.endsWith('/questions')) {
             // We are at the question level. We just show one "Quiz"
             examBrowserList.innerHTML = '';
-            const card = createBrowseCard("Start Quiz", "exam", "Click to start the practice test for this topic.", () => {
+            const card = createBrowseCard("Start Practice Quiz", "exam", "Click to start the practice test for this topic.", () => {
                 startExamQuiz(path); // Start the quiz
             });
             examBrowserList.appendChild(card);
@@ -1688,14 +1764,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const snapshot = await query.get();
             examBrowserList.innerHTML = '';
             if (snapshot.empty) {
-                examBrowserList.innerHTML = '<p>No content found in this section.</p>';
+                examBrowserList.innerHTML = '<p>No content found in this section. Admin needs to add it!</p>';
                 return;
             }
 
             snapshot.forEach(doc => {
                 const item = doc.data();
                 const itemId = doc.id;
-                const newPath = `${path}/${itemId}/${item.name === 'Algebra' ? 'questions' : 'subjects'}`; // HACK: This needs to be better
                 
                 // Determine next step
                 let nextCollectionName = 'subjects'; // Default
@@ -1753,8 +1828,9 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
         // Use the existing quiz player
-        startCustomQuiz(examQuizObject, collectionPath);
+        startCustomQuiz(examQuizObject, collectionPath); // Pass path as ID
     }
+    
     
     // --- Initialization ---
     function init() {

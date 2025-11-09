@@ -89,7 +89,7 @@
             </div>
 
             <div id="library-home-view" style="display: none;">
-                <h1 class="hero-heading">Library</h1>
+                 <h1 class="hero-heading">Library</h1>
                 <p class="hero-subheading">Choose a content category to explore.</p>
                 <div class="features-row">
                     <div class="card-home card-create">
@@ -121,6 +121,7 @@
                 <div id="exam-browser-list" class="quiz-list">
                     </div>
             </div>
+
 
             <div id="quiz-app-container" style="display: none;">
                 <div id="quiz-controls">
@@ -328,6 +329,7 @@
         <div class="modal-content" id="admin-modal-content">
             <button id="close-admin-btn" class="close-btn">X</button>
             <h2>Admin Panel (Exam Content)</h2>
+
             <section class="admin-section">
                 <h3>1. Create New Exam</h3>
                 <form id="add-exam-form">
@@ -335,6 +337,7 @@
                     <button type="submit" class="card-btn">Create Exam</button>
                 </form>
             </section>
+
             <section class="admin-section">
                 <h3>2. Create New Subject</h3>
                 <form id="add-subject-form">
@@ -345,6 +348,7 @@
                     <button type="submit" class="card-btn">Create Subject</button>
                 </form>
             </section>
+
             <section class="admin-section">
                 <h3>3. Create New Topic</h3>
                 <form id="add-topic-form">
@@ -355,8 +359,9 @@
                     <button type="submit" class="card-btn">Create Topic</button>
                 </form>
             </section>
+
             <section class="admin-section">
-                <h3>4. Add Exam Question</h3>
+                <h3>4. Add Single Exam Question</h3>
                 <form id="add-exam-question-form">
                     <select id="admin-topic-select" required>
                         <option value="">-- Select Topic --</option>
@@ -370,6 +375,26 @@
                     <button type="submit" class="card-btn">Add Question</button>
                 </form>
             </section>
+
+            <section class="admin-section">
+                <h3>5. Bulk Upload Questions (.json)</h3>
+                <form id="bulk-upload-form">
+                    <p>Select the topic to add questions to:</p>
+                    <select id="bulk-exam-select" required>
+                        <option value="">-- Select Exam --</option>
+                    </select>
+                    <select id="bulk-subject-select" required>
+                        <option value="">-- Select Subject --</option>
+                    </select>
+                    <select id="bulk-topic-select" required>
+                        <option value="">-- Select Topic --</option>
+                    </select>
+                    <p>Upload your .json file:</p>
+                    <input type="file" id="bulk-upload-file" accept=".json" required>
+                    <button type="submit" class="card-btn success-btn">Upload Bulk Questions</button>
+                </form>
+            </section>
+
         </div>
     </div>
 

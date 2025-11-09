@@ -178,8 +178,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const gamePlayerView = document.getElementById('game-player-view');
     const gamePlayerStatus = document.getElementById('game-player-status');
     const gamePlayerAnswers = document.getElementById('game-player-answers');
-
-    // *** NEW: Feedback and Final Leaderboard Elements ***
     const playerFeedbackView = document.getElementById('player-feedback-view');
     const playerFeedbackText = document.getElementById('player-feedback-text');
     const playerPointsEarned = document.getElementById('player-points-earned');
@@ -331,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
             authContainer.style.display = 'flex'; 
             userDisplay.style.display = 'none';
             welcomeUser.textContent = '';
-            sidebarAdminBtn.style.display = 'none'; // Hide admin button on logout
+            sidebarAdminBtn.style.display = 'none'; 
         }
     });
 
@@ -356,9 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
         studyTitleInput.value = '';
     };
     studyFlashcard.onclick = () => { studyFlashcard.classList.toggle('is-flipped'); };
-    
-    // *** BUG FIX: REMOVED ALL REFERENCES TO "manageContainer" and "closeManageBtn" ***
-    
+        
     closeResultsBtn.onclick = () => { resultsContainer.style.display = 'none'; };
     closeGiphyBtn.onclick = () => {
         giphyContainer.style.display = 'none';
@@ -1965,7 +1961,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebarAdminBtn.onclick = (e) => { 
             e.preventDefault();
             adminContainer.style.display = 'flex';
-            loadAdminDropdowns(); // Load for both forms
+            loadAdminDropdowns();
         };
         closeAdminBtn.onclick = () => { 
             adminContainer.style.display = 'none';

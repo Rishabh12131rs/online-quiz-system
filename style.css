@@ -796,7 +796,7 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
 .player-answer-btn[data-index="2"] { background-color: #ffc107; }
 .player-answer-btn[data-index="3"] { background-color: #28a745; }
 
-/* --- *** NEW: Admin Panel Styles *** --- */
+/* --- Admin Panel Styles --- */
 #admin-modal-content {
     max-height: 80vh;
     overflow-y: auto;

@@ -178,13 +178,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const gamePlayerView = document.getElementById('game-player-view');
     const gamePlayerStatus = document.getElementById('game-player-status');
     const gamePlayerAnswers = document.getElementById('game-player-answers');
-    // *** NEW Feedback Elements ***
+
+    // *** NEW: Feedback and Final Leaderboard Elements ***
     const playerFeedbackView = document.getElementById('player-feedback-view');
     const playerFeedbackText = document.getElementById('player-feedback-text');
     const playerPointsEarned = document.getElementById('player-points-earned');
     const playerTotalScore = document.getElementById('player-total-score');
-    
-    // *** NEW Final Leaderboard Elements ***
     const finalLeaderboardView = document.getElementById('final-leaderboard-view');
     const podiumName1 = document.getElementById('podium-name-1');
     const podiumScore1 = document.getElementById('podium-score-1');
@@ -332,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
             authContainer.style.display = 'flex'; 
             userDisplay.style.display = 'none';
             welcomeUser.textContent = '';
-            sidebarAdminBtn.style.display = 'none'; 
+            sidebarAdminBtn.style.display = 'none'; // Hide admin button on logout
         }
     });
 
@@ -357,7 +356,9 @@ document.addEventListener('DOMContentLoaded', () => {
         studyTitleInput.value = '';
     };
     studyFlashcard.onclick = () => { studyFlashcard.classList.toggle('is-flipped'); };
-        
+    
+    // *** BUG FIX: REMOVED ALL REFERENCES TO "manageContainer" and "closeManageBtn" ***
+    
     closeResultsBtn.onclick = () => { resultsContainer.style.display = 'none'; };
     closeGiphyBtn.onclick = () => {
         giphyContainer.style.display = 'none';
@@ -1544,7 +1545,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Correct!
             isCorrect = true;
             const timeTaken = myAnswer.time;
-            points = Math.round(1000 - (timeTaken * 100));
+            points = Math.round(1000 - (timeTaken * 100)); // This is an estimate, the real score is on the server
             
             playerFeedbackView.className = 'player-feedback-overlay correct';
             playerFeedbackText.textContent = "Correct!";
@@ -1569,9 +1570,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (btnIndex == correctAnswer) {
                 btn.classList.add('reveal-correct');
             } else if (btnIndex == (myAnswer ? myAnswer.answerIndex : null)) {
-                btn.classList.add('reveal-wrong');
+                // This was their wrong answer, keep it selected
+                btn.classList.add('selected');
             } else {
-                btn.classList.add('reveal-wrong'); // Fade out other wrong answers
+                // This was a wrong answer they didn't pick
+                btn.classList.add('reveal-wrong'); 
             }
         });
     }
@@ -1962,7 +1965,6 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebarAdminBtn.onclick = (e) => { 
             e.preventDefault();
             adminContainer.style.display = 'flex';
-            loadAdminDropdowns();
             loadAdminDropdowns(); // Load for both forms
         };
         closeAdminBtn.onclick = () => { 
@@ -1978,6 +1980,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             showView('exam-prep');
         };
+        
         // *** NEW: Final Leaderboard Home Button ***
         finalLeaderboardHomeBtn.onclick = (e) => {
             e.preventDefault();

@@ -1962,7 +1962,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Exam Browser Logic ---
     async function loadExamBrowser(path = 'exams', breadcrumbHistory = []) {
-        showView('exam-prep');
+        // *** BUG FIX: DO NOT call showView here, it causes an infinite loop ***
         examBrowserList.innerHTML = '<div class="loader"></div>';
         
         // 1. Build Breadcrumbs

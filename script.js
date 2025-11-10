@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Live Game State ---
     let currentGamePin = null;
     let currentGameRef = null; 
-    let hostPlayerListener = null; 
+    let hostPlayerListener = null; // *** BUG FIX: New variable for host listener ***
     let hostQuizData = null; 
     let playerGameListener = null;
 
@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
         errorElement.textContent = message;
     }
 
-    // --- View Switching Logic ---
+    // --- *** BUG FIX: Updated View Switching Logic *** ---
     function showView(viewName) {
         // Hide all main views
         homeView.style.display = 'none';
@@ -268,11 +268,11 @@ document.addEventListener('DOMContentLoaded', () => {
         gameHostView.style.display = 'none';
         gamePlayerView.style.display = 'none';
         finalLeaderboardView.style.display = 'none'; 
-        reviewView.style.display = 'none'; // *** NEW ***
+        reviewView.style.display = 'none'; 
 
         // Detach any active game listeners if we're leaving a game
         if (playerGameListener) {
-            playerGameListener.off(); 
+            playerGameListener.off(); // Detach the RTDB listener
             playerGameListener = null;
             if(currentGamePin && auth.currentUser) {
                 rtdb.ref(`games/${currentGamePin}/players/${auth.currentUser.uid}`).remove(); 
@@ -281,13 +281,15 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // *** BUG FIX: Correctly detach host listener ***
         if (hostPlayerListener) {
-            const playersRef = rtdb.ref(`games/${currentGamePin}/players`);
-            playersRef.off('value', hostPlayerListener); 
+            rtdb.ref(`games/${currentGamePin}/players`).off('value', hostPlayerListener); 
             hostPlayerListener = null;
         }
-        // Always clear the game pin and ref when changing views
-        currentGamePin = null;
-        currentGameRef = null;
+        
+        // Don't clear these if we are moving between game views
+        if (viewName !== 'game-host' && viewName !== 'game-player' && viewName !== 'final-leaderboard') {
+            currentGamePin = null;
+            currentGameRef = null;
+        }
         
         // Deactivate all sidebar links
         sidebarHomeBtn.classList.remove('active');
@@ -328,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gamePlayerView.style.display = 'block';
         } else if (viewName === 'final-leaderboard') { 
             finalLeaderboardView.style.display = 'block';
-        } else if (viewName === 'review') { // *** NEW ***
+        } else if (viewName === 'review') { 
             reviewView.style.display = 'block';
             sidebarDashboardBtn.classList.add('active'); // Keep dashboard active
         }
@@ -386,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
         giphyContainer.style.display = 'none';
         editorContainer.style.display = 'flex';
     };
-
+    
     // --- FIREBASE AUTHENTICATION LOGIC ---
     loginTab.onclick = () => {
         loginTab.classList.add('active');
@@ -846,30 +848,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // *** UPDATED: Adds "Review" button ***
+    // *** BUG FIX: This query no longer needs an index ***
     function loadMyResults(container) {
         const user = auth.currentUser;
         if (!user) return; 
         container.innerHTML = '<div class="loader"></div>';
-        db.collection("quiz_attempts").where("uid", "==", user.uid).orderBy("timestamp", "desc").limit(10) 
+        
+        // *** BUG FIX: Remove .orderBy() to avoid needing an index ***
+        db.collection("quiz_attempts").where("uid", "==", user.uid).limit(50) // Get last 50
           .get()
           .then(async (querySnapshot) => {
                 if (querySnapshot.empty) {
                     container.innerHTML = '<p>You haven\'t played any quizzes yet.</p>';
                     return;
                 }
-                let html = '';
-                const titlePromises = [];
-                const attempts = [];
                 
+                let attempts = [];
                 querySnapshot.forEach((doc) => {
                     const attempt = doc.data();
                     attempt.id = doc.id; // Save the attempt ID
                     attempts.push(attempt);
+                });
 
+                // *** NEW: Sort in JavaScript instead of in the query ***
+                attempts.sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
+                attempts = attempts.slice(0, 10); // Get the 10 most recent
+
+                let html = '';
+                const titlePromises = [];
+
+                attempts.forEach((attempt) => {
                     if (!attempt.quizId.startsWith('api_')) {
-                        if (attempt.quizId.includes('/')) { 
-                            titlePromises.push(Promise.resolve({ data: () => ({ title: "Exam Quiz" }) })); 
-                        } else { 
+                        if (attempt.quizId.includes('/')) { // Exam quiz
+                            titlePromises.push(Promise.resolve({ exists: true, data: () => ({ title: "Exam Quiz" }) })); 
+                        } else { // Community quiz
                             titlePromises.push(db.collection('quizzes').doc(attempt.quizId).get());
                         }
                     } else {
@@ -886,7 +898,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         quizTitle = titleDoc.data().title;
                     }
                     
-                    // *** NEW: Add Review Button ***
                     let reviewButtonHtml = '';
                     if (attempt.questions && attempt.userAnswers) { // Check if data exists to be reviewed
                          reviewButtonHtml = `<button class="review-btn card-btn" data-attempt-id="${attempt.id}">Review</button>`;
@@ -1386,9 +1397,14 @@ document.addEventListener('DOMContentLoaded', () => {
         showView('host-lobby');
         hostLobbyTitle.textContent = `Hosting Quiz: ${title}`;
         hostLobbyPin.textContent = pin;
+        
+        // *** BUG FIX: Set these refs correctly ***
+        currentGamePin = pin;
+        currentGameRef = rtdb.ref(`games/${pin}`);
+
         const playersRef = rtdb.ref(`games/${pin}/players`);
         
-        // *** BUG FIX: Store listener in new variable ***
+        // *** BUG FIX: Store the listener in hostPlayerListener ***
         hostPlayerListener = playersRef.on('value', (snapshot) => { 
             const players = snapshot.val() || {};
             hostLobbyPlayers.innerHTML = '';
@@ -1399,7 +1415,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 hostLobbyPlayers.appendChild(playerEl);
             });
         });
-        rtdb.ref(`games/${pin}`).onDisconnect().remove(); 
+        
+        currentGameRef.onDisconnect().remove(); 
     }
     
     // Step 3: Player joins with PIN
@@ -2260,7 +2277,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const itemCard = document.createElement('div');
                 itemCard.className = 'manage-quiz-card';
                 itemCard.innerHTML = `
-                    <h4>${item.name || item.question}</h4>
+                    <h4>${item.name || item.question.substring(0, 50) + '...'}</h4>
                     <div class="buttons-wrapper">
                         <button class="admin-delete-btn" data-id="${docId}">Delete</button>
                     </div>
@@ -2321,6 +2338,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast(`Error: ${err.message}`, "error");
         }
     }
+
 
     init(); // Run the initialization
 });

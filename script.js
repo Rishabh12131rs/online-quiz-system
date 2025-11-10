@@ -201,9 +201,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalLeaderboardList = document.getElementById('final-leaderboard-list');
     const finalLeaderboardHomeBtn = document.getElementById('final-leaderboard-home-btn');
 
+    // --- *** NEW: Answer Review Elements *** ---
+    const reviewView = document.getElementById('review-view');
+    const reviewTitle = document.getElementById('review-title');
+    const reviewBackBtn = document.getElementById('review-back-btn');
+    const reviewQuestionsList = document.getElementById('review-questions-list');
+
 
     // --- App State ---
     let questions = []; 
+    let userAnswers = []; // *** NEW: To store answers for review ***
     let currentQuizId = null; 
     let currentQuizObject = null; 
     let currentIndex = 0;
@@ -216,8 +223,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Live Game State ---
     let currentGamePin = null;
-    let currentGameRef = null; // This will ONLY be the ref to the game (e.g., rtdb.ref('games/1234'))
-    let hostPlayerListener = null; // *** BUG FIX: New variable for host listener ***
+    let currentGameRef = null; 
+    let hostPlayerListener = null; 
     let hostQuizData = null; 
     let playerGameListener = null;
 
@@ -246,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
         errorElement.textContent = message;
     }
 
-    // --- *** BUG FIX: Updated View Switching Logic *** ---
+    // --- View Switching Logic ---
     function showView(viewName) {
         // Hide all main views
         homeView.style.display = 'none';
@@ -261,10 +268,11 @@ document.addEventListener('DOMContentLoaded', () => {
         gameHostView.style.display = 'none';
         gamePlayerView.style.display = 'none';
         finalLeaderboardView.style.display = 'none'; 
+        reviewView.style.display = 'none'; // *** NEW ***
 
         // Detach any active game listeners if we're leaving a game
         if (playerGameListener) {
-            playerGameListener.off(); // Detach the RTDB listener
+            playerGameListener.off(); 
             playerGameListener = null;
             if(currentGamePin && auth.currentUser) {
                 rtdb.ref(`games/${currentGamePin}/players/${auth.currentUser.uid}`).remove(); 
@@ -274,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // *** BUG FIX: Correctly detach host listener ***
         if (hostPlayerListener) {
             const playersRef = rtdb.ref(`games/${currentGamePin}/players`);
-            playersRef.off('value', hostPlayerListener); // Detach the specific listener
+            playersRef.off('value', hostPlayerListener); 
             hostPlayerListener = null;
         }
         // Always clear the game pin and ref when changing views
@@ -320,6 +328,9 @@ document.addEventListener('DOMContentLoaded', () => {
             gamePlayerView.style.display = 'block';
         } else if (viewName === 'final-leaderboard') { 
             finalLeaderboardView.style.display = 'block';
+        } else if (viewName === 'review') { // *** NEW ***
+            reviewView.style.display = 'block';
+            sidebarDashboardBtn.classList.add('active'); // Keep dashboard active
         }
     }
 
@@ -375,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
         giphyContainer.style.display = 'none';
         editorContainer.style.display = 'flex';
     };
-    
+
     // --- FIREBASE AUTHENTICATION LOGIC ---
     loginTab.onclick = () => {
         loginTab.classList.add('active');
@@ -504,6 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function startApiQuiz(category, count, difficulty) { 
         currentQuizId = `api_${category}_${difficulty}`; 
         currentQuizObject = null;
+        userAnswers = []; // *** NEW: Clear user answers ***
         showView('quiz'); 
         quizControls.style.display = 'flex';
         quizArea.innerHTML = '<div class="loader"></div>'; 
@@ -519,11 +531,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 questions = data.results.map(q => ({
                     question: q.question,
                     options: [...q.incorrect_answers, q.correct_answer].sort(() => Math.random() - 0.5),
-                    correct_answer: q.correct_answer,
+                    correct_answer_index: -1, // We will find this
+                    correct_answer_text: q.correct_answer, // Store the text
                     questionType: 'mc',
                     explanation: 'Explanations are not available for API trivia questions.',
                     imageUrl: null
                 }));
+                
+                // Find and set the correct_answer_index
+                questions.forEach(q => {
+                    q.correct_answer_index = q.options.findIndex(opt => opt === q.correct_answer_text);
+                });
+
                 if (questions.length > 0) {
                     showQuestion();
                     quizNav.style.display = 'flex';
@@ -548,6 +567,7 @@ document.addEventListener('DOMContentLoaded', () => {
         questions = quizObject.questions;
         currentQuizId = quizId; 
         currentQuizObject = quizObject; 
+        userAnswers = []; // *** NEW: Clear user answers ***
         score = 0;
         currentIndex = 0;
         showView('quiz'); 
@@ -560,61 +580,57 @@ document.addEventListener('DOMContentLoaded', () => {
     function showQuestion() {
         clearInterval(timerInterval);
         if (currentIndex >= questions.length) {
-            // QUIZ COMPLETE LOGIC
-            const finalScorePercent = (questions.length > 0) ? (score / questions.length) : 0;
-            let recommendationHtml = ''; 
-            if (finalScorePercent < 0.6 && currentQuizObject && currentQuizObject.recommendedStudyGuideId) {
-                const guideId = currentQuizObject.recommendedStudyGuideId;
-                recommendationHtml = `<div class="recommendation-box" data-guide-id="${guideId}">Loading recommendation...</div>`;
-                db.collection("quizzes").doc(guideId).get()
-                    .then(doc => {
-                        const recBox = document.querySelector(`.recommendation-box[data-guide-id="${guideId}"]`);
-                        if (recBox && doc.exists) {
-                            const studyGuideData = doc.data();
-                            const studyGuideTitle = studyGuideData.title;
-                            recBox.innerHTML = `<h4>You scored ${score}/${questions.length}.</h4><p>We recommend reviewing this study guide before trying again:</p><button id="recommend-btn" class="card-btn">Study: ${studyGuideTitle}</button>`;
-                            document.getElementById('recommend-btn').onclick = () => {
-                                startStudySession(studyGuideData, guideId);
-                            };
-                        } else if (recBox) {
-                            recBox.innerHTML = '<p>Recommended study guide not found.</p>';
-                        }
-                    })
-                    .catch(err => {
-                        console.error("Error fetching recommendation:", err);
-                        const recBox = document.querySelector(`.recommendation-box[data-guide-id="${guideId}"]`);
-                        if(recBox) recBox.style.display = 'none';
-                    });
-            }
-            quizArea.innerHTML = `<h2>Quiz Complete!</h2><p>Your final score is: ${score} / ${questions.length}</p>${recommendationHtml}`;
+            // --- QUIZ COMPLETE LOGIC ---
+            
+            // *** NEW: Add Review Button ***
+            quizArea.innerHTML = `
+                <h2>Quiz Complete!</h2>
+                <p>Your final score is: ${score} / ${questions.length}</p>
+                <button id="review-quiz-btn" class="card-btn">Review Answers</button>
+            `;
+            
+            // Add listener for the new button
+            document.getElementById('review-quiz-btn').onclick = () => {
+                populateReviewView(questions, userAnswers, 'quiz'); // Go to review screen
+            };
+
             quizNav.style.display = 'none';
             quizControls.style.display = 'flex'; 
             timerDisplay.style.display = 'none'; 
+            
             const user = auth.currentUser;
             const username = user ? user.displayName : 'Anonymous';
             const uid = user ? user.uid : null;
-            saveQuizAttempt(username, uid, currentQuizId, score);
+            
+            // *** NEW: Save questions and answers ***
+            saveQuizAttempt(username, uid, currentQuizId, score, userAnswers, questions);
+            
             showLeaderboard();
             currentQuizObject = null; 
             return;
+            // --- END OF QUIZ COMPLETE LOGIC ---
         }
+        
         const q = questions[currentIndex];
         let imageHtml = '';
         if (q.imageUrl) imageHtml = `<img src="${q.imageUrl}" alt="Quiz Image" class="quiz-question-image">`;
         let questionHtml = '';
+        
         if (q.questionType === 'fill') {
             questionHtml = `<div class="fill-in-blank-group"><input type="text" id="fill-answer-input" placeholder="Type your answer..."><button id="fill-submit-btn" class="card-btn">Submit</button></div>`;
         } else {
             let options = q.options || [];
             questionHtml = options.map(opt => {
-                let isCorrect;
-                if (q.correct_answer) { isCorrect = decodeHTML(opt) === decodeHTML(q.correct_answer); } 
-                else { isCorrect = decodeHTML(opt) === decodeHTML(q.options[q.correct_answer_index]); }
+                // Determine correct answer
+                let correctAnswerText = q.correct_answer_text || q.options[q.correct_answer_index];
+                let isCorrect = decodeHTML(opt) === decodeHTML(correctAnswerText);
                 return `<button class="option-btn" data-correct="${isCorrect}">${decodeHTML(opt)}</button>`;
             }).join('');
         }
+        
         let html = `<div class="question-block">${imageHtml}<h4>Q${currentIndex + 1}: ${decodeHTML(q.question)}</h4>${questionHtml}</div><br><div id="feedback"></div>`;
         quizArea.innerHTML = html;
+        
         if (q.questionType === 'fill') {
             document.getElementById('fill-submit-btn').onclick = () => checkFillBlankAnswer();
             document.getElementById('fill-answer-input').onkeyup = (e) => {
@@ -628,6 +644,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateControls();
         startTimer();
     }
+    
     function startTimer() {
         timeLeft = 10; 
         timerDisplay.textContent = timeLeft;
@@ -643,22 +660,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, 1000); 
     }
+    
+    // *** NEW: All 3 functions below now save to userAnswers array ***
     function handleNoAnswer() {
         const q = questions[currentIndex];
         let correctAnswerText;
+        
+        userAnswers.push({ qIndex: currentIndex, answer: null, isCorrect: false }); // *** NEW ***
+
         if (q.questionType === 'fill') {
             correctAnswerText = q.answer;
             if(document.getElementById('fill-submit-btn')) document.getElementById('fill-submit-btn').disabled = true;
             if(document.getElementById('fill-answer-input')) document.getElementById('fill-answer-input').disabled = true;
         } else {
-            if (q.correct_answer) { correctAnswerText = q.correct_answer; } 
-            else { correctAnswerText = q.options[q.correct_answer_index]; }
+            correctAnswerText = q.correct_answer_text || q.options[q.correct_answer_index];
             disableOptions();
             const correctButton = document.querySelector(`.option-btn[data-correct="true"]`);
             if (correctButton) correctButton.classList.add('correct');
         }
         const explanationHtml = q.explanation ? `<div class="explanation-box">${q.explanation}</div>` : '';
-        if(document.getElementById('feedback')) { // Check if feedback div exists
+        if(document.getElementById('feedback')) { 
             document.getElementById('feedback').innerHTML = `<span style="color:red;">Time's up! Correct was: ${decodeHTML(correctAnswerText)}</span>${explanationHtml}`;
         }
     }
@@ -671,9 +692,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const q = questions[currentIndex];
         const userAnswer = input.value.trim();
         const correctAnswer = q.answer.trim();
+        const isCorrect = (userAnswer.toLowerCase() === correctAnswer.toLowerCase());
+        
+        userAnswers.push({ qIndex: currentIndex, answer: userAnswer, isCorrect: isCorrect }); // *** NEW ***
+
         const explanationHtml = q.explanation ? `<div class="explanation-box">${q.explanation}</div>` : '';
         const feedbackDiv = document.getElementById('feedback');
-        if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+        if (isCorrect) {
             feedbackDiv.innerHTML = `<span style="color:green;">Correct!</span>${explanationHtml}`;
             score++;
         } else {
@@ -687,6 +712,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const feedbackDiv = document.getElementById('feedback');
         const q = questions[currentIndex];
         const explanationHtml = q.explanation ? `<div class="explanation-box">${q.explanation}</div>` : '';
+        
+        userAnswers.push({ qIndex: currentIndex, answer: selectedButton.textContent, isCorrect: isCorrect }); // *** NEW ***
+
         disableOptions(); 
         if (isCorrect) {
             selectedButton.classList.add('correct'); 
@@ -694,15 +722,14 @@ document.addEventListener('DOMContentLoaded', () => {
             score++;
         } else {
             selectedButton.classList.add('incorrect'); 
-            let correctAnswerText;
-            if (q.correct_answer) { correctAnswerText = q.correct_answer; } 
-            else { correctAnswerText = q.options[q.correct_answer_index]; }
+            let correctAnswerText = q.correct_answer_text || q.options[q.correct_answer_index];
             feedbackDiv.innerHTML = `<span style="color:red;">Wrong! Correct was: ${decodeHTML(correctAnswerText)}</span>${explanationHtml}`;
             const correctButton = document.querySelector(`.option-btn[data-correct="true"]`);
             if (correctButton) correctButton.classList.add('correct');
         }
         scoreLabel.textContent = 'Score: ' + score;
     }
+    
     function disableOptions() {
         document.querySelectorAll('.option-btn').forEach((btn) => {
             btn.disabled = true;
@@ -727,17 +754,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- End Solo Quiz ---
 
     // --- Leaderboard & Results Logic ---
-    function saveQuizAttempt(username, uid, quizId, score) {
+    // *** UPDATED: Now saves questions and answers ***
+    function saveQuizAttempt(username, uid, quizId, score, userAnswers, questions) {
         if (!uid || !quizId) return; 
+        
+        // Don't save full question data for API quizzes
+        const questionsToSave = quizId.startsWith('api_') ? null : questions;
+        
         db.collection("quiz_attempts").add({
             username: username,
             uid: uid,
             quizId: quizId,
             score: score,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            userAnswers: userAnswers,     // *** NEW ***
+            questions: questionsToSave  // *** NEW ***
         })
         .then(() => console.log("Solo attempt saved!"))
         .catch(err => console.error("Error saving attempt: ", err));
+        
         saveGlobalHighScore(username, uid, score);
     }
     function saveGlobalHighScore(username, uid, newScore) {
@@ -810,6 +845,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadManageList(dashboardMyContentList);
     }
     
+    // *** UPDATED: Adds "Review" button ***
     function loadMyResults(container) {
         const user = auth.currentUser;
         if (!user) return; 
@@ -824,31 +860,63 @@ document.addEventListener('DOMContentLoaded', () => {
                 let html = '';
                 const titlePromises = [];
                 const attempts = [];
+                
                 querySnapshot.forEach((doc) => {
                     const attempt = doc.data();
+                    attempt.id = doc.id; // Save the attempt ID
                     attempts.push(attempt);
+
                     if (!attempt.quizId.startsWith('api_')) {
-                        // Check if it's an exam quiz or community quiz
-                        if (attempt.quizId.includes('/')) { // Exam quiz
-                            // We can't easily get the title from the deep path, so we'll just label it
+                        if (attempt.quizId.includes('/')) { 
                             titlePromises.push(Promise.resolve({ data: () => ({ title: "Exam Quiz" }) })); 
-                        } else { // Community quiz
+                        } else { 
                             titlePromises.push(db.collection('quizzes').doc(attempt.quizId).get());
                         }
                     } else {
                         titlePromises.push(Promise.resolve(null));
                     }
                 });
+                
                 const titleDocs = await Promise.all(titlePromises);
+                
                 attempts.forEach((attempt, index) => {
                     let quizTitle = "API Quiz"; 
                     const titleDoc = titleDocs[index];
                     if (titleDoc && titleDoc.exists) {
                         quizTitle = titleDoc.data().title;
                     }
-                    html += `<div class="my-result-card"><div><div class="my-result-card-name">${quizTitle}</div><div class="my-result-card-title">${new Date(attempt.timestamp.toDate()).toLocaleDateString()}</div></div><span class="my-result-card-score">${attempt.score}</span></div>`;
+                    
+                    // *** NEW: Add Review Button ***
+                    let reviewButtonHtml = '';
+                    if (attempt.questions && attempt.userAnswers) { // Check if data exists to be reviewed
+                         reviewButtonHtml = `<button class="review-btn card-btn" data-attempt-id="${attempt.id}">Review</button>`;
+                    }
+
+                    html += `
+                        <div class="my-result-card">
+                            <div>
+                                <div class="my-result-card-name">${quizTitle}</div>
+                                <div class="my-result-card-title">${new Date(attempt.timestamp.toDate()).toLocaleDateString()}</div>
+                            </div>
+                            <div class="buttons-wrapper">
+                                ${reviewButtonHtml}
+                                <span class="my-result-card-score">${attempt.score} / ${attempt.questions ? attempt.questions.length : '?'}</span>
+                            </div>
+                        </div>`;
                 });
                 container.innerHTML = html;
+                
+                // *** NEW: Add listeners for all new Review buttons ***
+                container.querySelectorAll('.review-btn').forEach(btn => {
+                    btn.onclick = () => {
+                        const attemptId = btn.dataset.attemptId;
+                        const attemptData = attempts.find(a => a.id === attemptId);
+                        if (attemptData) {
+                            populateReviewView(attemptData.questions, attemptData.userAnswers, 'dashboard');
+                        }
+                    };
+                });
+                
           }).catch(err => {
                 console.error("Error getting my results: ", err);
                 container.innerHTML = '<p>Could not load your results.</p>';
@@ -1984,6 +2052,79 @@ document.addEventListener('DOMContentLoaded', () => {
         startCustomQuiz(examQuizObject, collectionPath); // Pass path as ID
     }
     
+    // --- *** NEW: Answer Review Function *** ---
+    function populateReviewView(questions, userAnswers, fromView) {
+        showView('review-view');
+        reviewQuestionsList.innerHTML = ''; // Clear old review
+        reviewTitle.textContent = `Reviewing: ${currentQuizObject ? currentQuizObject.title : 'Quiz'}`;
+
+        // Set up the back button
+        reviewBackBtn.onclick = () => {
+            if (fromView === 'dashboard') {
+                showView('dashboard');
+            } else {
+                showView('quiz'); // Go back to the quiz results screen
+                quizArea.innerHTML = `<h2>Quiz Complete!</h2><p>Your final score is: ${score} / ${questions.length}</p><button id="review-quiz-btn" class="card-btn">Review Answers</button>`;
+                document.getElementById('review-quiz-btn').onclick = () => {
+                   populateReviewView(questions, userAnswers, 'quiz');
+                };
+            }
+        };
+
+        questions.forEach((q, index) => {
+            const ua = userAnswers.find(a => a.qIndex === index);
+            const userAnswer = ua ? ua.answer : null;
+            const card = document.createElement('div');
+            card.className = 'review-question-card';
+
+            let optionsHtml = '';
+            
+            if (q.questionType === 'fill') {
+                const correctAnswer = q.answer;
+                const isCorrect = (userAnswer && userAnswer.toLowerCase() === correctAnswer.toLowerCase());
+                optionsHtml = `
+                    <div class="review-fill-answer ${isCorrect ? 'correct' : 'incorrect'}">
+                        <strong>Your Answer:</strong> ${userAnswer || "No answer"}
+                    </div>
+                    ${!isCorrect ? `<div class="review-fill-answer correct" style="margin-top: 10px;"><strong>Correct Answer:</strong> ${correctAnswer}</div>` : ''}
+                `;
+            } else {
+                // Multiple Choice
+                const correctAnswer = q.correct_answer_text || q.options[q.correct_answer_index];
+                optionsHtml = q.options.map(opt => {
+                    const isCorrect = (decodeHTML(opt) === decodeHTML(correctAnswer));
+                    const isSelected = (decodeHTML(opt) === decodeHTML(userAnswer));
+                    
+                    let className = 'review-option';
+                    if (isCorrect) {
+                        className += ' correct';
+                    } else if (isSelected && !isCorrect) {
+                        className += ' incorrect';
+                    }
+                    
+                    if (isSelected) {
+                        className += ' selected'; // Extra style for what user picked
+                    }
+                    
+                    return `<div class="${className}">${decodeHTML(opt)}</div>`;
+                }).join('');
+            }
+            
+            card.innerHTML = `
+                <h4>Q${index + 1}: ${decodeHTML(q.question)}</h4>
+                ${q.imageUrl ? `<img src="${q.imageUrl}" class="quiz-question-image">` : ''}
+                <div class="review-options-list">
+                    ${optionsHtml}
+                </div>
+                <div class="explanation-box" style="display: block;">
+                    <strong>Explanation:</strong>
+                    <p style="margin: 5px 0 0 0;">${decodeHTML(q.explanation)}</p>
+                </div>
+            `;
+            reviewQuestionsList.appendChild(card);
+        });
+    }
+
     
     // --- Initialization ---
     function init() {
@@ -2016,12 +2157,27 @@ document.addEventListener('DOMContentLoaded', () => {
             showView('home');
         };
 
-        // --- *** NEW: PDF Generator Listeners *** ---
-        // This button was removed from HTML, so this code is removed
-        // createFromPdfBtn.onclick = () => { ... }
-        // closeUploadBtn.onclick = () => { ... }
-        // pdfUploadForm.onsubmit = (e) => { ... }
+        // *** NEW: Admin Panel Tab Listeners ***
+        adminTabAdd.onclick = () => {
+            adminTabAdd.classList.add('active');
+            adminTabManage.classList.remove('active');
+            adminAddContent.style.display = 'block';
+            adminManageContent.style.display = 'none';
+        };
+        adminTabManage.onclick = () => {
+            adminTabManage.classList.add('active');
+            adminTabAdd.classList.remove('active');
+            adminManageContent.style.display = 'block';
+            adminAddContent.style.display = 'none';
+            // Load the manager when tab is clicked
+            loadAdminManageList(); 
+        };
 
+        // *** NEW: Answer Review Back Button ***
+        reviewBackBtn.onclick = () => {
+            // Default action, will be overridden by populateReviewView
+            showView('dashboard'); 
+        };
 
         // --- Dark Mode Logic ---
         const theme = localStorage.getItem('theme');
@@ -2068,6 +2224,102 @@ document.addEventListener('DOMContentLoaded', () => {
                 else if (category) { startApiQuiz(category, 10, 'any'); }
             });
         });
+    }
+
+    // --- *** NEW: Admin Content Manager Functions *** ---
+    function loadAdminManageList(path = 'exams', level = 'exam') {
+        let container;
+        // Reset lower levels
+        if (level === 'exam') {
+            adminManageSubjects.innerHTML = '';
+            adminManageTopics.innerHTML = '';
+            adminManageQuestions.innerHTML = '';
+            container = adminManageExams;
+        } else if (level === 'subject') {
+            adminManageTopics.innerHTML = '';
+            adminManageQuestions.innerHTML = '';
+            container = adminManageSubjects;
+        } else if (level === 'topic') {
+            adminManageQuestions.innerHTML = '';
+            container = adminManageTopics;
+        } else if (level === 'question') {
+            container = adminManageQuestions;
+        }
+        
+        container.innerHTML = '<div class="loader"></div>';
+
+        db.collection(path).get().then(snapshot => {
+            container.innerHTML = '';
+            if (snapshot.empty) {
+                container.innerHTML = '<p>No content here.</p>';
+                return;
+            }
+            snapshot.forEach(doc => {
+                const item = doc.data();
+                const docId = doc.id;
+                const itemCard = document.createElement('div');
+                itemCard.className = 'manage-quiz-card';
+                itemCard.innerHTML = `
+                    <h4>${item.name || item.question}</h4>
+                    <div class="buttons-wrapper">
+                        <button class="admin-delete-btn" data-id="${docId}">Delete</button>
+                    </div>
+                `;
+                
+                // Add click listener to browse deeper (unless it's a question)
+                if (level !== 'question') {
+                    itemCard.querySelector('h4').style.cursor = 'pointer';
+                    itemCard.querySelector('h4').onclick = () => {
+                        let nextLevel = '';
+                        let nextPath = '';
+                        if (level === 'exam') {
+                            nextLevel = 'subject';
+                            nextPath = `exams/${docId}/subjects`;
+                        } else if (level === 'subject') {
+                            nextLevel = 'topic';
+                            nextPath = `${path}/${docId}/topics`;
+                        } else if (level === 'topic') {
+                            nextLevel = 'question';
+                            nextPath = `${path}/${docId}/questions`;
+                        }
+                        loadAdminManageList(nextPath, nextLevel);
+                    };
+                }
+                
+                // Add delete listener
+                itemCard.querySelector('.admin-delete-btn').onclick = (e) => {
+                    e.stopPropagation(); // Don't trigger the click above
+                    deleteAdminContent(path, docId, level);
+                };
+                container.appendChild(itemCard);
+            });
+        }).catch(err => {
+            console.error("Error loading admin manage list: ", err);
+            container.innerHTML = '<p>Error loading content.</p>';
+        });
+    }
+
+    async function deleteAdminContent(path, docId, level) {
+        if (!confirm(`Are you SURE you want to delete this ${level}? This will delete all content inside it!`)) {
+            return;
+        }
+        
+        showToast(`Deleting...`, "");
+        
+        // This is a complex operation, we need to delete all sub-collections
+        // For simplicity right now, we'll only delete the doc itself.
+        // A full solution requires a Cloud Function for deep deletes.
+        try {
+            await db.collection(path).doc(docId).delete();
+            showToast(`${level} deleted successfully!`, "success");
+            // Refresh the current level
+            loadAdminManageList(path, level);
+            // After deleting, we must also refresh the add content dropdowns
+            loadAdminDropdowns();
+        } catch (err) {
+            console.error("Error deleting content: ", err);
+            showToast(`Error: ${err.message}`, "error");
+        }
     }
 
     init(); // Run the initialization

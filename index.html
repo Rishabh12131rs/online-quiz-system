@@ -11,7 +11,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    </head>
+</head>
 <body>
 
     <header>
@@ -263,7 +263,13 @@
                     </div>
                 <button id="final-leaderboard-home-btn" class="card-btn">Back to Home</button>
             </div>
-
+            
+            <div id="review-view" style="display: none;">
+                <h1 class="hero-heading" id="review-title">Review Answers</h1>
+                <button id="review-back-btn" class="card-btn">Back to Dashboard</button>
+                <div id="review-questions-list" style="margin-top: 20px;">
+                    </div>
+            </div>
 
         </main>
     </div> <div id="auth-container" class="modal-overlay" style="display: flex;">
@@ -362,68 +368,98 @@
         <div class="modal-content" id="admin-modal-content">
             <button id="close-admin-btn" class="close-btn">X</button>
             <h2>Admin Panel (Exam Content)</h2>
-            <section class="admin-section">
-                <h3>1. Create New Exam</h3>
-                <form id="add-exam-form">
-                    <input type="text" id="admin-exam-name" placeholder="Exam Name (e.g., SAT)" required>
-                    <button type="submit" class="card-btn">Create Exam</button>
-                </form>
-            </section>
-            <section class="admin-section">
-                <h3>2. Create New Subject</h3>
-                <form id="add-subject-form">
-                    <select id="admin-exam-select" required>
-                        <option value="">-- Select Exam --</option>
-                    </select>
-                    <input type="text" id="admin-subject-name" placeholder="Subject Name (e.g., Math)" required>
-                    <button type="submit" class="card-btn">Create Subject</button>
-                </form>
-            </section>
-            <section class="admin-section">
-                <h3>3. Create New Topic</h3>
-                <form id="add-topic-form">
-                    <select id="admin-subject-select" required>
-                        <option value="">-- Select Subject --</option>
-                    </select>
-                    <input type="text" id="admin-topic-name" placeholder="Topic Name (e.g., Algebra)" required>
-                    <button type="submit" class="card-btn">Create Topic</button>
-                </form>
-            </section>
-            <section class="admin-section">
-                <h3>4. Add Single Exam Question</h3>
-                <form id="add-exam-question-form">
-                    <select id="admin-topic-select" required>
-                        <option value="">-- Select Topic --</option>
-                    </select>
-                    <textarea id="admin-q-text" placeholder="Question Text" required></textarea>
-                    <input type="text" id="admin-q-opt-1" placeholder="Option 1 (Correct)" required>
-                    <input type="text" id="admin-q-opt-2" placeholder="Option 2" required>
-                    <input type="text" id="admin-q-opt-3" placeholder="Option 3" required>
-                    <input type="text" id="admin-q-opt-4" placeholder="Option 4" required>
-                    <textarea id="admin-q-explanation" placeholder="Detailed Explanation" required></textarea>
-                    <button type="submit" class="card-btn">Add Question</button>
-                </form>
-            </section>
-            <section class="admin-section">
-                <h3>5. Bulk Upload Questions (.json)</h3>
-                <form id="bulk-upload-form">
-                    <p>Select the topic to add questions to:</p>
-                    <select id="bulk-exam-select" required>
-                        <option value="">-- Select Exam --</option>
-                    </select>
-                    <select id="bulk-subject-select" required>
-                        <option value="">-- Select Subject --</option>
-                    </select>
-                    <select id="bulk-topic-select" required>
-                        <option value="">-- Select Topic --</option>
-                    </select>
-                    <p>Upload your .json file:</p>
-                    <input type="file" id="bulk-upload-file" accept=".json" required>
-                    <button type="submit" class="card-btn success-btn">Upload Bulk Questions</button>
-                </form>
-            </section>
+
+            <div class="auth-tabs">
+                <button id="admin-tab-add" class="active">Add Content</button>
+                <button id="admin-tab-manage">Manage Content</button>
+            </div>
+
+            <div id="admin-add-content">
+                <section class="admin-section">
+                    <h3>1. Create New Exam</h3>
+                    <form id="add-exam-form">
+                        <input type="text" id="admin-exam-name" placeholder="Exam Name (e.g., SAT)" required>
+                        <button type="submit" class="card-btn">Create Exam</button>
+                    </form>
+                </section>
+                <section class="admin-section">
+                    <h3>2. Create New Subject</h3>
+                    <form id="add-subject-form">
+                        <select id="admin-exam-select" required>
+                            <option value="">-- Select Exam --</option>
+                        </select>
+                        <input type="text" id="admin-subject-name" placeholder="Subject Name (e.g., Math)" required>
+                        <button type="submit" class="card-btn">Create Subject</button>
+                    </form>
+                </section>
+                <section class="admin-section">
+                    <h3>3. Create New Topic</h3>
+                    <form id="add-topic-form">
+                        <select id="admin-subject-select" required>
+                            <option value="">-- Select Subject --</option>
+                        </select>
+                        <input type="text" id="admin-topic-name" placeholder="Topic Name (e.g., Algebra)" required>
+                        <button type="submit" class="card-btn">Create Topic</button>
+                    </form>
+                </section>
+                <section class="admin-section">
+                    <h3>4. Add Single Exam Question</h3>
+                    <form id="add-exam-question-form">
+                        <select id="admin-topic-select" required>
+                            <option value="">-- Select Topic --</option>
+                        </select>
+                        <textarea id="admin-q-text" placeholder="Question Text" required></textarea>
+                        <input type="text" id="admin-q-opt-1" placeholder="Option 1 (Correct)" required>
+                        <input type="text" id="admin-q-opt-2" placeholder="Option 2" required>
+                        <input type="text" id="admin-q-opt-3" placeholder="Option 3" required>
+                        <input type="text" id="admin-q-opt-4" placeholder="Option 4" required>
+                        <textarea id="admin-q-explanation" placeholder="Detailed Explanation" required></textarea>
+                        <button type="submit" class="card-btn">Add Question</button>
+                    </form>
+                </section>
+                <section class="admin-section">
+                    <h3>5. Bulk Upload Questions (.json)</h3>
+                    <form id="bulk-upload-form">
+                        <p>Select the topic to add questions to:</p>
+                        <select id="bulk-exam-select" required>
+                            <option value="">-- Select Exam --</option>
+                        </select>
+                        <select id="bulk-subject-select" required>
+                            <option value="">-- Select Subject --</option>
+                        </select>
+                        <select id="bulk-topic-select" required>
+                            <option value="">-- Select Topic --</option>
+                        </select>
+                        <p>Upload your .json file:</p>
+                        <input type="file" id="bulk-upload-file" accept=".json" required>
+                        <button type="submit" class="card-btn success-btn">Upload Bulk Questions</button>
+                    </form>
+                </section>
+            </div>
+
+            <div id="admin-manage-content" style="display: none;">
+                <div class="admin-manager-grid">
+                    <div class="admin-manager-col">
+                        <h4>Exams</h4>
+                        <div class="admin-manager-list" id="admin-manage-exams"></div>
+                    </div>
+                    <div class="admin-manager-col">
+                        <h4>Subjects</h4>
+                        <div class="admin-manager-list" id="admin-manage-subjects"></div>
+                    </div>
+                    <div class="admin-manager-col">
+                        <h4>Topics</h4>
+                        <div class="admin-manager-list" id="admin-manage-topics"></div>
+                    </div>
+                    <div class="admin-manager-col">
+                        <h4>Questions</h4>
+                        <div class="admin-manager-list" id="admin-manage-questions"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
 
     <div id="toast-notification"></div>
     <footer>&copy; 2025 QuizHub</footer>

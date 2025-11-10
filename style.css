@@ -140,7 +140,6 @@ main {
 }
 .card-home h2 { margin-top: 0; }
 .card-home p { color: var(--secondary); }
-/* --- AI PDF Card Style REMOVED --- */
 
 /* --- Search & Quiz List --- */
 .search-container { display: flex; margin-bottom: 30px; }
@@ -265,7 +264,7 @@ main {
 }
 #editor-modal-content, #study-editor-modal-content,
 #results-modal-content, #giphy-modal-content,
-#admin-modal-content { /* PDF modal style removed */
+#admin-modal-content { 
     max-width: 800px;
 }
 
@@ -276,6 +275,9 @@ main {
     background: var(--bg-light);
     color: var(--secondary);
     border-radius: 0;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: 700;
 }
 .auth-tabs button.active {
     background: var(--bg-white);
@@ -301,7 +303,7 @@ main {
     font-weight: 700;
     font-size: 0.9rem;
     color: var(--secondary);
-    margin-bottom: -10px; /* Pulls it closer to the input */
+    margin-bottom: -10px; 
 }
 
 .error-msg { color: var(--error); text-align: center; margin: 0; }
@@ -559,6 +561,13 @@ body.dark-mode .explanation-box { background: #2a3a4a; border-color: var(--prima
     color: var(--primary);
 }
 .my-result-card-title { font-size: 0.9rem; color: var(--secondary); }
+/* *** NEW: Review Button Style *** */
+.my-result-card .review-btn {
+    background: var(--secondary);
+    color: white;
+    font-size: 0.8rem;
+    padding: 6px 10px;
+}
 
 /* --- Giphy Modal --- */
 .giphy-search-box { display: flex; gap: 10px; margin-bottom: 20px; }
@@ -814,7 +823,6 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
     transform: scale(1.05);
     box-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }
-/* Show correct/wrong on player screen */
 .player-answer-btn.reveal-correct {
     opacity: 1;
     transform: scale(1.05);
@@ -997,4 +1005,98 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
 #final-leaderboard-home-btn {
     margin-top: 30px;
     font-size: 1.2rem;
+}
+
+/* --- *** NEW: Answer Review Styles *** --- */
+.review-question-card {
+    background: var(--bg-white);
+    border-radius: 8px;
+    box-shadow: var(--card-shadow);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+.review-question-card h4 {
+    margin-top: 0;
+    font-size: 1.2rem;
+}
+.review-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: var(--bg-light);
+    color: var(--text-dark);
+    border: 2px solid var(--border-color);
+    margin-bottom: 10px;
+    padding: 15px;
+    border-radius: 8px;
+    box-sizing: border-box; /* Important */
+    font-weight: 700;
+}
+.review-option.correct {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+}
+.review-option.incorrect {
+    background: var(--error);
+    border-color: var(--error);
+    color: white;
+    text-decoration: line-through;
+}
+.review-option.selected {
+    /* This style will apply to both correct and incorrect user answers */
+    box-shadow: 0 0 10px 3px var(--primary);
+}
+.review-fill-answer {
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: 10px;
+    background: var(--bg-light);
+    border-radius: 4px;
+}
+.review-fill-answer.correct {
+    color: var(--success);
+    border: 2px solid var(--success);
+}
+.review-fill-answer.incorrect {
+    color: var(--error);
+    border: 2px solid var(--error);
+    text-decoration: line-through;
+}
+
+/* --- Animation Styles --- */
+#home-view,
+#library-home-view,
+#community-content-view,
+#exam-prep-view,
+#quiz-app-container,
+#study-player-container,
+#dashboard-view,
+#review-view, /* Added review view */
+.game-view {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.card-home,
+.quiz-card,
+.manage-quiz-card,
+.my-result-card {
+    animation: popIn 0.4s ease-out backwards;
+}
+
+.card-home:nth-child(1), .quiz-card:nth-child(1) { animation-delay: 0.1s; }
+.card-home:nth-child(2), .quiz-card:nth-child(2) { animation-delay: 0.2s; }
+.card-home:nth-child(3), .quiz-card:nth-child(3) { animation-delay: 0.3s; }
+.quiz-card:nth-child(4) { animation-delay: 0.4s; }
+.quiz-card:nth-child(5) { animation-delay: 0.5s; }
+.quiz-card:nth-child(6) { animation-delay: 0.6s; }
+
+@keyframes popIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
 }

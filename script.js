@@ -17,6 +17,8 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 const rtdb = firebase.database(); // INITIALIZE REALTIME DATABASE
+const storage = firebase.storage(); // *** NEW: INITIALIZE STORAGE ***
+const functions = firebase.functions(); // *** NEW: INITIALIZE FUNCTIONS ***
 // --- END OF FIREBASE SETUP ---
 
 // *** NEW: SET YOUR ADMIN UID HERE ***
@@ -83,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const examPrepView = document.getElementById('exam-prep-view');
     const examBreadcrumbs = document.getElementById('exam-breadcrumbs');
     const examBrowserList = document.getElementById('exam-browser-list');
-    const examBrowserTitle = document.getElementById('exam-browser-title'); // *** THIS WAS THE MISSING VARIABLE ***
+    const examBrowserTitle = document.getElementById('exam-browser-title');
     const navCommunityBtn = document.getElementById('nav-community-btn');
     const navExamPrepBtn = document.getElementById('nav-exam-prep-btn');
 
@@ -158,6 +160,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const bulkSubjectSelect = document.getElementById('bulk-subject-select');
     const bulkTopicSelect = document.getElementById('bulk-topic-select');
     const bulkUploadFile = document.getElementById('bulk-upload-file');
+
+    // --- *** NEW: PDF Generator Modal Elements *** ---
+    const createFromPdfBtn = document.getElementById('create-from-pdf-btn');
+    const uploadGeneratorModal = document.getElementById('upload-generator-modal');
+    const closeUploadBtn = document.getElementById('close-upload-btn');
+    const pdfUploadForm = document.getElementById('pdf-upload-form');
+    const pdfQuizTitle = document.getElementById('pdf-quiz-title');
+    const pdfUploadFile = document.getElementById('pdf-upload-file');
+    const pdfGenerateBtn = document.getElementById('pdf-generate-btn');
+    const pdfUploadStatus = document.getElementById('pdf-upload-status');
+    const pdfStatusText = document.getElementById('pdf-status-text');
 
 
     // --- Live Game View Elements ---
@@ -361,6 +374,16 @@ document.addEventListener('DOMContentLoaded', () => {
         giphyContainer.style.display = 'none';
         editorContainer.style.display = 'flex';
     };
+    // *** NEW: PDF Modal Toggling ***
+    createFromPdfBtn.onclick = () => {
+        uploadGeneratorModal.style.display = 'flex';
+        pdfUploadStatus.style.display = 'none';
+        pdfUploadForm.reset();
+    };
+    closeUploadBtn.onclick = () => {
+        uploadGeneratorModal.style.display = 'none';
+    };
+
 
     // --- FIREBASE AUTHENTICATION LOGIC ---
     loginTab.onclick = () => {
@@ -1968,6 +1991,21 @@ document.addEventListener('DOMContentLoaded', () => {
             showView('home');
         };
 
+        // --- *** NEW: PDF Generator Listeners *** ---
+        createFromPdfBtn.onclick = () => {
+            uploadGeneratorModal.style.display = 'flex';
+            pdfUploadStatus.style.display = 'none';
+            pdfUploadForm.reset();
+            pdfGenerateBtn.disabled = false;
+        };
+        closeUploadBtn.onclick = () => {
+            uploadGeneratorModal.style.display = 'none';
+        };
+        pdfUploadForm.onsubmit = (e) => {
+            e.preventDefault();
+            handlePdfUpload();
+        };
+
         // --- Dark Mode Logic ---
         const theme = localStorage.getItem('theme');
         if (theme === 'dark') {
@@ -2014,6 +2052,69 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+
+    // --- *** NEW: PDF Upload and Function Call *** ---
+    async function handlePdfUpload() {
+        const user = auth.currentUser;
+        if (!user) {
+            showToast("Please log in to create a quiz.", "error");
+            return;
+        }
+
+        const file = pdfUploadFile.files[0];
+        const title = pdfQuizTitle.value.trim();
+
+        if (!file || !title) {
+            showToast("Please select a file and provide a title.", "error");
+            return;
+        }
+
+        pdfGenerateBtn.disabled = true;
+        pdfUploadStatus.style.display = 'block';
+        pdfStatusText.textContent = "Uploading PDF...";
+
+        try {
+            // 1. Upload file to Firebase Storage
+            const filePath = `uploads/${user.uid}/${Date.now()}_${file.name}`;
+            const storageRef = storage.ref(filePath);
+            const uploadTask = await storageRef.put(file);
+            
+            pdfStatusText.textContent = "File uploaded. Calling AI... (This may take a minute)";
+
+            // 2. Call the Cloud Function
+            // This function (generateQuizFromPdf) must be deployed in your Firebase project
+            const generateQuiz = functions.httpsCallable('generateQuizFromPdf');
+            
+            const result = await generateQuiz({ 
+                filePath: filePath,
+                title: title,
+                author: user.displayName || 'Anonymous',
+                authorUID: user.uid
+            });
+
+            // 3. Handle the result
+            const { quizId, error } = result.data;
+
+            if (error) {
+                throw new Error(error);
+            }
+
+            pdfUploadStatus.style.display = 'none';
+            pdfGenerateBtn.disabled = false;
+            uploadGeneratorModal.style.display = 'none';
+            showToast("AI Quiz generated successfully!", "success");
+            
+            // Show the user their new quiz
+            showView('community');
+
+        } catch (error) {
+            console.error("Error generating quiz: ", error);
+            showToast(`Error: ${error.message}`, "error");
+            pdfUploadStatus.style.display = 'none';
+            pdfGenerateBtn.disabled = false;
+        }
+    }
+
 
     init(); // Run the initialization
 });

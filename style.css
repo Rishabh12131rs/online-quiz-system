@@ -5,7 +5,7 @@
     --secondary: #6c757d;
     --success: #28a745;
     --error: #dc3545;
-    --exam: #9c27b0; /* New Exam color */
+    --exam: #9c27b0; 
     --gold: #ffd700;
     --silver: #c0c0c0;
     --bronze: #cd7f32;
@@ -140,6 +140,18 @@ main {
 }
 .card-home h2 { margin-top: 0; }
 .card-home p { color: var(--secondary); }
+/* --- NEW: AI Card Style --- */
+.card-ai-pdf {
+    background: linear-gradient(135deg, var(--exam), var(--primary));
+    color: white;
+}
+.card-ai-pdf h2, .card-ai-pdf p {
+    color: white;
+}
+.card-ai-pdf .card-btn {
+    background: var(--bg-white);
+    color: var(--exam);
+}
 
 /* --- Search & Quiz List --- */
 .search-container { display: flex; margin-bottom: 30px; }
@@ -187,6 +199,7 @@ main {
 .quiz-card-title.exam {
     border-left: 5px solid var(--exam);
 }
+
 .quiz-card-footer {
     display: flex;
     justify-content: space-between;
@@ -263,7 +276,7 @@ main {
 }
 #editor-modal-content, #study-editor-modal-content,
 #results-modal-content, #giphy-modal-content,
-#admin-modal-content { 
+#admin-modal-content, #upload-modal-content { 
     max-width: 800px;
 }
 
@@ -290,6 +303,19 @@ main {
     font-family: 'Montserrat', sans-serif;
     font-size: 1rem;
 }
+/* --- NEW: Style for file input --- */
+.modal-content input[type="file"] {
+    padding: 10px;
+    border: 1px dashed var(--secondary);
+    background: var(--bg-light);
+}
+.modal-content label {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--secondary);
+    margin-bottom: -10px; /* Pulls it closer to the input */
+}
+
 .error-msg { color: var(--error); text-align: center; margin: 0; }
 .form-link { color: var(--primary); text-decoration: none; text-align: center; }
 .auth-divider { text-align: center; margin: 15px 0; color: var(--secondary); }
@@ -816,7 +842,7 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
 .player-answer-btn[data-index="2"] { background-color: #ffc107; }
 .player-answer-btn[data-index="3"] { background-color: #28a745; }
 
-/* --- Player Feedback Overlay --- */
+/* Player Feedback Overlay */
 .player-feedback-overlay {
     position: absolute;
     top: 0;

@@ -19,8 +19,11 @@ const auth = firebase.auth();
 const rtdb = firebase.database(); // INITIALIZE REALTIME DATABASE
 // --- END OF FIREBASE SETUP ---
 
-// *** SET YOUR ADMIN UID HERE ***
-const ADMIN_UID = "NTSIsVxii9gKezQqQ3RYpQB2jTT";
+// *** NEW: SET YOUR ADMIN UID HERE ***
+// 1. Log in to your site
+// 2. Open the console (F12) and type: firebase.auth().currentUser.uid
+// 3. Copy the ID and paste it here
+const ADMIN_UID = "NTSIsVxii9gKezQqQ3RYpQB2jTT2";
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -155,6 +158,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const bulkSubjectSelect = document.getElementById('bulk-subject-select');
     const bulkTopicSelect = document.getElementById('bulk-topic-select');
     const bulkUploadFile = document.getElementById('bulk-upload-file');
+    const adminTabAdd = document.getElementById('admin-tab-add');
+    const adminTabManage = document.getElementById('admin-tab-manage');
+    const adminAddContent = document.getElementById('admin-add-content');
+    const adminManageContent = document.getElementById('admin-manage-content');
+    const adminManageExams = document.getElementById('admin-manage-exams');
+    const adminManageSubjects = document.getElementById('admin-manage-subjects');
+    const adminManageTopics = document.getElementById('admin-manage-topics');
+    const adminManageQuestions = document.getElementById('admin-manage-questions');
+
 
     // --- Live Game View Elements ---
     const hostLobbyView = document.getElementById('host-lobby-view');
@@ -204,7 +216,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Live Game State ---
     let currentGamePin = null;
-    let currentGameRef = null;
+    let currentGameRef = null; // This will ONLY be the ref to the game (e.g., rtdb.ref('games/1234'))
+    let hostPlayerListener = null; // *** BUG FIX: New variable for host listener ***
     let hostQuizData = null; 
     let playerGameListener = null;
 
@@ -233,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
         errorElement.textContent = message;
     }
 
-    // --- View Switching Logic ---
+    // --- *** BUG FIX: Updated View Switching Logic *** ---
     function showView(viewName) {
         // Hide all main views
         homeView.style.display = 'none';
@@ -251,17 +264,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Detach any active game listeners if we're leaving a game
         if (playerGameListener) {
-            playerGameListener.off(); 
+            playerGameListener.off(); // Detach the RTDB listener
             playerGameListener = null;
             if(currentGamePin && auth.currentUser) {
                 rtdb.ref(`games/${currentGamePin}/players/${auth.currentUser.uid}`).remove(); 
             }
-            currentGamePin = null;
         }
-        if (currentGameRef) {
-            currentGameRef.off(); 
-            currentGameRef = null;
+        
+        // *** BUG FIX: Correctly detach host listener ***
+        if (hostPlayerListener) {
+            const playersRef = rtdb.ref(`games/${currentGamePin}/players`);
+            playersRef.off('value', hostPlayerListener); // Detach the specific listener
+            hostPlayerListener = null;
         }
+        // Always clear the game pin and ref when changing views
+        currentGamePin = null;
+        currentGameRef = null;
         
         // Deactivate all sidebar links
         sidebarHomeBtn.classList.remove('active');
@@ -357,8 +375,6 @@ document.addEventListener('DOMContentLoaded', () => {
         giphyContainer.style.display = 'none';
         editorContainer.style.display = 'flex';
     };
-    
-    // --- *** BUG FIX: PDF GENERATOR BUTTONS REMOVED *** ---
     
     // --- FIREBASE AUTHENTICATION LOGIC ---
     loginTab.onclick = () => {
@@ -1262,34 +1278,39 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Step 1: Host clicks "Host Game"
     async function hostNewGame(quizId) {
-        const user = auth.currentUser;
-        if (!user) return;
-        const quizDoc = await db.collection("quizzes").doc(quizId).get();
-        if (!quizDoc.exists) {
-            showToast("Quiz not found.", "error");
-            return;
+        try {
+            const user = auth.currentUser;
+            if (!user) return;
+            const quizDoc = await db.collection("quizzes").doc(quizId).get();
+            if (!quizDoc.exists) {
+                showToast("Quiz not found.", "error");
+                return;
+            }
+            hostQuizData = quizDoc.data(); 
+            hostQuizData.questions = hostQuizData.questions.filter(q => q.questionType === 'mc');
+            if (hostQuizData.questions.length === 0) {
+                showToast("This quiz has no multiple-choice questions and cannot be hosted.", "error");
+                return;
+            }
+            const pin = Math.floor(1000 + Math.random() * 9000).toString();
+            currentGamePin = pin;
+            currentGameRef = rtdb.ref(`games/${pin}`);
+            await currentGameRef.set({
+                host: { uid: user.uid, name: user.displayName },
+                quizId: quizId,
+                quizTitle: hostQuizData.title,
+                gameState: "lobby", 
+                currentQuestion: -1, 
+                players: {},
+                scores: {}
+            });
+            await currentGameRef.child(`players/${user.uid}`).set({ name: user.displayName });
+            await currentGameRef.child(`scores/${user.uid}`).set({ name: user.displayName, score: 0 });
+            initHostLobby(pin, hostQuizData.title);
+        } catch (error) {
+            console.error("Error hosting game:", error);
+            showToast("Error hosting game. Check console and Firebase Rules.", "error");
         }
-        hostQuizData = quizDoc.data(); 
-        hostQuizData.questions = hostQuizData.questions.filter(q => q.questionType === 'mc');
-        if (hostQuizData.questions.length === 0) {
-            showToast("This quiz has no multiple-choice questions and cannot be hosted.", "error");
-            return;
-        }
-        const pin = Math.floor(1000 + Math.random() * 9000).toString();
-        currentGamePin = pin;
-        currentGameRef = rtdb.ref(`games/${pin}`);
-        await currentGameRef.set({
-            host: { uid: user.uid, name: user.displayName },
-            quizId: quizId,
-            quizTitle: hostQuizData.title,
-            gameState: "lobby", 
-            currentQuestion: -1, 
-            players: {},
-            scores: {}
-        });
-        await currentGameRef.child(`players/${user.uid}`).set({ name: user.displayName });
-        await currentGameRef.child(`scores/${user.uid}`).set({ name: user.displayName, score: 0 });
-        initHostLobby(pin, hostQuizData.title);
     }
 
     // Step 2: Host lands in lobby
@@ -1298,7 +1319,9 @@ document.addEventListener('DOMContentLoaded', () => {
         hostLobbyTitle.textContent = `Hosting Quiz: ${title}`;
         hostLobbyPin.textContent = pin;
         const playersRef = rtdb.ref(`games/${pin}/players`);
-        currentGameRef = playersRef.on('value', (snapshot) => { 
+        
+        // *** BUG FIX: Store listener in new variable ***
+        hostPlayerListener = playersRef.on('value', (snapshot) => { 
             const players = snapshot.val() || {};
             hostLobbyPlayers.innerHTML = '';
             Object.values(players).forEach(player => {
@@ -1318,6 +1341,8 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("You must be logged in to join a game.", "error");
             return;
         }
+        
+        gamePinInput.value = ""; // Clear input
         const gameRef = rtdb.ref(`games/${pin}`);
         gameRef.once('value', (snapshot) => {
             if (!snapshot.exists()) {
@@ -1329,6 +1354,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 currentGamePin = pin;
+                currentGameRef = gameRef; // Set the main game ref
                 gameRef.child(`players/${user.uid}`).set({ name: user.displayName });
                 gameRef.child(`scores/${user.uid}`).set({ name: user.displayName, score: 0 });
                 initPlayerLobby(pin); 
@@ -1340,6 +1366,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function initPlayerLobby(pin) {
         showView('player-lobby');
         currentGamePin = pin;
+        currentGameRef = rtdb.ref(`games/${pin}`); // Set the main game ref
+        
         const playersRef = rtdb.ref(`games/${pin}/players`);
         playersRef.on('value', (snapshot) => {
             const players = snapshot.val() || {};
@@ -1352,8 +1380,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        playerGameListener = rtdb.ref(`games/${pin}`);
-        playerGameListener.on('value', (snapshot) => {
+        playerGameListener = currentGameRef.on('value', (snapshot) => {
             const gameData = snapshot.val();
             if (!gameData) {
                 showToast("The host has ended the game.", "");
@@ -1383,14 +1410,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Step 6: Host sends a question
     function sendQuestion(qIndex) {
+        if (!currentGameRef) return; // Safety check
         if (qIndex >= hostQuizData.questions.length) {
             hostShowFinalResults();
             return;
         }
-        rtdb.ref(`games/${currentGamePin}`).update({
+        currentGameRef.update({
             gameState: 'question',
             currentQuestion: qIndex,
-            answers: {} 
+            answers: {},
+            correctAnswer: null // Clear previous correct answer
         });
         showView('game-host');
         gameHostLeaderboard.style.display = 'none';
@@ -1425,21 +1454,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // Step 7: Host shows results for the question
     async function hostShowResults() {
         clearInterval(timerInterval); 
+        if (!currentGameRef) return; // Safety check
         
-        const qIndex = (await rtdb.ref(`games/${currentGamePin}/currentQuestion`).get()).val();
+        const qIndex = (await currentGameRef.child('currentQuestion').get()).val();
         const q = hostQuizData.questions[qIndex];
         const correctAnswerIndex = q.correct_answer_index;
         
-        await rtdb.ref(`games/${currentGamePin}`).update({ 
+        await currentGameRef.update({ 
             gameState: 'results',
             correctAnswer: correctAnswerIndex 
         });
         
         gameHostAnswers.querySelector(`[data-correct="true"]`).classList.add('correct');
         
-        const answersSnapshot = await rtdb.ref(`games/${currentGamePin}/answers`).get();
+        const answersSnapshot = await currentGameRef.child('answers').get();
         const answers = answersSnapshot.val() || {};
-        const scoresRef = rtdb.ref(`games/${currentGamePin}/scores`);
+        const scoresRef = currentGameRef.child('scores');
         const scoresSnapshot = await scoresRef.get();
         const currentScores = scoresSnapshot.val() || {};
         
@@ -1469,7 +1499,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Host "Next" button click
     gameHostNextBtn.onclick = async () => {
-        const qIndex = (await rtdb.ref(`games/${currentGamePin}/currentQuestion`).get()).val();
+        if (!currentGameRef) return;
+        const qIndex = (await currentGameRef.child('currentQuestion').get()).val();
         sendQuestion(qIndex + 1); 
     };
     
@@ -1482,7 +1513,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function hostShowFinalResults() {
-        rtdb.ref(`games/${currentGamePin}`).update({ gameState: 'final' });
+        if (!currentGameRef) return;
+        currentGameRef.update({ gameState: 'final' });
         gameHostQuestion.textContent = "Game Over!";
         gameHostAnswers.style.display = 'none';
         gameHostNextBtn.style.display = 'none';
@@ -1491,7 +1523,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         setTimeout(() => {
             if (currentGameRef) {
-                rtdb.ref(`games/${currentGamePin}`).remove();
+                currentGameRef.remove();
                 currentGameRef = null;
             }
         }, 60000);

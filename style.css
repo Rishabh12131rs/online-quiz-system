@@ -927,6 +927,42 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
     border-radius: 4px;
     background: var(--bg-white);
 }
+/* NEW: Admin Manager Styles */
+.admin-manager-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    max-height: 60vh;
+}
+.admin-manager-col {
+    background: var(--bg-light);
+    border-radius: 8px;
+    padding: 10px;
+    overflow-y: auto;
+}
+.admin-manager-col h4 {
+    margin-top: 0;
+    text-align: center;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+}
+.admin-manager-list .manage-quiz-card {
+    padding: 10px;
+}
+.admin-manager-list .manage-quiz-card h4 {
+    font-size: 0.9rem;
+    border: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+}
+.admin-manager-list .admin-delete-btn {
+    background: var(--error);
+    color: white;
+    padding: 3px 8px;
+    font-size: 0.7rem;
+}
+
 
 /* --- Exam Prep View --- */
 .exam-breadcrumbs {
@@ -1006,7 +1042,7 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
     font-size: 1.2rem;
 }
 
-/* --- *** NEW: Answer Review Styles *** --- */
+/* --- Answer Review Styles --- */
 .review-controls {
     display: flex;
     justify-content: space-between;

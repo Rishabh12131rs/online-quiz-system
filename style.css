@@ -561,7 +561,6 @@ body.dark-mode .explanation-box { background: #2a3a4a; border-color: var(--prima
     color: var(--primary);
 }
 .my-result-card-title { font-size: 0.9rem; color: var(--secondary); }
-/* *** NEW: Review Button Style *** */
 .my-result-card .review-btn {
     background: var(--secondary);
     color: white;
@@ -1008,6 +1007,13 @@ body.dark-mode .recommendation-box { background: #2a3a4a; border-color: var(--pr
 }
 
 /* --- *** NEW: Answer Review Styles *** --- */
+.review-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
 .review-question-card {
     background: var(--bg-white);
     border-radius: 8px;

@@ -206,11 +206,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const reviewTitle = document.getElementById('review-title');
     const reviewBackBtn = document.getElementById('review-back-btn');
     const reviewQuestionsList = document.getElementById('review-questions-list');
+    const practiceMistakesBtn = document.getElementById('practice-mistakes-btn');
 
 
     // --- App State ---
     let questions = []; 
     let userAnswers = []; // *** NEW: To store answers for review ***
+    let practiceMistakes = []; // *** NEW: To store questions for practice ***
     let currentQuizId = null; 
     let currentQuizObject = null; 
     let currentIndex = 0;
@@ -224,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Live Game State ---
     let currentGamePin = null;
     let currentGameRef = null; 
-    let hostPlayerListener = null; // *** BUG FIX: New variable for host listener ***
+    let hostPlayerListener = null; 
     let hostQuizData = null; 
     let playerGameListener = null;
 
@@ -253,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
         errorElement.textContent = message;
     }
 
-    // --- *** BUG FIX: Updated View Switching Logic *** ---
+    // --- View Switching Logic ---
     function showView(viewName) {
         // Hide all main views
         homeView.style.display = 'none';
@@ -268,24 +270,23 @@ document.addEventListener('DOMContentLoaded', () => {
         gameHostView.style.display = 'none';
         gamePlayerView.style.display = 'none';
         finalLeaderboardView.style.display = 'none'; 
-        reviewView.style.display = 'none'; 
+        reviewView.style.display = 'none'; // *** NEW ***
 
         // Detach any active game listeners if we're leaving a game
         if (playerGameListener) {
-            playerGameListener.off(); // Detach the RTDB listener
+            playerGameListener.off(); 
             playerGameListener = null;
             if(currentGamePin && auth.currentUser) {
                 rtdb.ref(`games/${currentGamePin}/players/${auth.currentUser.uid}`).remove(); 
             }
         }
         
-        // *** BUG FIX: Correctly detach host listener ***
         if (hostPlayerListener) {
-            rtdb.ref(`games/${currentGamePin}/players`).off('value', hostPlayerListener); 
+            const playersRef = rtdb.ref(`games/${currentGamePin}/players`);
+            playersRef.off('value', hostPlayerListener); 
             hostPlayerListener = null;
         }
         
-        // Don't clear these if we are moving between game views
         if (viewName !== 'game-host' && viewName !== 'game-player' && viewName !== 'final-leaderboard') {
             currentGamePin = null;
             currentGameRef = null;
@@ -330,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gamePlayerView.style.display = 'block';
         } else if (viewName === 'final-leaderboard') { 
             finalLeaderboardView.style.display = 'block';
-        } else if (viewName === 'review') { 
+        } else if (viewName === 'review') { // *** NEW ***
             reviewView.style.display = 'block';
             sidebarDashboardBtn.classList.add('active'); // Keep dashboard active
         }
@@ -345,7 +346,6 @@ document.addEventListener('DOMContentLoaded', () => {
             welcomeUser.textContent = `Hello, ${user.displayName || 'User'}`; 
             showView('home'); 
 
-            // Show Admin button if user is admin
             if (user.uid === ADMIN_UID) {
                 sidebarAdminBtn.style.display = 'flex';
             } else {
@@ -388,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
         giphyContainer.style.display = 'none';
         editorContainer.style.display = 'flex';
     };
-    
+
     // --- FIREBASE AUTHENTICATION LOGIC ---
     loginTab.onclick = () => {
         loginTab.classList.add('active');
@@ -424,12 +424,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             })
             .then(() => {
-                // *** NEW: Create a user document in Firestore ***
                 return db.collection('users').doc(createdUser.uid).set({
                     username: username,
                     email: email,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    generationCount: 0 // Give them 0 generations to start
+                    generationCount: 0 
                 });
             })
             .then(() => {
@@ -484,10 +483,8 @@ document.addEventListener('DOMContentLoaded', () => {
     joinGameBtn.onclick = () => {
         const input = gamePinInput.value.trim();
         if (input.length === 4 && /^\d{4}$/.test(input)) {
-            // This is a 4-digit game PIN
             joinLiveGame(input);
         } else if (input.length > 10) { 
-            // This is a long Firestore ID for solo play
             joinSoloContent(input); 
         } else {
             showToast("Please enter a 4-digit Game PIN or a full Content ID.", "error");
@@ -495,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function joinSoloContent(contentId) {
-        gamePinInput.value = ""; // Clear input
+        gamePinInput.value = ""; 
         db.collection("quizzes").doc(contentId).get().then((doc) => {
             if (doc.exists) {
                 const content = doc.data();
@@ -585,16 +582,23 @@ document.addEventListener('DOMContentLoaded', () => {
             // --- QUIZ COMPLETE LOGIC ---
             
             // *** NEW: Add Review Button ***
+            let reviewButtonHtml = '';
+            if (currentQuizId !== 'practice-mistakes') { // Don't show review for a review quiz
+                reviewButtonHtml = `<button id="review-quiz-btn" class="card-btn">Review Answers</button>`;
+            }
+
             quizArea.innerHTML = `
                 <h2>Quiz Complete!</h2>
                 <p>Your final score is: ${score} / ${questions.length}</p>
-                <button id="review-quiz-btn" class="card-btn">Review Answers</button>
+                ${reviewButtonHtml}
             `;
             
             // Add listener for the new button
-            document.getElementById('review-quiz-btn').onclick = () => {
-                populateReviewView(questions, userAnswers, 'quiz'); // Go to review screen
-            };
+            if (currentQuizId !== 'practice-mistakes') {
+                document.getElementById('review-quiz-btn').onclick = () => {
+                    populateReviewView(questions, userAnswers, 'quiz'); // Go to review screen
+                };
+            }
 
             quizNav.style.display = 'none';
             quizControls.style.display = 'flex'; 
@@ -604,8 +608,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const username = user ? user.displayName : 'Anonymous';
             const uid = user ? user.uid : null;
             
-            // *** NEW: Save questions and answers ***
-            saveQuizAttempt(username, uid, currentQuizId, score, userAnswers, questions);
+            // *** NEW: Save questions and answers (but not for practice quizzes) ***
+            if (currentQuizId !== 'practice-mistakes') {
+                saveQuizAttempt(username, uid, currentQuizId, score, userAnswers, questions);
+            }
             
             showLeaderboard();
             currentQuizObject = null; 
@@ -740,7 +746,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateControls() {
         nextBtn.disabled = currentIndex >= questions.length; 
         questionNum.textContent = `Q${currentIndex + 1}/${questions.length}`;
-        scoreLabel.textContent = 'Score: ' + score; // *** BUG FIX: Removed stray 'L' ***
+        scoreLabel.textContent = 'Score: ' + score;
     }
     nextBtn.onclick = function () {
         if (currentIndex < questions.length) { 
@@ -760,9 +766,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveQuizAttempt(username, uid, quizId, score, userAnswers, questions) {
         if (!uid || !quizId) return; 
         
-        // Don't save full question data for API quizzes
-        const questionsToSave = quizId.startsWith('api_') ? null : questions;
-        
         db.collection("quiz_attempts").add({
             username: username,
             uid: uid,
@@ -770,7 +773,7 @@ document.addEventListener('DOMContentLoaded', () => {
             score: score,
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             userAnswers: userAnswers,     // *** NEW ***
-            questions: questionsToSave  // *** NEW ***
+            questions: questions  // *** NEW: Save all questions ***
         })
         .then(() => console.log("Solo attempt saved!"))
         .catch(err => console.error("Error saving attempt: ", err));
@@ -848,7 +851,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // *** UPDATED: Adds "Review" button ***
-    // *** BUG FIX: This query no longer needs an index ***
     function loadMyResults(container) {
         const user = auth.currentUser;
         if (!user) return; 
@@ -878,10 +880,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const titlePromises = [];
 
                 attempts.forEach((attempt) => {
-                    if (!attempt.quizId.startsWith('api_')) {
-                        if (attempt.quizId.includes('/')) { // Exam quiz
+                    if (attempt.quizId && !attempt.quizId.startsWith('api_')) {
+                        if (attempt.quizId.includes('/')) { 
                             titlePromises.push(Promise.resolve({ exists: true, data: () => ({ title: "Exam Quiz" }) })); 
-                        } else { // Community quiz
+                        } else { 
                             titlePromises.push(db.collection('quizzes').doc(attempt.quizId).get());
                         }
                     } else {
@@ -923,6 +925,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         const attemptId = btn.dataset.attemptId;
                         const attemptData = attempts.find(a => a.id === attemptId);
                         if (attemptData) {
+                            // Set this as the "current" quiz object for the review title
+                            currentQuizObject = { title: (titleDocs[attempts.indexOf(attemptData)]?.data().title || "Quiz") };
                             populateReviewView(attemptData.questions, attemptData.userAnswers, 'dashboard');
                         }
                     };
@@ -1404,7 +1408,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const playersRef = rtdb.ref(`games/${pin}/players`);
         
-        // *** BUG FIX: Store the listener in hostPlayerListener ***
+        // *** BUG FIX: Store listener in new variable ***
         hostPlayerListener = playersRef.on('value', (snapshot) => { 
             const players = snapshot.val() || {};
             hostLobbyPlayers.innerHTML = '';
@@ -2073,6 +2077,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function populateReviewView(questions, userAnswers, fromView) {
         showView('review-view');
         reviewQuestionsList.innerHTML = ''; // Clear old review
+        practiceMistakes = []; // Clear mistakes
         reviewTitle.textContent = `Reviewing: ${currentQuizObject ? currentQuizObject.title : 'Quiz'}`;
 
         // Set up the back button
@@ -2099,6 +2104,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (q.questionType === 'fill') {
                 const correctAnswer = q.answer;
                 const isCorrect = (userAnswer && userAnswer.toLowerCase() === correctAnswer.toLowerCase());
+                
+                if (!isCorrect) practiceMistakes.push(q); // Add to mistakes list
+                
                 optionsHtml = `
                     <div class="review-fill-answer ${isCorrect ? 'correct' : 'incorrect'}">
                         <strong>Your Answer:</strong> ${userAnswer || "No answer"}
@@ -2108,6 +2116,8 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 // Multiple Choice
                 const correctAnswer = q.correct_answer_text || q.options[q.correct_answer_index];
+                if (!ua || !ua.isCorrect) practiceMistakes.push(q); // Add to mistakes list
+
                 optionsHtml = q.options.map(opt => {
                     const isCorrect = (decodeHTML(opt) === decodeHTML(correctAnswer));
                     const isSelected = (decodeHTML(opt) === decodeHTML(userAnswer));
@@ -2140,6 +2150,13 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             reviewQuestionsList.appendChild(card);
         });
+
+        // Show or hide the practice mistakes button
+        if (practiceMistakes.length > 0) {
+            practiceMistakesBtn.style.display = 'block';
+        } else {
+            practiceMistakesBtn.style.display = 'none';
+        }
     }
 
     
@@ -2194,6 +2211,20 @@ document.addEventListener('DOMContentLoaded', () => {
         reviewBackBtn.onclick = () => {
             // Default action, will be overridden by populateReviewView
             showView('dashboard'); 
+        };
+        
+        // *** NEW: Practice Mistakes Button ***
+        practiceMistakesBtn.onclick = () => {
+            if (practiceMistakes.length > 0) {
+                const mistakesQuiz = {
+                    title: "Practice Mistakes",
+                    questions: practiceMistakes, // The array we built in populateReviewView
+                    type: 'review'
+                };
+                startCustomQuiz(mistakesQuiz, 'practice-mistakes');
+            } else {
+                showToast("You have no mistakes to practice!", "");
+            }
         };
 
         // --- Dark Mode Logic ---

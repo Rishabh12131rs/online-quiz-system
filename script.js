@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Live Game State ---
     let currentGamePin = null;
     let currentGameRef = null; 
-    let hostPlayerListener = null; 
+    let hostPlayerListener = null; // *** BUG FIX: New variable for host listener ***
     let hostQuizData = null; 
     let playerGameListener = null;
 
@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
         errorElement.textContent = message;
     }
 
-    // --- View Switching Logic ---
+    // --- *** BUG FIX: Updated View Switching Logic *** ---
     function showView(viewName) {
         // Hide all main views
         homeView.style.display = 'none';
@@ -270,23 +270,27 @@ document.addEventListener('DOMContentLoaded', () => {
         gameHostView.style.display = 'none';
         gamePlayerView.style.display = 'none';
         finalLeaderboardView.style.display = 'none'; 
-        reviewView.style.display = 'none'; // *** NEW ***
+        reviewView.style.display = 'none'; 
 
         // Detach any active game listeners if we're leaving a game
         if (playerGameListener) {
-            playerGameListener.off(); 
+            playerGameListener.off(); // Detach the RTDB listener
             playerGameListener = null;
             if(currentGamePin && auth.currentUser) {
                 rtdb.ref(`games/${currentGamePin}/players/${auth.currentUser.uid}`).remove(); 
             }
         }
         
+        // *** BUG FIX: Correctly detach host listener ***
         if (hostPlayerListener) {
-            const playersRef = rtdb.ref(`games/${currentGamePin}/players`);
-            playersRef.off('value', hostPlayerListener); 
+            // Check if currentGamePin exists before trying to access rtdb
+            if(currentGamePin) {
+                rtdb.ref(`games/${currentGamePin}/players`).off('value', hostPlayerListener); 
+            }
             hostPlayerListener = null;
         }
         
+        // Don't clear these if we are moving between game views
         if (viewName !== 'game-host' && viewName !== 'game-player' && viewName !== 'final-leaderboard') {
             currentGamePin = null;
             currentGameRef = null;
@@ -331,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gamePlayerView.style.display = 'block';
         } else if (viewName === 'final-leaderboard') { 
             finalLeaderboardView.style.display = 'block';
-        } else if (viewName === 'review') { // *** NEW ***
+        } else if (viewName === 'review') { 
             reviewView.style.display = 'block';
             sidebarDashboardBtn.classList.add('active'); // Keep dashboard active
         }
@@ -346,6 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
             welcomeUser.textContent = `Hello, ${user.displayName || 'User'}`; 
             showView('home'); 
 
+            // Show Admin button if user is admin
             if (user.uid === ADMIN_UID) {
                 sidebarAdminBtn.style.display = 'flex';
             } else {
@@ -424,11 +429,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             })
             .then(() => {
+                // *** NEW: Create a user document in Firestore ***
                 return db.collection('users').doc(createdUser.uid).set({
                     username: username,
                     email: email,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    generationCount: 0 
+                    generationCount: 0 // Give them 0 generations to start
                 });
             })
             .then(() => {
@@ -483,8 +489,10 @@ document.addEventListener('DOMContentLoaded', () => {
     joinGameBtn.onclick = () => {
         const input = gamePinInput.value.trim();
         if (input.length === 4 && /^\d{4}$/.test(input)) {
+            // This is a 4-digit game PIN
             joinLiveGame(input);
         } else if (input.length > 10) { 
+            // This is a long Firestore ID for solo play
             joinSoloContent(input); 
         } else {
             showToast("Please enter a 4-digit Game PIN or a full Content ID.", "error");
@@ -492,7 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function joinSoloContent(contentId) {
-        gamePinInput.value = ""; 
+        gamePinInput.value = ""; // Clear input
         db.collection("quizzes").doc(contentId).get().then((doc) => {
             if (doc.exists) {
                 const content = doc.data();
@@ -746,7 +754,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateControls() {
         nextBtn.disabled = currentIndex >= questions.length; 
         questionNum.textContent = `Q${currentIndex + 1}/${questions.length}`;
-        scoreLabel.textContent = 'Score: ' + score;
+        scoreLabel.textContent = 'Score: ' + score; // *** BUG FIX: Removed stray 'L' ***
     }
     nextBtn.onclick = function () {
         if (currentIndex < questions.length) { 

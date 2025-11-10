@@ -17,15 +17,10 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 const rtdb = firebase.database(); // INITIALIZE REALTIME DATABASE
-const storage = firebase.storage(); // *** NEW: INITIALIZE STORAGE ***
-const functions = firebase.functions(); // *** NEW: INITIALIZE FUNCTIONS ***
 // --- END OF FIREBASE SETUP ---
 
-// *** NEW: SET YOUR ADMIN UID HERE ***
-// 1. Log in to your site
-// 2. Open the console (F12) and type: firebase.auth().currentUser.uid
-// 3. Copy the ID and paste it here
-const ADMIN_UID = "NTSIsVxii9gKezQqQ3RYpQB2jTT2";
+// *** SET YOUR ADMIN UID HERE ***
+const ADMIN_UID = "NTSIsVxii9gKezQqQ3RYpQB2jTT";
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -160,18 +155,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const bulkSubjectSelect = document.getElementById('bulk-subject-select');
     const bulkTopicSelect = document.getElementById('bulk-topic-select');
     const bulkUploadFile = document.getElementById('bulk-upload-file');
-
-    // --- *** NEW: PDF Generator Modal Elements *** ---
-    const createFromPdfBtn = document.getElementById('create-from-pdf-btn');
-    const uploadGeneratorModal = document.getElementById('upload-generator-modal');
-    const closeUploadBtn = document.getElementById('close-upload-btn');
-    const pdfUploadForm = document.getElementById('pdf-upload-form');
-    const pdfQuizTitle = document.getElementById('pdf-quiz-title');
-    const pdfUploadFile = document.getElementById('pdf-upload-file');
-    const pdfGenerateBtn = document.getElementById('pdf-generate-btn');
-    const pdfUploadStatus = document.getElementById('pdf-upload-status');
-    const pdfStatusText = document.getElementById('pdf-status-text');
-
 
     // --- Live Game View Elements ---
     const hostLobbyView = document.getElementById('host-lobby-view');
@@ -374,17 +357,9 @@ document.addEventListener('DOMContentLoaded', () => {
         giphyContainer.style.display = 'none';
         editorContainer.style.display = 'flex';
     };
-    // *** NEW: PDF Modal Toggling ***
-    createFromPdfBtn.onclick = () => {
-        uploadGeneratorModal.style.display = 'flex';
-        pdfUploadStatus.style.display = 'none';
-        pdfUploadForm.reset();
-    };
-    closeUploadBtn.onclick = () => {
-        uploadGeneratorModal.style.display = 'none';
-    };
-
-
+    
+    // --- *** BUG FIX: PDF GENERATOR BUTTONS REMOVED *** ---
+    
     // --- FIREBASE AUTHENTICATION LOGIC ---
     loginTab.onclick = () => {
         loginTab.classList.add('active');
@@ -409,13 +384,31 @@ document.addEventListener('DOMContentLoaded', () => {
             signupErr.textContent = 'Username must be at least 3 characters.';
             return;
         }
+        
+        let createdUser; // To store the user object
         auth.createUserWithEmailAndPassword(email, password)
             .then((userCredential) => {
                 const user = userCredential.user;
-                return user.updateProfile({ displayName: username });
+                createdUser = user; // Save the user
+                return user.updateProfile({
+                    displayName: username
+                });
             })
-            .then(() => { console.log("User signed up!"); })
-            .catch((error) => { showFriendlyError(error, signupErr); });
+            .then(() => {
+                // *** NEW: Create a user document in Firestore ***
+                return db.collection('users').doc(createdUser.uid).set({
+                    username: username,
+                    email: email,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    generationCount: 0 // Give them 0 generations to start
+                });
+            })
+            .then(() => {
+                console.log("User signed up and user document created!");
+            })
+            .catch((error) => {
+                showFriendlyError(error, signupErr); 
+            });
     };
     loginForm.onsubmit = e => {
         e.preventDefault();
@@ -1992,19 +1985,11 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         // --- *** NEW: PDF Generator Listeners *** ---
-        createFromPdfBtn.onclick = () => {
-            uploadGeneratorModal.style.display = 'flex';
-            pdfUploadStatus.style.display = 'none';
-            pdfUploadForm.reset();
-            pdfGenerateBtn.disabled = false;
-        };
-        closeUploadBtn.onclick = () => {
-            uploadGeneratorModal.style.display = 'none';
-        };
-        pdfUploadForm.onsubmit = (e) => {
-            e.preventDefault();
-            handlePdfUpload();
-        };
+        // This button was removed from HTML, so this code is removed
+        // createFromPdfBtn.onclick = () => { ... }
+        // closeUploadBtn.onclick = () => { ... }
+        // pdfUploadForm.onsubmit = (e) => { ... }
+
 
         // --- Dark Mode Logic ---
         const theme = localStorage.getItem('theme');
@@ -2052,69 +2037,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
-
-    // --- *** NEW: PDF Upload and Function Call *** ---
-    async function handlePdfUpload() {
-        const user = auth.currentUser;
-        if (!user) {
-            showToast("Please log in to create a quiz.", "error");
-            return;
-        }
-
-        const file = pdfUploadFile.files[0];
-        const title = pdfQuizTitle.value.trim();
-
-        if (!file || !title) {
-            showToast("Please select a file and provide a title.", "error");
-            return;
-        }
-
-        pdfGenerateBtn.disabled = true;
-        pdfUploadStatus.style.display = 'block';
-        pdfStatusText.textContent = "Uploading PDF...";
-
-        try {
-            // 1. Upload file to Firebase Storage
-            const filePath = `uploads/${user.uid}/${Date.now()}_${file.name}`;
-            const storageRef = storage.ref(filePath);
-            const uploadTask = await storageRef.put(file);
-            
-            pdfStatusText.textContent = "File uploaded. Calling AI... (This may take a minute)";
-
-            // 2. Call the Cloud Function
-            // This function (generateQuizFromPdf) must be deployed in your Firebase project
-            const generateQuiz = functions.httpsCallable('generateQuizFromPdf');
-            
-            const result = await generateQuiz({ 
-                filePath: filePath,
-                title: title,
-                author: user.displayName || 'Anonymous',
-                authorUID: user.uid
-            });
-
-            // 3. Handle the result
-            const { quizId, error } = result.data;
-
-            if (error) {
-                throw new Error(error);
-            }
-
-            pdfUploadStatus.style.display = 'none';
-            pdfGenerateBtn.disabled = false;
-            uploadGeneratorModal.style.display = 'none';
-            showToast("AI Quiz generated successfully!", "success");
-            
-            // Show the user their new quiz
-            showView('community');
-
-        } catch (error) {
-            console.error("Error generating quiz: ", error);
-            showToast(`Error: ${error.message}`, "error");
-            pdfUploadStatus.style.display = 'none';
-            pdfGenerateBtn.disabled = false;
-        }
-    }
-
 
     init(); // Run the initialization
 });

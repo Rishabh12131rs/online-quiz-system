@@ -140,18 +140,7 @@ main {
 }
 .card-home h2 { margin-top: 0; }
 .card-home p { color: var(--secondary); }
-/* --- NEW: AI Card Style --- */
-.card-ai-pdf {
-    background: linear-gradient(135deg, var(--exam), var(--primary));
-    color: white;
-}
-.card-ai-pdf h2, .card-ai-pdf p {
-    color: white;
-}
-.card-ai-pdf .card-btn {
-    background: var(--bg-white);
-    color: var(--exam);
-}
+/* --- AI PDF Card Style REMOVED --- */
 
 /* --- Search & Quiz List --- */
 .search-container { display: flex; margin-bottom: 30px; }
@@ -276,7 +265,7 @@ main {
 }
 #editor-modal-content, #study-editor-modal-content,
 #results-modal-content, #giphy-modal-content,
-#admin-modal-content, #upload-modal-content { 
+#admin-modal-content { /* PDF modal style removed */
     max-width: 800px;
 }
 
@@ -303,7 +292,6 @@ main {
     font-family: 'Montserrat', sans-serif;
     font-size: 1rem;
 }
-/* --- NEW: Style for file input --- */
 .modal-content input[type="file"] {
     padding: 10px;
     border: 1px dashed var(--secondary);

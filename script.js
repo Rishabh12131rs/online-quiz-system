@@ -316,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (viewName === 'exam-prep') { 
             examPrepView.style.display = 'block';
             sidebarLibraryBtn.classList.add('active'); 
-            loadExamBrowser(); 
+            // *** BUG FIX: Do NOT call loadExamBrowser here, causes infinite loop ***
         } else if (viewName === 'dashboard') {
             dashboardView.style.display = 'block';
             sidebarDashboardBtn.classList.add('active');
@@ -2191,6 +2191,7 @@ document.addEventListener('DOMContentLoaded', () => {
         navExamPrepBtn.onclick = (e) => {
             e.preventDefault();
             showView('exam-prep');
+            loadExamBrowser(); // *** BUG FIX: Call this *here*, not in showView ***
         };
         
         // *** NEW: Final Leaderboard Home Button ***

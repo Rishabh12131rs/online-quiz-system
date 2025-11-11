@@ -881,7 +881,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 // *** NEW: Sort in JavaScript instead of in the query ***
-                attempts.sort((a, b) => b.timestamp.seconds - a.timestamp.seconds);
+                attempts.sort((a, b) => {
+                    if (a.timestamp && b.timestamp) {
+                        return b.timestamp.seconds - a.timestamp.seconds;
+                    }
+                    return 0; // Fallback if timestamp is missing
+                });
                 attempts = attempts.slice(0, 10); // Get the 10 most recent
 
                 let html = '';

@@ -754,7 +754,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateControls() {
         nextBtn.disabled = currentIndex >= questions.length; 
         questionNum.textContent = `Q${currentIndex + 1}/${questions.length}`;
-        scoreLabel.textContent = 'Score: ' + score; // *** BUG FIX: Removed stray 'L' ***
+        scoreLabel.textContent = 'Score: ' + score;
     }
     nextBtn.onclick = function () {
         if (currentIndex < questions.length) { 

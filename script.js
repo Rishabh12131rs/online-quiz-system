@@ -981,7 +981,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     addQuestionBtn.onclick = createNewQuestionEditor;
     
-    // --- *** BUG FIX: Validation length changed from 5 to 1 *** ---
     saveQuizBtn.onclick = () => {
         const user = auth.currentUser;
         if (!user) { 
@@ -1018,7 +1017,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const imageUrl = card.dataset.imageUrl || null;
             const questionType = card.querySelector('.question-type-select').value;
             
-            // *** BUG FIX: Changed from < 5 to < 1 ***
             if (questionText.length < 1 || explanation.length < 1) { 
                 allValid = false;
             }
@@ -1045,7 +1043,6 @@ document.addEventListener('DOMContentLoaded', () => {
             newQuiz.questions.push(questionData);
         });
         if (!allValid) {
-            // *** BUG FIX: Updated error message ***
             showToast("Please fill in all questions, answers, and explanations.", "error"); 
             saveQuizBtn.disabled = false;
             saveQuizBtn.textContent = "Save Quiz";
@@ -2083,10 +2080,24 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- *** NEW: Answer Review Function *** ---
     function populateReviewView(questions, userAnswers, fromView) {
+        // *** BUG FIX: Check if questions exist ***
+        if (!questions || questions.length === 0) {
+            showToast("Could not find questions for this review.", "error");
+            showView('dashboard');
+            return;
+        }
+
         showView('review-view');
         reviewQuestionsList.innerHTML = ''; // Clear old review
         practiceMistakes = []; // Clear mistakes
-        reviewTitle.textContent = `Reviewing: ${currentQuizObject ? currentQuizObject.title : 'Quiz'}`;
+        
+        // *** BUG FIX: Get title from the attempt, not the global object ***
+        let title = "Quiz";
+        if (currentQuizObject) {
+             title = currentQuizObject.title;
+        }
+        reviewTitle.textContent = `Reviewing: ${title}`;
+        
 
         // Set up the back button
         reviewBackBtn.onclick = () => {
@@ -2095,9 +2106,12 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 showView('quiz'); // Go back to the quiz results screen
                 quizArea.innerHTML = `<h2>Quiz Complete!</h2><p>Your final score is: ${score} / ${questions.length}</p><button id="review-quiz-btn" class="card-btn">Review Answers</button>`;
-                document.getElementById('review-quiz-btn').onclick = () => {
-                   populateReviewView(questions, userAnswers, 'quiz');
-                };
+                // Re-add listener
+                if (document.getElementById('review-quiz-btn')) {
+                    document.getElementById('review-quiz-btn').onclick = () => {
+                       populateReviewView(questions, userAnswers, 'quiz');
+                    };
+                }
             }
         };
 
